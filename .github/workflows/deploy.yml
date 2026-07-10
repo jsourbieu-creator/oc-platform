@@ -1,0 +1,52 @@
+name: Build & Deploy to o2switch
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Copy API into dist
+        run: cp -r api dist/api
+
+      - name: Generate DB credentials file (never committed to git)
+        run: |
+          cat > dist/api/db-credentials.php << 'PHPEOF'
+          <?php
+          declare(strict_types=1);
+          const DB_HOST = '${{ secrets.DB_HOST }}';
+          const DB_NAME = '${{ secrets.DB_NAME }}';
+          const DB_USER = '${{ secrets.DB_USER }}';
+          const DB_PASS = '${{ secrets.DB_PASS }}';
+          PHPEOF
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.O2SWITCH_HOST }}
+          username: ${{ secrets.O2SWITCH_USER }}
+          password: ${{ secrets.O2SWITCH_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ${{ secrets.O2SWITCH_PATH }}
+          dangerous-clean-slate: true
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
