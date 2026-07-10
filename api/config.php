@@ -36,6 +36,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Toute exception non attrapée renvoie un JSON explicite au lieu d'une 500 muette.
+set_exception_handler(function (Throwable $e): void {
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'Erreur serveur : ' . $e->getMessage(),
+        'type' => get_class($e),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+
 function json_out($data, int $status = 200): void {
     http_response_code($status);
     echo json_encode($data, JSON_UNESCAPED_UNICODE);

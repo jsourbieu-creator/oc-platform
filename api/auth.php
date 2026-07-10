@@ -21,7 +21,12 @@ switch ($action) {
             $stmt = db()->prepare('INSERT INTO users (email, password_hash, first_name, last_name) VALUES (?,?,?,?)');
             $stmt->execute([$email, $hash, $firstName, $lastName]);
         } catch (PDOException $e) {
-            json_error('Un compte existe déjà avec cet e-mail.');
+            // 23000 = violation de contrainte d'unicité → vrai doublon d'e-mail.
+            // Toute autre erreur (connexion, table manquante…) doit remonter telle quelle.
+            if ($e->getCode() === '23000') {
+                json_error('Un compte existe déjà avec cet e-mail.');
+            }
+            throw $e;
         }
         $userId = (int) db()->lastInsertId();
         log_action($userId, 'signup', $email);
