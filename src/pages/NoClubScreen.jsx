@@ -32,11 +32,12 @@ export function NoClubScreen() {
       <div className="auth-screen">
         <div className="auth-box" style={{ textAlign: "center" }}>
           <div style={{ fontSize: "2rem", marginBottom: 8 }}>👋</div>
-          <h2 style={{ fontSize: "1.4rem", marginBottom: 8 }}>En attente de rattachement</h2>
+          <h2 style={{ fontSize: "1.4rem", marginBottom: 8 }}>Rejoindre le club</h2>
           <p style={{ color: "var(--text-dim)", fontSize: "0.9rem" }}>
-            Ton compte existe mais n'est encore rattaché à aucun club. Un
-            administrateur doit t'ajouter à l'Olympique Castelblangeoise.
+            Ton compte existe mais n'est encore rattaché à aucun club. Si un
+            administrateur t'a transmis un code d'invitation, saisis-le ici.
           </p>
+          <JoinWithCode />
           <span onClick={signOut} style={{ color: "var(--oc-blue-600)", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}>
             Se déconnecter
           </span>
@@ -64,5 +65,41 @@ export function NoClubScreen() {
         </div>
       </div>
     </div>
+  );
+}
+
+function JoinWithCode() {
+  const { token, refresh } = useAuth();
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError(""); setBusy(true);
+    try {
+      await api("clubs.php", "join_with_code", { code }, token);
+      await refresh();
+    } catch (e2) { setError(e2.message); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <form onSubmit={submit} style={{ margin: "16px 0 20px" }}>
+      {error && <div className="error-box">{error}</div>}
+      <div className="field" style={{ marginBottom: 10 }}>
+        <input
+          type="text"
+          placeholder="CODE (8 caractères)"
+          value={code}
+          maxLength={8}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          style={{ textAlign: "center", fontFamily: "monospace", letterSpacing: "0.15em", fontWeight: 700 }}
+        />
+      </div>
+      <button className="btn btn-primary" disabled={busy || code.length !== 8}>
+        {busy ? "Vérification…" : "Rejoindre le club"}
+      </button>
+    </form>
   );
 }

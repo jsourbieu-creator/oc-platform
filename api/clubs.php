@@ -45,6 +45,67 @@ switch ($action) {
         json_out(['ok' => true, 'club_id' => $clubId]);
         break;
 
+    // Rejoindre un club avec un code d'invitation (Phase 1)
+    case 'join_with_code':
+        $me = current_user();
+        $code = strtoupper(trim($in['code'] ?? ''));
+        if ($code === '') json_error('Code requis.');
+
+        $stmt = db()->prepare("SELECT * FROM invitations WHERE code = ? AND status = 'pending'");
+        $stmt->execute([$code]);
+        $inv = $stmt->fetch();
+        if (!$inv) json_error('Code invalide, déjà utilisé ou révoqué.', 404);
+        if (strtotime($inv['expires_at']) < time()) json_error('Ce code a expiré. Demande une nouvelle invitation.', 410);
+
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('SELECT id, status FROM club_members WHERE club_id = ? AND user_id = ?');
+            $stmt->execute([(int) $inv['club_id'], (int) $me['id']]);
+            $existing = $stmt->fetch();
+
+            if ($existing && $existing['status'] === 'active') {
+                $pdo->rollBack();
+                json_error('Tu es déjà membre actif de ce club.');
+            }
+            if ($existing) {
+                $stmt = $pdo->prepare("UPDATE club_members SET role = ?, status = 'active' WHERE id = ?");
+                $stmt->execute([$inv['role'], (int) $existing['id']]);
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO club_members (club_id, user_id, role, status) VALUES (?,?,?,'active')");
+                $stmt->execute([(int) $inv['club_id'], (int) $me['id'], $inv['role']]);
+            }
+            $stmt = $pdo->prepare("UPDATE invitations SET status = 'used', used_by = ? WHERE id = ?");
+            $stmt->execute([(int) $me['id'], (int) $inv['id']]);
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+
+        log_action((int) $me['id'], 'join_with_code', $code);
+        json_out(['ok' => true, 'club_id' => (int) $inv['club_id']]);
+        break;
+
+    // Modifier les paramètres du club (Phase 1)
+    case 'update':
+        $me = current_user();
+        $clubId = (int) ($in['club_id'] ?? 0);
+        require_permission((int) $me['id'], $clubId, 'manage_club_settings');
+
+        $name = trim($in['name'] ?? '');
+        $shortName = trim($in['short_name'] ?? '');
+        $color = trim($in['primary_color'] ?? '');
+        if ($name === '' || $shortName === '') json_error('Nom et nom court requis.');
+        if ($color !== '' && !preg_match('/^#[0-9A-Fa-f]{6}$/', $color)) json_error('Couleur invalide (format #RRGGBB).');
+
+        $stmt = db()->prepare('UPDATE clubs SET name = ?, short_name = ?' . ($color !== '' ? ', primary_color = ?' : '') . ' WHERE id = ?');
+        $params = $color !== '' ? [$name, $shortName, $color, $clubId] : [$name, $shortName, $clubId];
+        $stmt->execute($params);
+        log_action((int) $me['id'], 'club_update', "$name ($shortName)");
+        json_out(['ok' => true]);
+        break;
+
     default:
         json_error('Action inconnue.', 404);
 }

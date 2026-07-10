@@ -6,6 +6,11 @@ import { SignupPage } from "@/pages/SignupPage";
 import { NoClubScreen } from "@/pages/NoClubScreen";
 import { DashboardHome } from "@/pages/DashboardHome";
 import { PlusPage } from "@/pages/PlusPage";
+import { TeamsPage } from "@/pages/TeamsPage";
+import { MembersPage } from "@/pages/MembersPage";
+import { ProfilePage } from "@/pages/ProfilePage";
+import { SettingsPage } from "@/pages/SettingsPage";
+import { AdminPage } from "@/pages/AdminPage";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 function Root() {
@@ -33,6 +38,11 @@ function Root() {
     <DashboardShell view={dashView} goto={setDashView}>
       {dashView === "home" && <DashboardHome />}
       {dashView === "plus" && <PlusPage goto={setDashView} />}
+      {dashView === "equipes" && <TeamsPage />}
+      {dashView === "membres" && <MembersPage />}
+      {dashView === "profil" && <ProfilePage />}
+      {dashView === "parametres" && <SettingsPage />}
+      {dashView === "administration" && <AdminPage />}
     </DashboardShell>
   );
 }

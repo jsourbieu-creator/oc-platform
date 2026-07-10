@@ -94,6 +94,36 @@ switch ($action) {
         ]);
         break;
 
+    case 'update_profile':
+        $me = current_user();
+        $firstName = trim($in['first_name'] ?? '');
+        $lastName = trim($in['last_name'] ?? '');
+        $phone = trim($in['phone'] ?? '');
+        if ($firstName === '' || $lastName === '') json_error('Prénom et nom requis.');
+
+        $stmt = db()->prepare('UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ?');
+        $stmt->execute([$firstName, $lastName, $phone ?: null, (int) $me['id']]);
+        log_action((int) $me['id'], 'update_profile');
+        json_out(['ok' => true]);
+        break;
+
+    case 'change_password':
+        $me = current_user();
+        $current = (string) ($in['current_password'] ?? '');
+        $new = (string) ($in['new_password'] ?? '');
+        if (strlen($new) < 8) json_error('Le nouveau mot de passe doit faire au moins 8 caractères.');
+
+        $stmt = db()->prepare('SELECT password_hash FROM users WHERE id = ?');
+        $stmt->execute([(int) $me['id']]);
+        $hash = $stmt->fetchColumn();
+        if (!password_verify($current, $hash)) json_error('Mot de passe actuel incorrect.', 401);
+
+        $stmt = db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+        $stmt->execute([password_hash($new, PASSWORD_DEFAULT), (int) $me['id']]);
+        log_action((int) $me['id'], 'change_password');
+        json_out(['ok' => true]);
+        break;
+
     default:
         json_error('Action inconnue.', 404);
 }

@@ -1,4 +1,4 @@
-# Olympique Castelblangeoise — Plateforme (Phase 0)
+# Olympique Castelblangeoise — Plateforme (Phase 1)
 
 Plateforme complète de gestion du club, construite phase par phase à partir
 du cahier des charges. **Phase 0 : fondations** — architecture, auth, rôles
@@ -26,11 +26,30 @@ pour rester sur ce que tu payes déjà).
     un joueur d'un club ne voit jamais rien d'un autre club.
 - Écran de création du club au tout premier compte créé (tu deviens
   automatiquement super-administrateur).
-- Saisons / équipes (tables + endpoints, pas encore d'écran de création
-  détaillé — Phase 1).
+- Saisons / équipes (tables + endpoints).
 - Thème clair/sombre, navigation desktop (barre latérale) + mobile (barre
   du bas, 5 entrées + "Plus"), avec indicateur de phase par section.
 - Tableau de bord connecté en direct à ta base MySQL.
+
+## Ce qui est fait (Phase 1)
+
+- **Équipes & saisons** : écran complet — création/édition de saisons avec
+  statut (une seule saison active à la fois), création/suppression d'équipes,
+  gestion des effectifs (ajout/retrait de membres, capitaine, gardien).
+- **Membres** : liste complète du club, changement de rôle et de statut
+  (garde-fous : impossible de rétrograder ou suspendre le dernier
+  super-admin actif, ni de se suspendre soi-même ; seuls les super-admins
+  touchent aux rôles administrateurs).
+- **Invitations par code** : un admin génère un code à 8 caractères (14
+  jours de validité, révocable) ; la personne crée son compte puis saisit le
+  code sur l'écran "Rejoindre le club" — aucun envoi d'e-mail requis.
+- **Profil** : modification prénom/nom/téléphone + changement de mot de passe.
+- **Paramètres** : édition du nom du club (admins).
+- **Administration** : journal d'audit des 100 dernières actions
+  (super-admin uniquement).
+
+⚠️ La Phase 1 nécessite d'importer `api/migrations/0003_phase1_invitations.sql`
+via phpMyAdmin (comme 0001).
 
 ## Ce qui n'est PAS encore fait
 

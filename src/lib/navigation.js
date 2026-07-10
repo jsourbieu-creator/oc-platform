@@ -29,4 +29,4 @@ export const MOBILE_NAV_ITEMS = [
   { label: "Plus", view: "plus", icon: "⋯", phase: 0 },
 ];
 
-export const CURRENT_PHASE = 0;
+export const CURRENT_PHASE = 1;
