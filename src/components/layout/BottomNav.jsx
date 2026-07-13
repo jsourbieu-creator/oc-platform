@@ -1,10 +1,10 @@
-import { MOBILE_NAV_ITEMS, CURRENT_PHASE } from "@/lib/navigation";
+import { MOBILE_NAV_ITEMS, isAvailable } from "@/lib/navigation";
 
 export function BottomNav({ view, goto }) {
   return (
     <nav className="bottom-nav">
       {MOBILE_NAV_ITEMS.map((item) => {
-        const available = item.phase <= CURRENT_PHASE;
+        const available = isAvailable(item);
         const active = view === item.view;
         return (
           <div

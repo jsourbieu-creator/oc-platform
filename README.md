@@ -1,4 +1,4 @@
-# Olympique Castelblangeoise — Plateforme (Phase 1)
+# Olympique Castelblangeoise — Plateforme (Phases 0-1-3)
 
 Plateforme complète de gestion du club, construite phase par phase à partir
 du cahier des charges. **Phase 0 : fondations** — architecture, auth, rôles
@@ -51,9 +51,28 @@ pour rester sur ce que tu payes déjà).
 ⚠️ La Phase 1 nécessite d'importer `api/migrations/0003_phase1_invitations.sql`
 via phpMyAdmin (comme 0001).
 
+## Ce qui est fait (Phase 3)
+
+- **Événements** : création/édition par les coachs et admins — matchs
+  (avec adversaire), entraînements, événements club ; rattachés à une équipe
+  ou à tout le club ; lieu, heure de début, heure de rendez-vous, notes ;
+  annulation réversible ou suppression définitive.
+- **Calendrier** : vue chronologique groupée par mois (passé masquable),
+  détail par événement avec réponses de disponibilité en un tap, liste des
+  réponses de tout le monde, et gestion des convocations intégrée.
+- **Disponibilités** : récap des événements à venir « à renseigner » +
+  réponses rapides (Disponible / Peut-être / Indisponible).
+- **Convocations** : le coach coche les joueurs convoqués (synchronisation
+  complète), chaque joueur confirme ou décline depuis sa page Convocations
+  ou le Calendrier ; compteurs confirmés/total visibles sur chaque événement.
+
+⚠️ La Phase 3 nécessite d'importer `api/migrations/0004_phase3_calendrier.sql`
+via phpMyAdmin. La Phase 2 (fusion Ballon d'Or) reste verrouillée en
+attendant les fichiers du module existant.
+
 ## Ce qui n'est PAS encore fait
 
-Calendrier/convocations (Phase 3), Vestiaire/notifications (Phase 4),
+Vestiaire/notifications (Phase 4),
 messagerie (Phase 5 — ici en "polling" plutôt qu'en temps réel, faute de
 WebSocket sur hébergement mutualisé classique), documents/médiathèque
 (Phase 6), statistiques avancées/autres trophées (Phase 7), PWA (Phase 8).

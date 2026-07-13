@@ -51,10 +51,10 @@ export function DashboardHome() {
 
       <div className="card">
         <div className="subtle">
-          C'est la Phase 0 : les fondations (auth, rôles, isolation par club) sont
-          en place et connectées en direct à ta base MySQL — ce que tu vois
-          ci-dessus vient réellement de ta base. Les sections du menu grisées
-          arriveront phase après phase.
+          Phases en place : fondations (auth, rôles), équipes/membres/invitations,
+          et calendrier/convocations. Les sections du menu grisées arriveront
+          phase après phase (la fusion du Ballon d'Or attend les fichiers du
+          module existant).
         </div>
       </div>
     </div>

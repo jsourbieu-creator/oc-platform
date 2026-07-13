@@ -1,4 +1,4 @@
-import { NAV_ITEMS, CURRENT_PHASE } from "@/lib/navigation";
+import { NAV_ITEMS, isAvailable } from "@/lib/navigation";
 
 export function PlusPage({ goto }) {
   return (
@@ -9,7 +9,7 @@ export function PlusPage({ goto }) {
       </p>
       <div className="card">
         {NAV_ITEMS.filter((i) => i.label !== "Accueil").map((item) => {
-          const available = item.phase <= CURRENT_PHASE;
+          const available = isAvailable(item);
           return (
             <div
               key={item.view}

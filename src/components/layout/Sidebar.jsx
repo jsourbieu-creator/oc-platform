@@ -1,4 +1,4 @@
-import { NAV_ITEMS, CURRENT_PHASE } from "@/lib/navigation";
+import { NAV_ITEMS, isAvailable } from "@/lib/navigation";
 
 export function Sidebar({ view, goto }) {
   return (
@@ -12,7 +12,7 @@ export function Sidebar({ view, goto }) {
       </div>
       <nav className="sidebar-nav">
         {NAV_ITEMS.map((item) => {
-          const available = item.phase <= CURRENT_PHASE;
+          const available = isAvailable(item);
           const active = view === item.view;
           return (
             <div
