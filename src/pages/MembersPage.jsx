@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -161,7 +162,7 @@ function InvitationsBlock() {
       {lastCode && (
         <div className="info-box" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
           <span>Code : <strong style={{ fontFamily: "monospace", fontSize: "1.05rem", letterSpacing: "0.08em" }}>{lastCode}</strong></span>
-          <button className="btn btn-secondary btn-sm" onClick={() => copy(lastCode)}>{copied ? "Copié ✓" : "Copier"}</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => copy(lastCode)}>{copied ? <><Check size={13} style={{ marginRight: 4, verticalAlign: "-2px" }} />Copié</> : "Copier"}</button>
         </div>
       )}
 

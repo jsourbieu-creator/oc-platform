@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { Bell } from "lucide-react";
 
 const ROLE_LABELS = {
   super_admin: "Super admin",
@@ -53,8 +54,8 @@ export function DashboardShell({ view, goto, children }) {
           </div>
           <div className="topbar-right">
             <span className="subtle" style={{ display: "none" }}>{user?.first_name} {user?.last_name}</span>
-            <span onClick={() => goto("notifications")} style={{ cursor: "pointer", position: "relative", fontSize: "1.1rem" }} title="Notifications">
-              🔔
+            <span onClick={() => goto("notifications")} style={{ cursor: "pointer", position: "relative", display: "inline-flex", color: "var(--text-dim)" }} title="Notifications">
+              <Bell size={18} />
               {unread > 0 && (
                 <span style={{ position: "absolute", top: -6, right: -8, background: "var(--danger-600)", color: "#fff", borderRadius: "var(--radius-full)", fontSize: "0.6rem", fontWeight: 800, padding: "1px 5px", lineHeight: 1.4 }}>{unread > 9 ? "9+" : unread}</span>
               )}

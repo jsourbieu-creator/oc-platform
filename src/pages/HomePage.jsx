@@ -1,3 +1,4 @@
+import { CalendarDays, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis } from "lucide-react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -125,30 +126,30 @@ export function HomePage() {
 
       <div className="stat-tiles">
         <StatTile
-          icon={nextEvent ? (EVENT_TYPES[nextEvent.type] ?? EVENT_TYPES.match).icon : "📅"}
+          icon={(() => { const I = nextEvent ? (EVENT_TYPES[nextEvent.type] ?? EVENT_TYPES.match).icon : CalendarDays; return <I size={20} />; })()}
           value={nextEvent === undefined ? "…" : nextEvent ? nextEvent.title : "Aucune"}
           label={nextEvent ? `${fmtTime(nextEvent.starts_at)}` : "Prochaine séance"}
           tint="blue"
         />
         <StatTile
-          icon="⭐"
+          icon={<Star size={20} />}
           value={myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}
           label={myScore ? "Mon score Ballon d'Or" : "Pas encore classé"}
           tint="gold"
         />
-        <StatTile icon="🛡️" value={teams?.length ?? "…"} label="Équipes" tint="green" />
+        <StatTile icon={<Shield size={20} />} value={teams?.length ?? "…"} label="Équipes" tint="green" />
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <button className="btn btn-secondary btn-sm" style={{ borderRadius: "var(--radius-full)" }} onClick={() => setShowPast((v) => !v)}>
-          {showPast ? "↺ Masquer le passé" : "↺ Passé"}
+          <RotateCcw size={13} style={{ marginRight: 5, verticalAlign: "-2px" }} />{showPast ? "Masquer le passé" : "Passé"}
         </button>
         {manage && (
           <button
             className="btn btn-sm" style={{ borderRadius: "var(--radius-full)", background: "var(--gold-500)", color: "#fff" }}
             onClick={() => setForm(form ? null : { ...EMPTY_FORM })}
           >
-            {form ? "✕ Annuler" : "+ Ajouter"}
+            {form ? <><X size={13} style={{ marginRight: 5, verticalAlign: "-2px" }} />Annuler</> : "+ Ajouter"}
           </button>
         )}
       </div>
@@ -248,7 +249,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
           <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <strong>{t.icon} {e.title}</strong>
+              <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><t.icon size={15} />{e.title}</strong>
               {cancelled && <span className="badge badge-neutral">Annulé</span>}
               {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
             </div>
@@ -260,7 +261,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         </div>
         {manage && (
           <div style={{ position: "relative", flexShrink: 0 }}>
-            <button className="btn btn-ghost btn-sm" style={{ width: "auto", padding: "4px 8px", fontSize: "1.1rem" }} onClick={() => setMenuOpen((v) => !v)}>⋯</button>
+            <button className="btn btn-ghost btn-sm" style={{ width: "auto", padding: "4px 8px", fontSize: "1.1rem" }} onClick={() => setMenuOpen((v) => !v)}><Ellipsis size={17} /></button>
             {menuOpen && (
               <div style={{
                 position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "1px solid var(--border)",
@@ -301,7 +302,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
       </div>
 
       {e.type === "match" && convokedTotal > 0 && (
-        <div className="subtle" style={{ marginTop: 8 }}>📋 {confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""} à la convocation</div>
+        <div className="subtle" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}><ClipboardList size={13} />{confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""} à la convocation</div>
       )}
 
       <div style={{ textAlign: "center", marginTop: 6 }}>
@@ -350,7 +351,7 @@ function EventDetail({ event: e, reload, manage, members, onEdit, onStatus, onDe
 
       {(e.meet_at || e.notes) && (
         <div style={{ marginBottom: 12 }}>
-          {e.meet_at && <div style={{ fontSize: "0.88rem" }}>🕐 Rendez-vous à <strong>{fmtTime(e.meet_at)}</strong></div>}
+          {e.meet_at && <div style={{ fontSize: "0.88rem", display: "flex", alignItems: "center", gap: 6 }}><Clock size={13} />Rendez-vous à <strong>{fmtTime(e.meet_at)}</strong></div>}
           {e.notes && <div className="subtle" style={{ whiteSpace: "pre-wrap", marginTop: 4 }}>{e.notes}</div>}
         </div>
       )}
@@ -440,7 +441,7 @@ function ConvocationManager({ event: e, reload, members }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <button className="btn btn-secondary btn-sm" onClick={openManager}>
-        ⚽ {open ? "Fermer les convocations" : "Gérer les convocations (match)"}
+        <Goal size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les convocations" : "Gérer les convocations (match)"}
       </button>
       {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
       {open && (
@@ -536,7 +537,7 @@ function PresenceValidator({ event: e, members }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <button className="btn btn-secondary btn-sm" onClick={toggleOpen}>
-        🧍 {open ? "Fermer les présences réelles" : "Présences réelles & votes"}
+        <UsersRound size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les présences réelles" : "Présences réelles & votes"}
       </button>
       {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
       {notice && <div className="info-box" style={{ marginTop: 8 }}>{notice}</div>}

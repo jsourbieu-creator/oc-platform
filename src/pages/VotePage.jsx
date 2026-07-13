@@ -61,7 +61,7 @@ export function VotePage() {
           <select value={selectedEventId ?? ""} onChange={(e) => setSelectedEventId(Number(e.target.value))}>
             {events?.map((e) => (
               <option key={e.id} value={e.id}>
-                {(EVENT_TYPES[e.type] ?? EVENT_TYPES.match).icon} {e.title} — {fmtDate(e.starts_at)} {fmtTime(e.starts_at)}
+                {(() => { const I = (EVENT_TYPES[e.type] ?? EVENT_TYPES.match).icon; return <I size={15} style={{ verticalAlign: "-2px", marginRight: 6 }} />; })()}{e.title} — {fmtDate(e.starts_at)} {fmtTime(e.starts_at)}
               </option>
             ))}
           </select>

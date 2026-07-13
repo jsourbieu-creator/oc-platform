@@ -1,12 +1,16 @@
+import { Newspaper, MessageCircle, ClipboardList, TriangleAlert, UserPlus, UserCheck, Star, Bell } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 const TYPE_ICONS = {
-  new_post: "📰",
-  new_comment: "💬",
-  convocation: "📋",
-  event_cancelled: "⚠️",
+  new_post: Newspaper,
+  new_comment: MessageCircle,
+  convocation: ClipboardList,
+  event_cancelled: TriangleAlert,
+  join_request: UserPlus,
+  join_approved: UserCheck,
+  rate_request: Star,
 };
 
 function fmtDateTime(s) {
@@ -62,7 +66,7 @@ export function NotificationsPage({ goto }) {
               onClick={() => n.view && goto?.(n.view)}
             >
               <div style={{ minWidth: 0 }}>
-                <span style={{ marginRight: 8 }}>{TYPE_ICONS[n.type] ?? "🔔"}</span>
+                <span style={{ marginRight: 8, display: "inline-flex", verticalAlign: "-3px", color: "var(--text-dim)" }}>{(() => { const I = TYPE_ICONS[n.type] ?? Bell; return <I size={16} />; })()}</span>
                 <span style={{ fontWeight: n.read_at ? 400 : 700 }}>{n.text}</span>
                 <div className="subtle">{fmtDateTime(n.created_at)}</div>
               </div>

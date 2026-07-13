@@ -7,7 +7,7 @@ export function DateBadge({ date, color = "var(--oc-blue-deep)" }) {
     <div style={{ display: "flex", gap: 10, flexShrink: 0, alignSelf: "stretch" }}>
       <div style={{ width: 4, borderRadius: 2, background: color }} />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center", minWidth: 38 }}>
-        <div style={{ fontFamily: "'Oswald',sans-serif", fontWeight: 700, fontSize: "1.4rem", lineHeight: 1.05, color: "var(--text)" }}>{day}</div>
+        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.4rem", lineHeight: 1.05, color: "var(--text)" }}>{day}</div>
         <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-dim)" }}>{month}</div>
       </div>
     </div>
@@ -81,7 +81,7 @@ export function Donut({ segments, size = 96, thickness = 12, centerLabel, center
       </svg>
       {(centerLabel || centerSub) && (
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          {centerLabel && <div style={{ fontFamily: "'Oswald',sans-serif", fontWeight: 700, fontSize: "1.15rem" }}>{centerLabel}</div>}
+          {centerLabel && <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.15rem" }}>{centerLabel}</div>}
           {centerSub && <div style={{ fontSize: "0.62rem", color: "var(--text-dim)" }}>{centerSub}</div>}
         </div>
       )}
@@ -103,7 +103,7 @@ export function StatTile({ icon, value, label, tint = "blue" }) {
   return (
     <div style={{ background: t.bg, borderRadius: "var(--radius-lg)", padding: "16px", flex: 1, minWidth: 130 }}>
       <div style={{ fontSize: "1.3rem", marginBottom: 6 }}>{icon}</div>
-      <div style={{ fontFamily: "'Oswald',sans-serif", fontWeight: 700, fontSize: "1.5rem", color: t.fg }}>{value}</div>
+      <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.5rem", color: t.fg }}>{value}</div>
       <div style={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>{label}</div>
     </div>
   );

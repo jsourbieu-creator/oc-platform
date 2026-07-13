@@ -1,16 +1,17 @@
+import { Trophy, Ruler, Flame, TrendingUp, Target, Frown, Laugh, Medal } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { fmtScore } from "@/lib/ballondor";
 
 const TROPHY_ICONS = {
-  ballon_dor: "🏆",
-  most_regular: "📏",
-  most_assiduous: "🔥",
-  best_progression: "📈",
-  closest_perception: "🎯",
-  most_severe_self: "😬",
-  most_overrated_self: "😅",
+  ballon_dor: Trophy,
+  most_regular: Ruler,
+  most_assiduous: Flame,
+  best_progression: TrendingUp,
+  closest_perception: Target,
+  most_severe_self: Frown,
+  most_overrated_self: Laugh,
 };
 
 export function TropheesPage() {
@@ -87,7 +88,7 @@ export function TropheesPage() {
           {trophies.trophies.map((t) => (
             <div key={t.code} className="list-row">
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: "1.4rem" }}>{TROPHY_ICONS[t.code] ?? "🏅"}</span>
+                <span style={{ display: "inline-flex", color: "var(--gold-500)" }}>{(() => { const I = TROPHY_ICONS[t.code] ?? Medal; return <I size={22} />; })()}</span>
                 <div>
                   <strong>{t.label}</strong>
                   <div className="subtle">{t.player}</div>

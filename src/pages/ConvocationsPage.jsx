@@ -53,7 +53,7 @@ export function ConvocationsPage({ goto }) {
             <div key={e.id} className="event-row" style={{ flexWrap: "wrap" }}>
               <DateBadge date={e.starts_at} color={(EVENT_TYPES[e.type] ?? EVENT_TYPES.match).color} />
               <div className="event-row-body">
-                <strong>{(EVENT_TYPES[e.type] ?? EVENT_TYPES.match).icon} {e.title}</strong>
+                <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>{(() => { const I = (EVENT_TYPES[e.type] ?? EVENT_TYPES.match).icon; return <I size={15} />; })()}{e.title}</strong>
                 <span className={`badge ${e.my_convocation === "confirmed" ? "badge-info" : "badge-neutral"}`} style={{ marginLeft: 8 }}>{CONV_LABELS[e.my_convocation]}</span>
                 <div className="subtle">
                   {fmtTime(e.starts_at)}

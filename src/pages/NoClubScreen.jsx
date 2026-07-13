@@ -1,3 +1,4 @@
+import { UsersRound, CircleCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -79,7 +80,7 @@ function JoinScreen({ signOut }) {
   return (
     <div className="auth-screen">
       <div className="auth-box" style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "2rem", marginBottom: 8 }}>👋</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 10, color: "var(--oc-blue-mid)" }}><UsersRound size={36} strokeWidth={1.6} /></div>
         <h2 style={{ fontSize: "1.4rem", marginBottom: 8 }}>Rejoindre {clubName || "le club"}</h2>
         {error && <div className="error-box" style={{ textAlign: "left" }}>{error}</div>}
 
@@ -88,7 +89,7 @@ function JoinScreen({ signOut }) {
         {status === "invited" && (
           <div>
             <div className="info-box" style={{ textAlign: "left" }}>
-              Ta demande d'adhésion est envoyée ✅ Un administrateur du club doit
+              Ta demande d'adhésion est envoyée. Un administrateur du club doit
               la valider — tu recevras l'accès dès que c'est fait.
             </div>
             <button className="btn btn-secondary btn-sm" style={{ marginBottom: 16 }} onClick={() => refresh()}>Vérifier à nouveau</button>

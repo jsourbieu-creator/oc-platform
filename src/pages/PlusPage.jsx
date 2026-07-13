@@ -21,7 +21,7 @@ export function PlusPage({ goto }) {
               }}
             >
               <span style={{ display: "flex", alignItems: "center", gap: 10, fontSize: "0.9rem", fontWeight: 600 }}>
-                <span>{item.icon}</span>{item.label}
+                <item.icon size={17} strokeWidth={2} />{item.label}
               </span>
               <span className="badge badge-neutral">{available ? "Disponible" : `Phase ${item.phase}`}</span>
             </div>
