@@ -1,17 +1,27 @@
 import { fmtDateBadge, initials, avatarColor } from "@/lib/events";
 
-/** Pastille date colorée (jour + mois) façon carte d'événement */
+/** Date compacte façon TeamPulse : barre colorée + jour/mois en texte simple */
 export function DateBadge({ date, color = "var(--oc-blue-deep)" }) {
   const { day, month } = fmtDateBadge(date);
   return (
-    <div style={{
-      width: 52, height: 52, borderRadius: "var(--radius-md)", background: color, color: "#fff",
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      flexShrink: 0, lineHeight: 1.1,
-    }}>
-      <div style={{ fontFamily: "'Oswald',sans-serif", fontWeight: 700, fontSize: "1.3rem" }}>{day}</div>
-      <div style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.03em" }}>{month}</div>
+    <div style={{ display: "flex", gap: 10, flexShrink: 0, alignSelf: "stretch" }}>
+      <div style={{ width: 4, borderRadius: 2, background: color }} />
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center", minWidth: 38 }}>
+        <div style={{ fontFamily: "'Oswald',sans-serif", fontWeight: 700, fontSize: "1.4rem", lineHeight: 1.05, color: "var(--text)" }}>{day}</div>
+        <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-dim)" }}>{month}</div>
+      </div>
     </div>
+  );
+}
+
+/** Pastille de comptage colorée (présents/absents/sans réponse) */
+export function CountChip({ value, tint }) {
+  const bg = { green: "var(--success-600)", orange: "var(--warning-600)", gray: "var(--neutral-400)" }[tint];
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 30, height: 26,
+      borderRadius: "var(--radius-sm)", background: bg, color: "#fff", fontWeight: 800, fontSize: "0.85rem", padding: "0 8px",
+    }}>{value}</span>
   );
 }
 

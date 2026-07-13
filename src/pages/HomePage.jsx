@@ -6,7 +6,7 @@ import {
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents,
 } from "@/lib/events";
 import { REAL_STATUS_LABELS, fmtScore } from "@/lib/ballondor";
-import { DateBadge, AvatarStack, StatTile } from "@/components/ui";
+import { DateBadge, AvatarStack, StatTile, CountChip } from "@/components/ui";
 import blason from "@/assets/blason.svg";
 
 const ROLE_LABELS = {
@@ -139,18 +139,18 @@ export function HomePage() {
         <StatTile icon="🛡️" value={teams?.length ?? "…"} label="Équipes" tint="green" />
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, gap: 8, flexWrap: "wrap" }}>
-        <h1 style={{ fontSize: "1.7rem" }}>Calendrier</h1>
-        <div style={{ display: "flex", gap: 8 }}>
-          {manage && (
-            <button className="btn btn-secondary btn-sm" onClick={() => setForm(form ? null : { ...EMPTY_FORM })}>
-              {form ? "Annuler" : "+ Nouvel événement"}
-            </button>
-          )}
-          <button className="btn btn-ghost btn-sm" onClick={() => setShowPast((v) => !v)}>
-            {showPast ? "Masquer le passé" : "Voir le passé"}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        <button className="btn btn-secondary btn-sm" style={{ borderRadius: "var(--radius-full)" }} onClick={() => setShowPast((v) => !v)}>
+          {showPast ? "↺ Masquer le passé" : "↺ Passé"}
+        </button>
+        {manage && (
+          <button
+            className="btn btn-sm" style={{ borderRadius: "var(--radius-full)", background: "var(--gold-500)", color: "#fff" }}
+            onClick={() => setForm(form ? null : { ...EMPTY_FORM })}
+          >
+            {form ? "✕ Annuler" : "+ Ajouter"}
           </button>
-        </div>
+        )}
       </div>
       {error && <div className="error-box">{error}</div>}
 
@@ -224,19 +224,29 @@ export function HomePage() {
 }
 
 function EventAccordionCard({ event: e, open, toggle, reload, manage, members, onEdit, onStatus, onDelete }) {
+  const { token, activeClubId } = useAuth();
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   const cancelled = e.status === "cancelled";
   const presentCount = e.avail_counts?.present ?? 0;
+  const absentCount = (e.avail_counts?.absent ?? 0) + (e.avail_counts?.injured ?? 0);
+  const totalMembers = members?.length ?? 0;
+  const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount);
   const confirmedCount = e.conv_counts?.confirmed ?? 0;
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
   const confirmedPeople = (e.confirmed_names ?? []).map((name) => ({ name }));
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const quickRespond = async (status) => {
+    try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
+    catch (_) { /* affiché en détail si besoin */ }
+  };
 
   return (
-    <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1 }}>
-      <div style={{ display: "flex", gap: 12, cursor: "pointer" }} onClick={toggle}>
-        <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
-        <div style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "space-between", gap: 10 }}>
-          <div style={{ minWidth: 0 }}>
+    <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1, position: "relative" }}>
+      <div style={{ display: "flex", gap: 12 }}>
+        <div style={{ cursor: "pointer", display: "flex", gap: 12, flex: 1, minWidth: 0 }} onClick={toggle}>
+          <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <strong>{t.icon} {e.title}</strong>
               {cancelled && <span className="badge badge-neutral">Annulé</span>}
@@ -246,21 +256,73 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
               {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}
               {e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
             </div>
-            <div className="subtle" style={{ marginTop: 4 }}>
-              {presentCount > 0 && <>✅ {presentCount} présent{presentCount > 1 ? "s" : ""} </>}
-              {e.type === "match" && convokedTotal > 0 && <>📋 {confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""}</>}
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-            <AvatarStack people={confirmedPeople} />
-            <span className="subtle">{open ? "▲" : "▼"}</span>
           </div>
         </div>
+        {manage && (
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <button className="btn btn-ghost btn-sm" style={{ width: "auto", padding: "4px 8px", fontSize: "1.1rem" }} onClick={() => setMenuOpen((v) => !v)}>⋯</button>
+            {menuOpen && (
+              <div style={{
+                position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "1px solid var(--border)",
+                borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-md)", zIndex: 10, minWidth: 140, overflow: "hidden",
+              }}>
+                <MenuItem onClick={() => { setMenuOpen(false); onEdit(e); }}>Modifier</MenuItem>
+                {cancelled
+                  ? <MenuItem onClick={() => { setMenuOpen(false); onStatus(e.id, "scheduled"); }}>Rétablir</MenuItem>
+                  : <MenuItem color="var(--warning-600)" onClick={() => { setMenuOpen(false); onStatus(e.id, "cancelled"); }}>Annuler</MenuItem>}
+                <MenuItem color="var(--danger-600)" onClick={() => { setMenuOpen(false); onDelete(e.id); }}>Supprimer</MenuItem>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 6 }}>
+          <CountChip value={presentCount} tint="green" />
+          <CountChip value={absentCount} tint="orange" />
+          <CountChip value={noResponseCount} tint="gray" />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <AvatarStack people={confirmedPeople} />
+          {!cancelled && !isPast(e.starts_at) && (
+            <>
+              <button
+                className="btn btn-sm" style={{ width: "auto", background: e.my_availability === "present" ? "var(--success-600)" : "transparent", color: e.my_availability === "present" ? "#fff" : "var(--success-600)", border: "1.5px solid var(--success-600)" }}
+                onClick={(ev) => { ev.stopPropagation(); quickRespond("present"); }}
+              >Présent</button>
+              <button
+                className="btn btn-sm" style={{ width: "auto", background: e.my_availability === "absent" ? "var(--warning-600)" : "transparent", color: e.my_availability === "absent" ? "#fff" : "var(--warning-600)", border: "1.5px solid var(--warning-600)" }}
+                onClick={(ev) => { ev.stopPropagation(); quickRespond("absent"); }}
+              >Absent</button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {e.type === "match" && convokedTotal > 0 && (
+        <div className="subtle" style={{ marginTop: 8 }}>📋 {confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""} à la convocation</div>
+      )}
+
+      <div style={{ textAlign: "center", marginTop: 6 }}>
+        <span className="subtle" style={{ cursor: "pointer" }} onClick={toggle}>{open ? "▲ Moins de détails" : "▼ Plus de détails (blessé, convocations, présences réelles)"}</span>
+      </div>
+
       {open && (
         <EventDetail event={e} reload={reload} manage={manage} members={members} onEdit={onEdit} onStatus={onStatus} onDelete={onDelete} />
       )}
     </div>
+  );
+}
+
+function MenuItem({ children, onClick, color }) {
+  return (
+    <div
+      onClick={onClick}
+      style={{ padding: "10px 14px", fontSize: "0.88rem", fontWeight: 600, cursor: "pointer", color: color ?? "var(--text)" }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-alt)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+    >{children}</div>
   );
 }
 
@@ -311,16 +373,6 @@ function EventDetail({ event: e, reload, manage, members, onEdit, onStatus, onDe
               );
             })}
           </div>
-        </div>
-      )}
-
-      {manage && (
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
-          <button className="btn btn-ghost btn-sm" onClick={() => onEdit(e)}>Modifier</button>
-          {cancelled
-            ? <button className="btn btn-ghost btn-sm" onClick={() => onStatus(e.id, "scheduled")}>Rétablir</button>
-            : <button className="btn btn-ghost btn-sm" style={{ color: "var(--warning-600)" }} onClick={() => onStatus(e.id, "cancelled")}>Annuler</button>}
-          <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger-600)" }} onClick={() => onDelete(e.id)}>Suppr.</button>
         </div>
       )}
 
