@@ -157,19 +157,9 @@ export function HomePage({ gotoConversation }) {
         <StatTile icon={<Shield size={20} />} value={teams?.length ?? "…"} label="Équipes" tint="green" />
       </div>
 
-      <div style={{ display: "inline-flex", background: "var(--surface-alt)", borderRadius: "var(--radius-full)", padding: 3, marginBottom: 14, gap: 2 }}>
+      <div className="segmented" style={{ marginBottom: 14 }}>
         {[["week", "Semaine"], ["month", "Mois"], ["year", "Année"]].map(([v, l]) => (
-          <button
-            key={v}
-            onClick={() => { setScope(v); setSelectedDay(null); }}
-            style={{
-              border: "none", cursor: "pointer", padding: "6px 16px", borderRadius: "var(--radius-full)",
-              fontSize: "0.8rem", fontWeight: 700, fontFamily: "inherit",
-              background: scope === v ? "var(--surface)" : "transparent",
-              color: scope === v ? "var(--text)" : "var(--text-dim)",
-              boxShadow: scope === v ? "var(--shadow-1)" : "none",
-            }}
-          >{l}</button>
+          <button key={v} className={scope === v ? "active" : ""} onClick={() => { setScope(v); setSelectedDay(null); }}>{l}</button>
         ))}
       </div>
 
