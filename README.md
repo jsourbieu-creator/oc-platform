@@ -1,4 +1,4 @@
-# Olympique Castelblangeoise — Plateforme (Phases 0-1-3-4)
+# Olympique Castelblangeoise — Plateforme (Phases 0-1-3-4-5)
 
 Plateforme complète de gestion du club, construite phase par phase à partir
 du cahier des charges. **Phase 0 : fondations** — architecture, auth, rôles
@@ -85,10 +85,20 @@ attendant les fichiers du module existant.
 ⚠️ La Phase 4 nécessite d'importer `api/migrations/0006_phase4_vestiaire.sql`
 via phpMyAdmin.
 
+## Ce qui est fait (Phase 5)
+
+- **Messagerie interne** : conversations 1-à-1 (dédupliquées : réécrire à la
+  même personne rouvre le fil existant) et conversations de groupe titrées ;
+  bulles style chat, compteurs de non-lus par conversation, marquage lu
+  automatique à l'ouverture. Rafraîchissement par polling (fil ouvert : 8 s ;
+  liste : 30 s) — pas de WebSocket possible sur hébergement mutualisé.
+
+⚠️ La Phase 5 nécessite d'importer `api/migrations/0007_phase5_messagerie.sql`
+via phpMyAdmin.
+
 ## Ce qui n'est PAS encore fait
 
-Messagerie (Phase 5 — ici en "polling" plutôt qu'en temps réel, faute de
-WebSocket sur hébergement mutualisé classique), documents/médiathèque
+Documents/médiathèque
 (Phase 6), statistiques avancées/autres trophées (Phase 7), PWA (Phase 8).
 Le module Ballon d'Or déjà construit (PHP/SQLite séparé) n'est pas encore
 fusionné dans cette base MySQL commune — c'est la Phase 2.

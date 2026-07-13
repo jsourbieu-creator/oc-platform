@@ -17,6 +17,7 @@ import { AvailabilityPage } from "@/pages/AvailabilityPage";
 import { ConvocationsPage } from "@/pages/ConvocationsPage";
 import { VestiairePage } from "@/pages/VestiairePage";
 import { NotificationsPage } from "@/pages/NotificationsPage";
+import { MessagesPage } from "@/pages/MessagesPage";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 function Root() {
@@ -55,6 +56,7 @@ function Root() {
       {dashView === "convocations" && <ConvocationsPage goto={setDashView} />}
       {dashView === "vestiaire" && <VestiairePage />}
       {dashView === "notifications" && <NotificationsPage goto={setDashView} />}
+      {dashView === "messages" && <MessagesPage />}
     </DashboardShell>
   );
 }
