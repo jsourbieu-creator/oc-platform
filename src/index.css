@@ -185,6 +185,14 @@ label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color
 .bottom-nav-item.active svg{ color:#fff; }
 .bottom-nav-item.disabled{ opacity:0.4; }
 .bottom-nav-item.disabled svg{ color:var(--text-dim); }
+.bottom-nav-icon{ line-height:1; position:relative; display:inline-flex; }
+.bottom-nav-item.raised{
+  width:46px; height:46px; flex:0 0 46px; margin-top:-22px;
+  background:var(--oc-gradient); box-shadow:0 6px 18px rgba(25,100,150,0.45), 0 0 0 4px var(--surface);
+}
+.bottom-nav-item.raised .bottom-nav-icon svg{ color:#fff; filter:drop-shadow(0 0 6px rgba(255,255,255,0.6)); }
+.bottom-nav-item.raised.active{ background:var(--oc-gradient); }
+.bottom-nav-item.raised.disabled{ opacity:0.6; }
 
 .topbar{
   display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 20px;
