@@ -161,3 +161,22 @@ label{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color
 .podium-name{ font-weight:700; font-size:0.82rem; text-align:center; }
 .podium-score{ font-family:'Oswald',sans-serif; font-weight:600; color:var(--oc-blue-deep); }
 [data-theme="dark"] .podium-score{ color:var(--oc-blue-bright); }
+
+/* Carte événement (calendrier/convocations/dispos/événements) */
+.event-row{ display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border); }
+.event-row:last-child{ border-bottom:none; }
+.event-row-body{ flex:1; min-width:0; }
+
+/* Réactions (Vestiaire) */
+.reaction-bar{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+.reaction-pill{
+  display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:var(--radius-full);
+  background:var(--surface-alt); border:1px solid var(--border); font-size:0.8rem; font-weight:700;
+  cursor:pointer; color:var(--text); transition:filter .1s ease;
+}
+.reaction-pill.mine{ background:rgba(84,196,240,0.18); border-color:var(--oc-blue-bright); color:var(--oc-blue-deep); }
+[data-theme="dark"] .reaction-pill.mine{ color:var(--oc-blue-bright); }
+.reaction-pill:hover{ filter:brightness(0.97); }
+
+/* Tuiles de stats (accueil) */
+.stat-tiles{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }

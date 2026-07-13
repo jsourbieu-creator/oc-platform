@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { fmtScore } from "@/lib/ballondor";
+import { Donut, StatTile } from "@/components/ui";
 
 export function StatistiquesPage() {
   const { token, activeClubId } = useAuth();
@@ -49,16 +50,52 @@ export function StatistiquesPage() {
       )}
 
       {stats && (
-        <div className="card">
-          <div className="list-row"><span>Séances jouées cette saison</span><strong>{stats.total_sessions}</strong></div>
-          <div className="list-row"><span>Moyenne générale du groupe</span><strong>{stats.group_average !== null ? `${fmtScore(stats.group_average)}/10` : "—"}</strong></div>
-          <div className="list-row"><span>Joueurs classés</span><strong>{stats.nb_ranked_players}</strong></div>
-          <div className="list-row"><span>Taux de réponse aux convocations</span><strong>{stats.convocation_response_rate !== null ? `${stats.convocation_response_rate}%` : "—"}</strong></div>
-          <div className="list-row"><span>Taux de participation aux votes</span><strong>{stats.vote_participation_rate !== null ? `${stats.vote_participation_rate}%` : "—"}</strong></div>
-          {stats.most_regular && <div className="list-row"><span>Joueur le plus régulier</span><strong>{stats.most_regular.name}</strong></div>}
-          {stats.most_assiduous && <div className="list-row"><span>Joueur le plus assidu</span><strong>{stats.most_assiduous.name} ({stats.most_assiduous.value}%)</strong></div>}
-          {stats.best_progression && <div className="list-row"><span>Meilleure progression</span><strong>{stats.best_progression.name} ({stats.best_progression.value > 0 ? "+" : ""}{fmtScore(stats.best_progression.value)})</strong></div>}
-        </div>
+        <>
+          <div className="stat-tiles">
+            <StatTile icon="🏃" value={stats.total_sessions} label="Séances jouées" tint="blue" />
+            <StatTile icon="⭐" value={stats.group_average !== null ? fmtScore(stats.group_average) : "—"} label="Moyenne du groupe" tint="gold" />
+            <StatTile icon="👥" value={stats.nb_ranked_players} label="Joueurs classés" tint="green" />
+          </div>
+
+          <div className="card" style={{ marginBottom: 16, display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
+            {stats.convocation_response_rate !== null && (
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <Donut
+                  segments={[
+                    { value: stats.convocation_response_rate, color: "var(--oc-blue-bright)" },
+                    { value: 100 - stats.convocation_response_rate, color: "var(--surface-alt)" },
+                  ]}
+                  centerLabel={`${stats.convocation_response_rate}%`} centerSub="réponses"
+                />
+                <div>
+                  <strong>Taux de réponse</strong>
+                  <div className="subtle">aux convocations</div>
+                </div>
+              </div>
+            )}
+            {stats.vote_participation_rate !== null && (
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <Donut
+                  segments={[
+                    { value: stats.vote_participation_rate, color: "var(--gold-500)" },
+                    { value: 100 - stats.vote_participation_rate, color: "var(--surface-alt)" },
+                  ]}
+                  centerLabel={`${stats.vote_participation_rate}%`} centerSub="votes"
+                />
+                <div>
+                  <strong>Participation</strong>
+                  <div className="subtle">aux votes Ballon d'Or</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="card">
+            {stats.most_regular && <div className="list-row"><span>🎯 Joueur le plus régulier</span><strong>{stats.most_regular.name}</strong></div>}
+            {stats.most_assiduous && <div className="list-row"><span>🔥 Joueur le plus assidu</span><strong>{stats.most_assiduous.name} ({stats.most_assiduous.value}%)</strong></div>}
+            {stats.best_progression && <div className="list-row"><span>📈 Meilleure progression</span><strong>{stats.best_progression.name} ({stats.best_progression.value > 0 ? "+" : ""}{fmtScore(stats.best_progression.value)})</strong></div>}
+          </div>
+        </>
       )}
     </div>
   );

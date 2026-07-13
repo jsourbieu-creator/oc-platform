@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { EVENT_TYPES, AVAIL_LABELS, CONV_LABELS, fmtDate, fmtTime, fmtMonthKey, isPast, canManageEvents } from "@/lib/events";
+import { DateBadge, AvatarStack } from "@/components/ui";
 
 export function CalendarPage() {
   const { token, activeClubId } = useAuth();
@@ -60,27 +61,34 @@ function EventCard({ event: e, open, toggle, reload }) {
   const availableCount = e.avail_counts?.available ?? 0;
   const confirmedCount = e.conv_counts?.confirmed ?? 0;
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
+  const confirmedPeople = (e.confirmed_names ?? []).map((name) => ({ name }));
 
   return (
     <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, cursor: "pointer" }} onClick={toggle}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <strong>{t.icon} {e.title}</strong>
-            {cancelled && <span className="badge badge-neutral">Annulé</span>}
-            {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
+      <div style={{ display: "flex", gap: 12, cursor: "pointer" }} onClick={toggle}>
+        <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
+        <div style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <strong>{t.icon} {e.title}</strong>
+              {cancelled && <span className="badge badge-neutral">Annulé</span>}
+              {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
+            </div>
+            <div className="subtle">
+              {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}
+              {e.location ? ` — ${e.location}` : ""}
+              {e.opponent ? ` — vs ${e.opponent}` : ""}
+            </div>
+            <div className="subtle" style={{ marginTop: 4 }}>
+              {availableCount > 0 && <>✅ {availableCount} dispo{availableCount > 1 ? "s" : ""} </>}
+              {convokedTotal > 0 && <>📋 {confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""}</>}
+            </div>
           </div>
-          <div className="subtle" style={{ textTransform: "capitalize" }}>
-            {fmtDate(e.starts_at)} à {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}
-            {e.location ? ` — ${e.location}` : ""}
-            {e.opponent ? ` — vs ${e.opponent}` : ""}
-          </div>
-          <div className="subtle">
-            {availableCount > 0 && <>✅ {availableCount} dispo{availableCount > 1 ? "s" : ""} </>}
-            {convokedTotal > 0 && <>📋 {confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""}</>}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            <AvatarStack people={confirmedPeople} />
+            <span className="subtle">{open ? "▲" : "▼"}</span>
           </div>
         </div>
-        <span className="subtle" style={{ flexShrink: 0 }}>{open ? "▲" : "▼"}</span>
       </div>
       {open && <EventDetail event={e} reload={reload} />}
     </div>

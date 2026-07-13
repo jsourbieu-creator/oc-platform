@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { AVAIL_LABELS, fmtDate, fmtTime, isPast, EVENT_TYPES } from "@/lib/events";
+import { DateBadge } from "@/components/ui";
 
 export function AvailabilityPage() {
   const { token, activeClubId } = useAuth();
@@ -58,20 +59,21 @@ export function AvailabilityPage() {
 function Row({ event: e, setAvail }) {
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   return (
-    <div className="list-row" style={{ flexWrap: "wrap" }}>
-      <div style={{ minWidth: 0 }}>
+    <div className="event-row" style={{ flexWrap: "wrap" }}>
+      <DateBadge date={e.starts_at} color={t.color} />
+      <div className="event-row-body">
         <strong>{t.icon} {e.title}</strong>
         {e.team_name && <span className="badge badge-info" style={{ marginLeft: 8 }}>{e.team_name}</span>}
-        <div className="subtle" style={{ textTransform: "capitalize" }}>{fmtDate(e.starts_at)} à {fmtTime(e.starts_at)}</div>
-      </div>
-      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-        {Object.entries(AVAIL_LABELS).map(([v, l]) => (
-          <button
-            key={v}
-            className={`btn btn-sm ${e.my_availability === v ? "btn-primary" : "btn-secondary"}`}
-            onClick={() => setAvail(e.id, v)}
-          >{l}</button>
-        ))}
+        <div className="subtle">{fmtTime(e.starts_at)}</div>
+        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+          {Object.entries(AVAIL_LABELS).map(([v, l]) => (
+            <button
+              key={v}
+              className={`btn btn-sm ${e.my_availability === v ? "btn-primary" : "btn-secondary"}`}
+              onClick={() => setAvail(e.id, v)}
+            >{l}</button>
+          ))}
+        </div>
       </div>
     </div>
   );

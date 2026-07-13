@@ -1,7 +1,7 @@
 export const EVENT_TYPES = {
-  match: { label: "Match", icon: "⚽" },
-  training: { label: "Entraînement", icon: "🏃" },
-  club_event: { label: "Événement club", icon: "🎉" },
+  match: { label: "Match", icon: "⚽", color: "var(--gold-500)" },
+  training: { label: "Entraînement", icon: "🏃", color: "var(--oc-blue-deep)" },
+  club_event: { label: "Événement club", icon: "🎉", color: "var(--oc-blue-bright)" },
 };
 
 export const AVAIL_LABELS = {
@@ -58,3 +58,26 @@ export function fromLocalInput(s) {
 }
 
 export const canManageEvents = (role) => ["super_admin", "admin", "coach"].includes(role);
+
+const MONTHS_SHORT = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+
+/** "2026-07-13 19:30:00" → { day: "13", month: "juil." } pour le badge de date */
+export function fmtDateBadge(s) {
+  const d = parseDT(s);
+  if (!d) return { day: "?", month: "" };
+  return { day: String(d.getDate()), month: MONTHS_SHORT[d.getMonth()] };
+}
+
+/** Initiales pour un avatar (ex. "Julien Sourbieu" → "JS") */
+export function initials(firstName, lastName) {
+  return `${(firstName?.[0] ?? "").toUpperCase()}${(lastName?.[0] ?? "").toUpperCase()}` || "?";
+}
+
+const AVATAR_PALETTE = ["#196496", "#3D9ECD", "#54C4F0", "#D6A928", "#B87333", "#8FB0C9", "#15803D", "#B5482E"];
+
+/** Couleur déterministe (même nom → même couleur) pour un avatar */
+export function avatarColor(name) {
+  let hash = 0;
+  for (let i = 0; i < (name ?? "").length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}

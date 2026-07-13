@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { EVENT_TYPES, fmtDate, fmtTime, isPast, toLocalInput, fromLocalInput, canManageEvents } from "@/lib/events";
+import { DateBadge } from "@/components/ui";
 
 const EMPTY = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
@@ -169,19 +170,20 @@ function EventList({ title, events, onEdit, onStatus, onDelete }) {
         const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
         const cancelled = e.status === "cancelled";
         return (
-          <div key={e.id} className="list-row" style={{ opacity: cancelled ? 0.55 : 1 }}>
-            <div style={{ minWidth: 0 }}>
+          <div key={e.id} className="event-row" style={{ opacity: cancelled ? 0.55 : 1, flexWrap: "wrap" }}>
+            <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
+            <div className="event-row-body">
               <strong>{t.icon} {e.title}</strong>
               {cancelled && <span className="badge badge-neutral" style={{ marginLeft: 8 }}>Annulé</span>}
               {e.team_name && <span className="badge badge-info" style={{ marginLeft: 8 }}>{e.team_name}</span>}
-              <div className="subtle" style={{ textTransform: "capitalize" }}>{fmtDate(e.starts_at)} à {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}{e.location ? ` — ${e.location}` : ""}</div>
-            </div>
-            <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-              <button className="btn btn-ghost btn-sm" onClick={() => onEdit(e)}>Modifier</button>
-              {cancelled
-                ? <button className="btn btn-ghost btn-sm" onClick={() => onStatus(e.id, "scheduled")}>Rétablir</button>
-                : <button className="btn btn-ghost btn-sm" style={{ color: "var(--warning-600)" }} onClick={() => onStatus(e.id, "cancelled")}>Annuler</button>}
-              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger-600)" }} onClick={() => onDelete(e.id)}>Suppr.</button>
+              <div className="subtle">{fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}{e.location ? ` — ${e.location}` : ""}</div>
+              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => onEdit(e)}>Modifier</button>
+                {cancelled
+                  ? <button className="btn btn-ghost btn-sm" onClick={() => onStatus(e.id, "scheduled")}>Rétablir</button>
+                  : <button className="btn btn-ghost btn-sm" style={{ color: "var(--warning-600)" }} onClick={() => onStatus(e.id, "cancelled")}>Annuler</button>}
+                <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger-600)" }} onClick={() => onDelete(e.id)}>Suppr.</button>
+              </div>
             </div>
           </div>
         );

@@ -214,9 +214,12 @@ function Thread({ conversation, myMemberId, back }) {
             <div key={m.id} style={{ alignSelf: mine ? "flex-end" : "flex-start", maxWidth: "80%" }}>
               {!mine && <div className="subtle" style={{ fontSize: "0.72rem", marginBottom: 2 }}>{m.first_name ? `${m.first_name} ${m.last_name}` : "Ancien membre"}</div>}
               <div style={{
-                background: mine ? "var(--oc-blue-600)" : "var(--surface-alt)",
+                background: mine ? "var(--oc-gradient)" : "var(--surface-alt)",
+                backgroundSize: mine ? "200% 100%" : undefined,
                 color: mine ? "#fff" : "var(--text)",
-                padding: "9px 13px", borderRadius: "var(--radius-lg)",
+                padding: "9px 13px",
+                borderRadius: mine ? "var(--radius-lg) var(--radius-lg) 4px var(--radius-lg)" : "var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px",
+                boxShadow: "var(--shadow-sm)",
                 fontSize: "0.92rem", whiteSpace: "pre-wrap", wordBreak: "break-word",
               }}>{m.content}</div>
               <div className="subtle" style={{ fontSize: "0.68rem", textAlign: mine ? "right" : "left", marginTop: 2 }}>{fmtDateTime(m.created_at)}</div>

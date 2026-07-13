@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import blason from "@/assets/blason.svg";
+import { StatTile } from "@/components/ui";
+import { EVENT_TYPES, fmtDate, fmtTime, isPast } from "@/lib/events";
+import { fmtScore } from "@/lib/ballondor";
 
 const ROLE_LABELS = {
   super_admin: "Super admin",
@@ -15,12 +18,34 @@ export function DashboardHome() {
   const { user, token, activeClubId, memberships, activeRole } = useAuth();
   const [seasons, setSeasons] = useState(null);
   const [teams, setTeams] = useState(null);
+  const [nextEvent, setNextEvent] = useState(undefined); // undefined = loading, null = aucun
+  const [myScore, setMyScore] = useState(undefined);
 
   useEffect(() => {
     if (!activeClubId) return;
     api("seasons.php", "list", { club_id: activeClubId }, token).then((d) => setSeasons(d.seasons)).catch(() => setSeasons([]));
     api("teams.php", "list", { club_id: activeClubId }, token).then((d) => setTeams(d.teams)).catch(() => setTeams([]));
+    api("events.php", "list", { club_id: activeClubId }, token).then((d) => {
+      const upcoming = d.events.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled");
+      setNextEvent(upcoming[0] ?? null);
+    }).catch(() => setNextEvent(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClubId, token]);
+
+  useEffect(() => {
+    if (!activeClubId || !seasons) return;
+    const active = seasons.find((s) => s.status === "active");
+    if (!active) { setMyScore(null); return; }
+    Promise.all([
+      api("members.php", "list", { club_id: activeClubId }, token),
+      api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: active.id }, token),
+    ]).then(([m, r]) => {
+      const me = m.members.find((x) => x.user_id === user?.id);
+      const mine = [...r.official, ...r.provisional].find((p) => p.club_member_id === me?.id);
+      setMyScore(mine ?? null);
+    }).catch(() => setMyScore(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeClubId, seasons, token, user?.id]);
 
   const club = memberships.find((m) => m.club_id === activeClubId);
   const activeSeason = seasons?.find((s) => s.status === "active");
@@ -36,6 +61,22 @@ export function DashboardHome() {
             {ROLE_LABELS[activeRole] ?? activeRole}{activeSeason ? ` — Saison ${activeSeason.name}` : ""}
           </div>
         </div>
+      </div>
+
+      <div className="stat-tiles">
+        <StatTile
+          icon={nextEvent ? (EVENT_TYPES[nextEvent.type] ?? EVENT_TYPES.match).icon : "📅"}
+          value={nextEvent === undefined ? "…" : nextEvent ? fmtDate(nextEvent.starts_at) : "Aucune"}
+          label={nextEvent ? `${nextEvent.title} à ${fmtTime(nextEvent.starts_at)}` : "Prochaine séance"}
+          tint="blue"
+        />
+        <StatTile
+          icon="⭐"
+          value={myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}
+          label={myScore ? "Mon score Ballon d'Or" : "Pas encore classé"}
+          tint="gold"
+        />
+        <StatTile icon="🛡️" value={teams?.length ?? "…"} label="Équipes" tint="green" />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>

@@ -40,7 +40,29 @@ switch ($action) {
             LIMIT 100
         ');
         $stmt->execute([$clubId]);
-        json_out(['posts' => $stmt->fetchAll(), 'my_member_id' => $myMemberId]);
+        $posts = $stmt->fetchAll();
+
+        if ($posts) {
+            $ids = array_column($posts, 'id');
+            $ph = implode(',', array_fill(0, count($ids), '?'));
+
+            $stmt = db()->prepare("SELECT post_id, emoji, COUNT(*) c FROM post_reactions WHERE post_id IN ($ph) GROUP BY post_id, emoji");
+            $stmt->execute($ids);
+            $counts = [];
+            foreach ($stmt->fetchAll() as $r) $counts[$r['post_id']][$r['emoji']] = (int) $r['c'];
+
+            $stmt = db()->prepare("SELECT post_id, emoji FROM post_reactions WHERE post_id IN ($ph) AND club_member_id = ?");
+            $stmt->execute([...$ids, $myMemberId]);
+            $mine = array_column($stmt->fetchAll(), 'emoji', 'post_id');
+
+            foreach ($posts as &$p) {
+                $p['reactions'] = $counts[$p['id']] ?? new stdClass();
+                $p['my_reaction'] = $mine[$p['id']] ?? null;
+            }
+            unset($p);
+        }
+
+        json_out(['posts' => $posts, 'my_member_id' => $myMemberId]);
         break;
 
     case 'create':
@@ -119,6 +141,37 @@ switch ($action) {
         $stmt = db()->prepare('UPDATE posts SET pinned = ? WHERE id = ?');
         $stmt->execute([$pinned, $id]);
         log_action((int) $me['id'], 'pin_post', "#$id → " . ($pinned ? 'épinglé' : 'désépinglé'));
+        json_out(['ok' => true]);
+        break;
+
+    // Bascule la réaction du membre courant : même emoji → retire, sinon remplace.
+    case 'reaction_toggle':
+        $me = current_user();
+        $clubId = (int) ($in['club_id'] ?? 0);
+        require_club_member((int) $me['id'], $clubId);
+        $myMemberId = my_member_id_posts((int) $me['id'], $clubId);
+
+        $postId = (int) ($in['post_id'] ?? 0);
+        post_in_club_or_404($postId, $clubId);
+
+        $emoji = trim($in['emoji'] ?? '');
+        $allowed = ['👍', '❤️', '😂', '🔥', '👏'];
+        if (!in_array($emoji, $allowed, true)) json_error('Réaction invalide.');
+
+        $stmt = db()->prepare('SELECT emoji FROM post_reactions WHERE post_id = ? AND club_member_id = ?');
+        $stmt->execute([$postId, $myMemberId]);
+        $current = $stmt->fetchColumn();
+
+        if ($current === $emoji) {
+            $stmt = db()->prepare('DELETE FROM post_reactions WHERE post_id = ? AND club_member_id = ?');
+            $stmt->execute([$postId, $myMemberId]);
+        } else {
+            $stmt = db()->prepare('
+                INSERT INTO post_reactions (post_id, club_member_id, emoji) VALUES (?,?,?)
+                ON DUPLICATE KEY UPDATE emoji = VALUES(emoji)
+            ');
+            $stmt->execute([$postId, $myMemberId, $emoji]);
+        }
         json_out(['ok' => true]);
         break;
 

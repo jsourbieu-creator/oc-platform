@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { CONV_LABELS, fmtDate, fmtTime, isPast, EVENT_TYPES, canManageEvents } from "@/lib/events";
+import { DateBadge } from "@/components/ui";
 
 export function ConvocationsPage({ goto }) {
   const { token, activeClubId, activeRole } = useAuth();
@@ -49,19 +50,20 @@ export function ConvocationsPage({ goto }) {
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="label-title">À venir ({upcoming.length})</div>
           {upcoming.map((e) => (
-            <div key={e.id} className="list-row" style={{ flexWrap: "wrap" }}>
-              <div style={{ minWidth: 0 }}>
+            <div key={e.id} className="event-row" style={{ flexWrap: "wrap" }}>
+              <DateBadge date={e.starts_at} color={(EVENT_TYPES[e.type] ?? EVENT_TYPES.match).color} />
+              <div className="event-row-body">
                 <strong>{(EVENT_TYPES[e.type] ?? EVENT_TYPES.match).icon} {e.title}</strong>
                 <span className={`badge ${e.my_convocation === "confirmed" ? "badge-info" : "badge-neutral"}`} style={{ marginLeft: 8 }}>{CONV_LABELS[e.my_convocation]}</span>
-                <div className="subtle" style={{ textTransform: "capitalize" }}>
-                  {fmtDate(e.starts_at)} à {fmtTime(e.starts_at)}
+                <div className="subtle">
+                  {fmtTime(e.starts_at)}
                   {e.meet_at ? ` — RDV ${fmtTime(e.meet_at)}` : ""}
                   {e.location ? ` — ${e.location}` : ""}
                 </div>
-              </div>
-              <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                <button className={`btn btn-sm ${e.my_convocation === "confirmed" ? "btn-primary" : "btn-secondary"}`} onClick={() => respond(e.id, "confirmed")}>Je confirme</button>
-                <button className={`btn btn-sm ${e.my_convocation === "declined" ? "btn-danger" : "btn-secondary"}`} onClick={() => respond(e.id, "declined")}>Je décline</button>
+                <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                  <button className={`btn btn-sm ${e.my_convocation === "confirmed" ? "btn-primary" : "btn-secondary"}`} onClick={() => respond(e.id, "confirmed")}>Je confirme</button>
+                  <button className={`btn btn-sm ${e.my_convocation === "declined" ? "btn-danger" : "btn-secondary"}`} onClick={() => respond(e.id, "declined")}>Je décline</button>
+                </div>
               </div>
             </div>
           ))}

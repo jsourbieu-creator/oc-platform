@@ -61,11 +61,25 @@ switch ($action) {
             $stmt->execute([...$ids, $myMemberId]);
             $myConv = array_column($stmt->fetchAll(), 'status', 'event_id');
 
+            $stmt = db()->prepare("
+                SELECT c.event_id, u.first_name, u.last_name
+                FROM convocations c
+                JOIN club_members cm ON cm.id = c.club_member_id
+                JOIN users u ON u.id = cm.user_id
+                WHERE c.event_id IN ($ph) AND c.status = 'confirmed'
+            ");
+            $stmt->execute($ids);
+            $confirmedNames = [];
+            foreach ($stmt->fetchAll() as $r) {
+                $confirmedNames[$r['event_id']][] = trim("{$r['first_name']} {$r['last_name']}");
+            }
+
             foreach ($events as &$e) {
                 $e['avail_counts'] = $availCounts[$e['id']] ?? new stdClass();
                 $e['conv_counts'] = $convCounts[$e['id']] ?? new stdClass();
                 $e['my_availability'] = $myAvail[$e['id']] ?? null;
                 $e['my_convocation'] = $myConv[$e['id']] ?? null;
+                $e['confirmed_names'] = $confirmedNames[$e['id']] ?? [];
             }
             unset($e);
         }

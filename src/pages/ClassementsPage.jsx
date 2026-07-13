@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { fmtScore } from "@/lib/ballondor";
+import { StatTile } from "@/components/ui";
 
 const PODIUM_COLORS = ["var(--gold-500)", "var(--silver-400)", "var(--bronze-500)"];
 
@@ -144,6 +145,14 @@ export function ClassementsPage() {
               ]
             )}
           >Exporter en CSV</button>
+        </div>
+      )}
+
+      {rankings && (rankings.official.length > 0 || rankings.provisional.length > 0) && (
+        <div className="stat-tiles">
+          <StatTile icon="🏆" value={rankings.official[0]?.name ?? "—"} label="En tête du classement" tint="gold" />
+          <StatTile icon="⭐" value={rankings.group_average !== null ? fmtScore(rankings.group_average) : "—"} label="Moyenne du groupe" tint="blue" />
+          <StatTile icon="👥" value={rankings.official.length + rankings.provisional.length} label="Joueurs classés" tint="green" />
         </div>
       )}
 

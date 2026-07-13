@@ -66,6 +66,14 @@ export function VestiairePage() {
     } catch (e2) { setError(e2.message); }
   };
 
+  const react = async (postId, emoji) => {
+    setError("");
+    try {
+      await api("posts.php", "reaction_toggle", { club_id: activeClubId, post_id: postId, emoji }, token);
+      load();
+    } catch (e2) { setError(e2.message); }
+  };
+
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -107,6 +115,7 @@ export function VestiairePage() {
           onEdit={() => setForm({ post_id: p.id, title: p.title, content: p.content })}
           onDelete={() => remove(p.id)}
           onPin={() => pin(p.id, Number(p.pinned) ? 0 : 1)}
+          onReact={(emoji) => react(p.id, emoji)}
           canPublish={publish}
         />
       ))}
@@ -114,10 +123,12 @@ export function VestiairePage() {
   );
 }
 
-function PostCard({ post: p, myMemberId, activeRole, onEdit, onDelete, onPin, canPublish: publish }) {
+function PostCard({ post: p, myMemberId, activeRole, onEdit, onDelete, onPin, onReact, canPublish: publish }) {
   const isMine = p.author_member_id === myMemberId;
   const moderate = canModerate(activeRole);
   const [showComments, setShowComments] = useState(false);
+  const REACTIONS = ["👍", "❤️", "😂", "🔥", "👏"];
+  const counts = p.reactions ?? {};
 
   return (
     <div className="card" style={{ marginBottom: 12, borderColor: Number(p.pinned) ? "var(--oc-blue-600)" : undefined }}>
@@ -143,7 +154,18 @@ function PostCard({ post: p, myMemberId, activeRole, onEdit, onDelete, onPin, ca
 
       <p style={{ whiteSpace: "pre-wrap", fontSize: "0.93rem", margin: "10px 0" }}>{p.content}</p>
 
-      <button className="btn btn-ghost btn-sm" onClick={() => setShowComments((v) => !v)}>
+      <div className="reaction-bar">
+        {REACTIONS.map((emoji) => counts[emoji] || p.my_reaction === emoji ? (
+          <span key={emoji} className={`reaction-pill ${p.my_reaction === emoji ? "mine" : ""}`} onClick={() => onReact(emoji)}>
+            {emoji} {counts[emoji] ?? 0}
+          </span>
+        ) : null)}
+        {REACTIONS.filter((e) => !counts[e] && p.my_reaction !== e).map((emoji) => (
+          <span key={emoji} className="reaction-pill" style={{ opacity: 0.45 }} onClick={() => onReact(emoji)}>{emoji}</span>
+        ))}
+      </div>
+
+      <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => setShowComments((v) => !v)}>
         💬 {p.comment_count} commentaire{p.comment_count > 1 ? "s" : ""}
       </button>
 
