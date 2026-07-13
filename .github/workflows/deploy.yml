@@ -35,6 +35,7 @@ jobs:
           const DB_NAME = '${{ secrets.DB_NAME }}';
           const DB_USER = '${{ secrets.DB_USER }}';
           const DB_PASS = '${{ secrets.DB_PASS }}';
+          const UPLOADS_DIR = '${{ secrets.UPLOADS_DIR }}';
           PHPEOF
 
       - name: Deploy via FTP

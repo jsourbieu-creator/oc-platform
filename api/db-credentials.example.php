@@ -15,3 +15,9 @@ const DB_HOST = 'localhost';           // presque toujours 'localhost' sur o2swi
 const DB_NAME = 'CHANGE_ME_dbname';    // nom complet préfixé, ex. tonlogin_platform
 const DB_USER = 'CHANGE_ME_user';      // ex. tonlogin_platform_user
 const DB_PASS = 'CHANGE_ME_password';
+
+// Dossier de stockage des fichiers uploadés (documents/médiathèque), en
+// dehors du dossier déployé par GitHub Actions (qui est entièrement vidé
+// à chaque push — voir 0010_phase6_files_and_trophies_setting.sql).
+// En local : n'importe quel chemin absolu inscriptible sur ta machine.
+const UPLOADS_DIR = '/tmp/oc-platform-uploads';

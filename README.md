@@ -1,4 +1,4 @@
-# Olympique Castelblangeoise — Plateforme (Phases 0-1-3-4-5)
+# Olympique Castelblangeoise — Plateforme (Phases 0 à 7)
 
 Plateforme complète de gestion du club, construite phase par phase à partir
 du cahier des charges. **Phase 0 : fondations** — architecture, auth, rôles
@@ -111,12 +111,56 @@ via phpMyAdmin.
   notifié). Le code d'invitation reste disponible en option (utile pour
   pré-attribuer un rôle).
 
+## Ce qui est fait (Phase 2 — Ballon d'Or)
+
+- **Présences réelles** : validation post-séance par le coach/admin
+  (présent/absent/blessé), distincte de la dispo annoncée et de la
+  convocation. Les blessures sont exclues du dénominateur du taux de
+  présence (subies, elles ne pénalisent pas l'assiduité).
+- **Votes** : session ouverte/clôturée par séance ; parcours de vote
+  atomique pour chaque présent (note 1-10 par demi-point de tous les
+  autres présents + auto-évaluation), validé en un seul envoi définitif —
+  aucune modification possible ensuite. Pas de module anti-fraude (choix
+  acté avec le club).
+- **Classement** : score Ballon d'Or = moyenne ajustée (bayésienne, seuil
+  de fiabilité configurable) × coefficient d'assiduité. Classement
+  officiel (seuils d'éligibilité configurables) + provisoire. Réglages de
+  calcul éditables par saison par un admin.
+- **Mon ressenti** : comparaison auto-évaluation / moyenne reçue par
+  séance, avec graphique et niveau de proximité de perception.
+- **Trophées de fin de saison** : Ballon d'Or, joueur le plus régulier,
+  le plus assidu, meilleure progression, ressenti le plus proche du
+  groupe — plus deux trophées humoristiques optionnels (désactivés par
+  défaut, à activer par un admin dans Trophées).
+- **Export CSV** du classement et des présences d'une séance.
+
+⚠️ Nécessite `api/migrations/0009_phase2_ballondor.sql`.
+
+## Ce qui est fait (Phase 6 — Documents & médiathèque)
+
+- Upload/téléchargement/suppression de fichiers (PDF, Word, Excel,
+  images, courtes vidéos ; 20 Mo max), séparés en deux bibliothèques
+  (Documents / Médiathèque) avec permissions dédiées
+  (`manage_documents` / `manage_media`).
+- **Stockage hors zone déployée** : les fichiers vivent dans un dossier
+  séparé du dossier `/club/` (voir « Mise en route » ci-dessous) — sans
+  quoi ils seraient effacés à chaque déploiement (`dangerous-clean-slate`).
+
+⚠️ Nécessite `api/migrations/0010_phase6_files_and_trophies_setting.sql`
+**et** la création du dossier de stockage + le secret `UPLOADS_DIR`
+(voir Mise en route, étape 3bis).
+
+## Ce qui est fait (Phase 7 — Statistiques collectives)
+
+- Page Statistiques : moyenne générale du groupe, taux de réponse aux
+  convocations, taux de participation aux votes, joueur le plus
+  régulier/assidu, meilleure progression — à l'échelle de la saison.
+
 ## Ce qui n'est PAS encore fait
 
-Documents/médiathèque
-(Phase 6), statistiques avancées/autres trophées (Phase 7), PWA (Phase 8).
-Le module Ballon d'Or déjà construit (PHP/SQLite séparé) n'est pas encore
-fusionné dans cette base MySQL commune — c'est la Phase 2.
+Export Excel/PDF natif (le CSV couvre l'essentiel, s'ouvre dans Excel),
+fusion du module Ballon d'Or cérémonie existant (PHP/SQLite séparé, projet
+« awards-castelblangeoise ») dans cette base commune, PWA (Phase 8).
 
 ## Mise en route
 
@@ -146,6 +190,25 @@ donc **le repo peut être public sans risque**.
 `api/db-credentials.php` (déjà dans `.gitignore`, ne sera jamais commité) et
 remplis-le avec tes propres identifiants de test.
 
+### 3bis. Dossier de stockage des fichiers (Documents/Médiathèque — Phase 6)
+
+Le déploiement vide entièrement `O2SWITCH_PATH` (`/club/`) à chaque push. Les
+fichiers uploadés doivent donc vivre **ailleurs** sur l'hébergement, sinon
+ils seraient perdus au prochain déploiement.
+
+1. Dans le gestionnaire de fichiers cPanel (ou en FTP), crée un dossier
+   **en dehors** de `/club/` — par exemple un dossier `oc_uploads` à la
+   racine de ton compte (à côté de `public_html`, pas dedans). Donne-lui
+   les permissions d'écriture standard (755 ou 775).
+2. Note son **chemin absolu sur le serveur** (visible dans cPanel, ex.
+   `/home/tonlogin/oc_uploads`).
+3. Ajoute un secret `UPLOADS_DIR` (`Settings → Secrets and variables →
+   Actions`) avec ce chemin absolu.
+
+Si ce secret n'est pas configuré, l'upload de fichiers échouera proprement
+avec un message d'erreur clair — le reste de la plateforme continue de
+fonctionner normalement.
+
 ### 4. Développement local
 
 ```bash
@@ -167,8 +230,8 @@ sinon teste directement en ligne après déploiement).
    avant de pousser — le workflow fait un `dangerous-clean-slate` (il
    supprime tout ce qu'il y a dans ce dossier à chaque déploiement), donc ce
    secret ne doit surtout pas pointer vers la racine du site.
-3. Ajoute 4 nouveaux secrets (`Settings → Secrets and variables → Actions`) :
-   `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`.
+3. Ajoute 5 nouveaux secrets (`Settings → Secrets and variables → Actions`) :
+   `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`, `UPLOADS_DIR`.
 4. Push sur `main` → build + déploiement FTP automatique.
 5. Ouvre l'app déployée → `/signup` → crée ton compte → l'écran "Créer le
    club" apparaît automatiquement (une seule fois) → tu deviens
@@ -196,6 +259,5 @@ En cas de souci avec cet écran, un SQL de secours est fourni dans
 
 ## Prochaine étape
 
-Dis-moi quand tu veux enchaîner sur la **Phase 1** (écrans saisons/équipes/
-membres, invitations) ou si tu préfères d'abord fusionner le **Ballon d'Or**
-(Phase 2) dans cette base commune.
+Toutes les phases planifiées (0 à 7) sont livrées. Reste en option : export
+Excel/PDF natif, fusion du Ballon d'Or cérémonie existant, PWA (Phase 8).

@@ -18,6 +18,10 @@ import { ConvocationsPage } from "@/pages/ConvocationsPage";
 import { PresencesPage } from "@/pages/PresencesPage";
 import { VotePage } from "@/pages/VotePage";
 import { ClassementsPage } from "@/pages/ClassementsPage";
+import { TropheesPage } from "@/pages/TropheesPage";
+import { StatistiquesPage } from "@/pages/StatistiquesPage";
+import { DocumentsPage } from "@/pages/DocumentsPage";
+import { MediasPage } from "@/pages/MediasPage";
 import { VestiairePage } from "@/pages/VestiairePage";
 import { NotificationsPage } from "@/pages/NotificationsPage";
 import { MessagesPage } from "@/pages/MessagesPage";
@@ -75,6 +79,10 @@ function Root() {
       {dashView === "presences" && <PresencesPage />}
       {dashView === "votes" && <VotePage />}
       {dashView === "classements" && <ClassementsPage />}
+      {dashView === "trophees" && <TropheesPage />}
+      {dashView === "statistiques" && <StatistiquesPage />}
+      {dashView === "documents" && <DocumentsPage />}
+      {dashView === "medias" && <MediasPage />}
       {dashView === "vestiaire" && <VestiairePage />}
       {dashView === "notifications" && <NotificationsPage goto={setDashView} />}
       {dashView === "messages" && <MessagesPage />}

@@ -5,6 +5,41 @@ import { fmtScore } from "@/lib/ballondor";
 
 const PODIUM_COLORS = ["var(--gold-500)", "var(--silver-400)", "var(--bronze-500)"];
 
+function PerceptionChart({ sessions }) {
+  if (!sessions || sessions.length < 2) return null;
+  const w = 600, h = 180, pad = 24;
+  const allVals = sessions.flatMap((s) => [s.self_score, s.received_avg]);
+  const min = Math.min(1, ...allVals), max = Math.max(10, ...allVals);
+  const x = (i) => pad + (i * (w - 2 * pad)) / (sessions.length - 1);
+  const y = (v) => h - pad - ((v - min) / (max - min)) * (h - 2 * pad);
+  const path = (key) => sessions.map((s, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(s[key])}`).join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: "auto", marginTop: 10 }}>
+      <path d={path("self_score")} fill="none" stroke="var(--oc-sky-400)" strokeWidth="2.5" />
+      <path d={path("received_avg")} fill="none" stroke="var(--oc-blue-600)" strokeWidth="2.5" />
+      {sessions.map((s, i) => (
+        <g key={s.event_id}>
+          <circle cx={x(i)} cy={y(s.self_score)} r="3" fill="var(--oc-sky-400)" />
+          <circle cx={x(i)} cy={y(s.received_avg)} r="3" fill="var(--oc-blue-600)" />
+        </g>
+      ))}
+      <text x={pad} y={14} fontSize="11" fill="var(--oc-sky-400)" fontWeight="700">● Auto-évaluation</text>
+      <text x={pad + 140} y={14} fontSize="11" fill="var(--oc-blue-600)" fontWeight="700">● Moyenne reçue</text>
+    </svg>
+  );
+}
+
+function downloadCsv(filename, rows) {
+  const csv = rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function ClassementsPage() {
   const { token, activeClubId, activeRole } = useAuth();
   const [seasons, setSeasons] = useState(null);
@@ -96,6 +131,22 @@ export function ClassementsPage() {
         </div>
       )}
 
+      {rankings && (rankings.official.length > 0 || rankings.provisional.length > 0) && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+          <button
+            className="btn btn-sm btn-secondary" style={{ width: "auto" }}
+            onClick={() => downloadCsv(
+              `classement-${seasons.find((s) => s.id === seasonId)?.name ?? seasonId}.csv`,
+              [
+                ["Rang", "Joueur", "Score Ballon d'Or", "Moyenne ajustée", "Moyenne brute", "Séances", "Taux de présence %", "Régularité", "Statut"],
+                ...rankings.official.map((p) => [p.rank, p.name, p.ballon_dor_score, p.adjusted_average, p.raw_average, p.sessions_played, p.attendance_rate, p.regularity, "Officiel"]),
+                ...rankings.provisional.map((p) => ["-", p.name, p.ballon_dor_score, p.adjusted_average, p.raw_average, p.sessions_played, p.attendance_rate, p.regularity, "Provisoire"]),
+              ]
+            )}
+          >Exporter en CSV</button>
+        </div>
+      )}
+
       {rankings && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="label-title">Classement officiel</div>
@@ -140,6 +191,7 @@ export function ClassementsPage() {
           <div className="list-row"><span>Moyenne attribuée par mes coéquipiers</span><strong>{fmtScore(perception.summary.avg_received)}/10</strong></div>
           <div className="list-row"><span>Écart moyen</span><strong>{perception.summary.avg_gap > 0 ? "+" : ""}{fmtScore(perception.summary.avg_gap)}</strong></div>
           <p className="subtle" style={{ marginTop: 10, marginBottom: 0 }}>{perception.summary.perception_level}</p>
+          <PerceptionChart sessions={perception.sessions} />
         </div>
       )}
     </div>

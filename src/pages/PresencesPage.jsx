@@ -4,6 +4,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { EVENT_TYPES, fmtDate, fmtTime } from "@/lib/events";
 import { REAL_STATUS_LABELS, canManageVotes } from "@/lib/ballondor";
 
+function downloadCsv(filename, rows) {
+  const csv = rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function PresencesPage() {
   const { token, activeClubId, activeRole } = useAuth();
   const [events, setEvents] = useState(null);
@@ -154,6 +164,13 @@ export function PresencesPage() {
           <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={save} disabled={saving}>
             {saving ? "Enregistrement…" : "Enregistrer les présences"}
           </button>
+          <button
+            className="btn btn-secondary" style={{ marginTop: 8 }}
+            onClick={() => downloadCsv(
+              `presences-${events.find((e) => e.id === selectedEventId)?.title ?? selectedEventId}.csv`,
+              [["Joueur", "Statut réel"], ...candidates.map((c) => [c.name, REAL_STATUS_LABELS[statuses[c.club_member_id]] ?? "Non renseigné"])]
+            )}
+          >Exporter en CSV</button>
         </div>
       )}
 

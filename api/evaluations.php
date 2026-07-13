@@ -63,6 +63,127 @@ function member_name_map(array $memberIds): array {
     return $map;
 }
 
+/**
+ * Calcule, pour chaque membre ayant joué au moins une séance de la saison,
+ * l'ensemble des métriques Ballon d'Or (réutilisé par season_rankings,
+ * season_trophies et season_team_stats pour ne pas dupliquer la formule).
+ * Retourne aussi l'historique chronologique des moyennes de séance (pour
+ * la progression) et les écarts de perception (auto-éval vs reçu).
+ */
+function compute_season_player_stats(int $clubId, array $season): array {
+    $stmt = db()->prepare("
+        SELECT id, starts_at FROM events
+        WHERE club_id = ? AND status != 'cancelled' AND starts_at >= ? AND starts_at <= ?
+        ORDER BY starts_at ASC
+    ");
+    $stmt->execute([$clubId, $season['start_date'] . ' 00:00:00', $season['end_date'] . ' 23:59:59']);
+    $events = $stmt->fetchAll();
+    $eventIds = array_map(fn($e) => (int) $e['id'], $events);
+    $eventOrder = array_flip($eventIds); // event_id => position chronologique
+
+    if (!$eventIds) return ['players' => [], 'group_average' => null];
+    $ph = implode(',', array_fill(0, count($eventIds), '?'));
+
+    $stmt = db()->prepare("SELECT event_id, club_member_id, real_status FROM event_attendances WHERE event_id IN ($ph)");
+    $stmt->execute($eventIds);
+    $attendances = $stmt->fetchAll();
+
+    $stmt = db()->prepare("SELECT event_id, ratee_member_id, AVG(score) avg_score FROM evaluations WHERE event_id IN ($ph) GROUP BY event_id, ratee_member_id");
+    $stmt->execute($eventIds);
+    $sessionAverages = [];
+    foreach ($stmt->fetchAll() as $r) {
+        $sessionAverages[(int) $r['ratee_member_id']][(int) $r['event_id']] = (float) $r['avg_score'];
+    }
+
+    $stmt = db()->prepare("SELECT event_id, club_member_id, score AS self_score FROM self_evaluations WHERE event_id IN ($ph)");
+    $stmt->execute($eventIds);
+    $selfScores = [];
+    foreach ($stmt->fetchAll() as $r) $selfScores[(int) $r['club_member_id']][(int) $r['event_id']] = (float) $r['self_score'];
+
+    $eligibleCount = []; $presentCount = [];
+    foreach ($attendances as $a) {
+        $mid = (int) $a['club_member_id'];
+        if ($a['real_status'] === 'injured') continue;
+        $eligibleCount[$mid] = ($eligibleCount[$mid] ?? 0) + 1;
+        if ($a['real_status'] === 'present') $presentCount[$mid] = ($presentCount[$mid] ?? 0) + 1;
+    }
+
+    $rawAverages = [];
+    foreach ($sessionAverages as $mid => $byEvent) $rawAverages[$mid] = array_sum($byEvent) / count($byEvent);
+    $groupAverage = $rawAverages ? array_sum($rawAverages) / count($rawAverages) : null;
+
+    $k = (int) $season['reliability_threshold'];
+    $coefMin = (float) $season['attendance_coef_min'];
+    $coefRange = (float) $season['attendance_coef_range'];
+    $minSessions = (int) $season['eligibility_min_sessions'];
+    $minPct = (float) $season['eligibility_min_attendance_pct'];
+
+    $memberIds = array_unique(array_merge(array_keys($rawAverages), array_keys($eligibleCount)));
+    $names = member_name_map($memberIds);
+
+    $players = [];
+    foreach ($memberIds as $mid) {
+        $sessionsPlayed = $presentCount[$mid] ?? 0;
+        if ($sessionsPlayed === 0 || !isset($rawAverages[$mid])) continue;
+
+        $raw = $rawAverages[$mid];
+        $adjusted = $groupAverage !== null
+            ? (($sessionsPlayed / ($sessionsPlayed + $k)) * $raw) + (($k / ($sessionsPlayed + $k)) * $groupAverage)
+            : $raw;
+
+        $eligible = $eligibleCount[$mid] ?? 0;
+        $attendanceRate = $eligible > 0 ? $sessionsPlayed / $eligible : 0;
+        $coef = $coefMin + ($coefRange * $attendanceRate);
+        $score = $adjusted * $coef;
+
+        // Historique chronologique des moyennes de séance (pour régularité + progression)
+        $history = $sessionAverages[$mid] ?? [];
+        uksort($history, fn($a, $b) => ($eventOrder[$a] ?? 0) <=> ($eventOrder[$b] ?? 0));
+        $vals = array_values($history);
+        $mean = array_sum($vals) / max(count($vals), 1);
+        $variance = count($vals) > 1 ? array_sum(array_map(fn($v) => ($v - $mean) ** 2, $vals)) / count($vals) : 0;
+        $stddev = sqrt($variance);
+        $regularity = $stddev < 0.5 ? 'très régulier' : ($stddev < 1 ? 'régulier' : ($stddev < 1.5 ? 'irrégulier' : 'très irrégulier'));
+
+        // Progression : moyenne 2e moitié de la saison - moyenne 1ère moitié
+        $progression = null;
+        if (count($vals) >= 4) {
+            $mid_i = (int) floor(count($vals) / 2);
+            $firstHalf = array_slice($vals, 0, $mid_i);
+            $secondHalf = array_slice($vals, $mid_i);
+            $progression = (array_sum($secondHalf) / count($secondHalf)) - (array_sum($firstHalf) / count($firstHalf));
+        }
+
+        // Écart de perception (auto-éval vs reçu), séance par séance
+        $gaps = [];
+        foreach ($selfScores[$mid] ?? [] as $eid => $self) {
+            if (isset($sessionAverages[$mid][$eid])) $gaps[] = $self - $sessionAverages[$mid][$eid];
+        }
+        $avgGap = $gaps ? array_sum($gaps) / count($gaps) : null;
+        $avgAbsGap = $gaps ? array_sum(array_map('abs', $gaps)) / count($gaps) : null;
+
+        $players[$mid] = [
+            'club_member_id' => $mid,
+            'name' => $names[$mid] ?? '?',
+            'sessions_played' => $sessionsPlayed,
+            'attendance_rate' => round($attendanceRate * 100, 1),
+            'raw_average' => round($raw, 2),
+            'adjusted_average' => round($adjusted, 2),
+            'attendance_coef' => round($coef, 3),
+            'ballon_dor_score' => round($score, 2),
+            'regularity' => $regularity,
+            'regularity_stddev' => round($stddev, 3),
+            'progression' => $progression !== null ? round($progression, 2) : null,
+            'avg_gap' => $avgGap !== null ? round($avgGap, 2) : null,
+            'avg_abs_gap' => $avgAbsGap !== null ? round($avgAbsGap, 2) : null,
+            'sessions_until_eligible' => max(0, $minSessions - $sessionsPlayed),
+            'is_eligible' => $sessionsPlayed >= $minSessions && ($attendanceRate * 100) >= $minPct,
+        ];
+    }
+
+    return ['players' => $players, 'group_average' => $groupAverage, 'event_ids' => $eventIds];
+}
+
 switch ($action) {
 
     // ═══════════════════════════════════════════════════════════════
@@ -419,6 +540,7 @@ switch ($action) {
             'attendance_coef_range' => (float) $s['attendance_coef_range'],
             'eligibility_min_sessions' => (int) $s['eligibility_min_sessions'],
             'eligibility_min_attendance_pct' => (float) $s['eligibility_min_attendance_pct'],
+            'humorous_trophies_enabled' => (bool) $s['humorous_trophies_enabled'],
         ]]);
         break;
 
@@ -435,16 +557,17 @@ switch ($action) {
         $coefRange = (float) ($in['attendance_coef_range'] ?? 0.30);
         $minSessions = (int) ($in['eligibility_min_sessions'] ?? 10);
         $minPct = (float) ($in['eligibility_min_attendance_pct'] ?? 40);
+        $humorous = (int) (bool) ($in['humorous_trophies_enabled'] ?? false);
         if ($threshold < 1 || $coefMin < 0 || $coefMin > 1 || $coefRange < 0 || $coefMin + $coefRange > 1) {
             json_error('Paramètres invalides.');
         }
 
         $stmt = db()->prepare('
             UPDATE seasons SET reliability_threshold = ?, attendance_coef_min = ?, attendance_coef_range = ?,
-                eligibility_min_sessions = ?, eligibility_min_attendance_pct = ?
+                eligibility_min_sessions = ?, eligibility_min_attendance_pct = ?, humorous_trophies_enabled = ?
             WHERE id = ? AND club_id = ?
         ');
-        $stmt->execute([$threshold, $coefMin, $coefRange, $minSessions, $minPct, $seasonId, $clubId]);
+        $stmt->execute([$threshold, $coefMin, $coefRange, $minSessions, $minPct, $humorous, $seasonId, $clubId]);
         log_action((int) $me['id'], 'season_settings_update', "saison #$seasonId");
         json_out(['ok' => true]);
         break;
@@ -622,6 +745,113 @@ switch ($action) {
             'close_count' => count(array_filter($gaps, fn($g) => abs($g) <= 0.25)),
             'perception_level' => $perceptionLevel,
         ]]);
+        break;
+
+    // ═══════════════════════════════════════════════════════════════
+    // TROPHÉES DE FIN DE SAISON
+    // ═══════════════════════════════════════════════════════════════
+
+    case 'season_trophies':
+        $me = current_user();
+        $clubId = (int) ($in['club_id'] ?? ($_GET['club_id'] ?? 0));
+        require_club_member((int) $me['id'], $clubId);
+
+        $seasonId = (int) ($in['season_id'] ?? ($_GET['season_id'] ?? 0));
+        $season = season_in_club_or_404($seasonId, $clubId);
+        $stats = compute_season_player_stats($clubId, $season);
+        $players = array_values($stats['players']);
+
+        if (!$players) json_out(['trophies' => [], 'humorous_enabled' => (bool) $season['humorous_trophies_enabled']]);
+
+        $pick = function (array $items, string $field, bool $max = true) {
+            $items = array_filter($items, fn($p) => $p[$field] !== null);
+            if (!$items) return null;
+            usort($items, fn($a, $b) => $max ? $b[$field] <=> $a[$field] : $a[$field] <=> $b[$field]);
+            return $items[0];
+        };
+
+        $trophies = [];
+
+        $official = array_values(array_filter($players, fn($p) => $p['is_eligible']));
+        $ballonDor = $pick($official ?: $players, 'ballon_dor_score', true);
+        if ($ballonDor) $trophies[] = ['code' => 'ballon_dor', 'label' => "Ballon d'Or", 'player' => $ballonDor['name'], 'value' => $ballonDor['ballon_dor_score']];
+
+        $regularEligible = array_filter($players, fn($p) => $p['sessions_played'] >= 5);
+        $mostRegular = $pick($regularEligible, 'regularity_stddev', false);
+        if ($mostRegular) $trophies[] = ['code' => 'most_regular', 'label' => 'Joueur le plus régulier', 'player' => $mostRegular['name'], 'value' => $mostRegular['regularity']];
+
+        $mostAssiduous = $pick($players, 'attendance_rate', true);
+        if ($mostAssiduous) $trophies[] = ['code' => 'most_assiduous', 'label' => 'Joueur le plus assidu', 'player' => $mostAssiduous['name'], 'value' => $mostAssiduous['attendance_rate'] . '%'];
+
+        $bestProgression = $pick($players, 'progression', true);
+        if ($bestProgression) $trophies[] = ['code' => 'best_progression', 'label' => 'Meilleure progression', 'player' => $bestProgression['name'], 'value' => ($bestProgression['progression'] > 0 ? '+' : '') . $bestProgression['progression']];
+
+        $closestPerception = $pick($players, 'avg_abs_gap', false);
+        if ($closestPerception) $trophies[] = ['code' => 'closest_perception', 'label' => 'Ressenti le plus proche du groupe', 'player' => $closestPerception['name'], 'value' => $closestPerception['avg_abs_gap']];
+
+        if ($season['humorous_trophies_enabled']) {
+            $mostSevere = $pick($players, 'avg_gap', false);
+            if ($mostSevere) $trophies[] = ['code' => 'most_severe_self', 'label' => 'Le plus sévère avec lui-même', 'player' => $mostSevere['name'], 'value' => $mostSevere['avg_gap']];
+
+            $mostOverrated = $pick($players, 'avg_gap', true);
+            if ($mostOverrated) $trophies[] = ['code' => 'most_overrated_self', 'label' => 'Celui qui se voit un peu trop beau', 'player' => $mostOverrated['name'], 'value' => '+' . $mostOverrated['avg_gap']];
+        }
+
+        json_out(['trophies' => $trophies, 'humorous_enabled' => (bool) $season['humorous_trophies_enabled']]);
+        break;
+
+    // ═══════════════════════════════════════════════════════════════
+    // STATISTIQUES COLLECTIVES (Phase 7)
+    // ═══════════════════════════════════════════════════════════════
+
+    case 'season_team_stats':
+        $me = current_user();
+        $clubId = (int) ($in['club_id'] ?? ($_GET['club_id'] ?? 0));
+        require_club_member((int) $me['id'], $clubId);
+
+        $seasonId = (int) ($in['season_id'] ?? ($_GET['season_id'] ?? 0));
+        $season = season_in_club_or_404($seasonId, $clubId);
+        $stats = compute_season_player_stats($clubId, $season);
+        $players = array_values($stats['players']);
+        $eventIds = $stats['event_ids'];
+
+        $totalSessions = count($eventIds);
+        $convocationRespRate = null;
+        $voteParticipationRate = null;
+
+        if ($eventIds) {
+            $ph = implode(',', array_fill(0, count($eventIds), '?'));
+            $stmt = db()->prepare("SELECT COUNT(*) total, SUM(status != 'pending') responded FROM convocations WHERE event_id IN ($ph)");
+            $stmt->execute($eventIds);
+            $r = $stmt->fetch();
+            if ($r && (int) $r['total'] > 0) $convocationRespRate = round(100 * (int) $r['responded'] / (int) $r['total'], 1);
+
+            $stmt = db()->prepare("SELECT COUNT(*) present_count FROM event_attendances WHERE event_id IN ($ph) AND real_status = 'present'");
+            $stmt->execute($eventIds);
+            $presentTotal = (int) $stmt->fetchColumn();
+            $stmt = db()->prepare("SELECT COUNT(*) FROM vote_submissions WHERE event_id IN ($ph)");
+            $stmt->execute($eventIds);
+            $submittedTotal = (int) $stmt->fetchColumn();
+            if ($presentTotal > 0) $voteParticipationRate = round(100 * $submittedTotal / $presentTotal, 1);
+        }
+
+        $pick = function (array $items, string $field, bool $max = true) {
+            $items = array_filter($items, fn($p) => $p[$field] !== null);
+            if (!$items) return null;
+            usort($items, fn($a, $b) => $max ? $b[$field] <=> $a[$field] : $a[$field] <=> $b[$field]);
+            return ['name' => $items[0]['name'], 'value' => $items[0][$field]];
+        };
+
+        json_out([
+            'total_sessions' => $totalSessions,
+            'group_average' => $stats['group_average'] !== null ? round($stats['group_average'], 2) : null,
+            'convocation_response_rate' => $convocationRespRate,
+            'vote_participation_rate' => $voteParticipationRate,
+            'most_regular' => $pick(array_filter($players, fn($p) => $p['sessions_played'] >= 5), 'regularity_stddev', false),
+            'most_assiduous' => $pick($players, 'attendance_rate', true),
+            'best_progression' => $pick($players, 'progression', true),
+            'nb_ranked_players' => count($players),
+        ]);
         break;
 
     default:

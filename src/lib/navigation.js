@@ -29,9 +29,9 @@ export const MOBILE_NAV_ITEMS = [
   { label: "Plus", view: "plus", icon: "⋯", phase: 0 },
 ];
 
-export const CURRENT_PHASE = 5;
+export const CURRENT_PHASE = 7;
 
-// Phase 2 (Ballon d'Or : présences réelles, votes, classement) livrée.
+// Toutes les phases planifiées (0 à 7) sont livrées.
 export const SKIPPED_PHASES = [];
 
 export const isAvailable = (item) =>
