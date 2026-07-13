@@ -31,9 +31,8 @@ export const MOBILE_NAV_ITEMS = [
 
 export const CURRENT_PHASE = 5;
 
-// Phases sautées pour l'instant (ex. Phase 2 = fusion Ballon d'Or, en attente
-// des fichiers du module existant) : leurs sections restent verrouillées.
-export const SKIPPED_PHASES = [2];
+// Phase 2 (Ballon d'Or : présences réelles, votes, classement) livrée.
+export const SKIPPED_PHASES = [];
 
 export const isAvailable = (item) =>
   item.phase <= CURRENT_PHASE && !SKIPPED_PHASES.includes(item.phase);
