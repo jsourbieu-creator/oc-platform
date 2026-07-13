@@ -86,7 +86,15 @@ export function ClassementsPage() {
         )}
       </div>
 
-      {rankings === null && <div className="spinner" />}
+      {rankings === null && seasons !== null && seasons.length > 0 && <div className="spinner" />}
+
+      {seasons !== null && seasons.length === 0 && (
+        <div className="card">
+          <p className="subtle" style={{ margin: 0 }}>
+            Aucune saison créée pour le moment. Rends-toi dans <strong>Équipes</strong> pour créer une saison (et l'activer) avant de pouvoir consulter le classement.
+          </p>
+        </div>
+      )}
 
       {rankings && (
         <div className="card" style={{ marginBottom: 16 }}>
