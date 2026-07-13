@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
+import blason from "@/assets/blason.svg";
 
 export function LoginPage({ goto }) {
   const { login } = useAuth();
@@ -34,10 +35,13 @@ export function LoginPage({ goto }) {
   return (
     <div className="auth-screen">
       <div className="auth-box">
-        <div className="auth-header">
-          <div className="brand-badge" style={{ width: 52, height: 52, fontSize: "1.2rem", margin: "0 auto 12px" }}>OC</div>
-          <h1 style={{ fontSize: "1.6rem" }}>Olympique Castelblangeoise</h1>
-          <div style={{ color: "var(--text-dim)", fontSize: "0.9rem", marginTop: 4 }}>Connexion à ta plateforme de club</div>
+        <div className="hero-banner" style={{ marginBottom: 20 }}>
+          <div className="hero-content">
+            <img src={blason} alt="Blason OC" className="hero-blason" />
+            <div className="hero-eyebrow">Olympique Castelblangeoise · Futsal</div>
+            <div className="hero-title" style={{ fontSize: "1.6rem" }}>Ta plateforme de club</div>
+            <div className="hero-sub">Connecte-toi pour continuer</div>
+          </div>
         </div>
         <div className="card">
           {forgot ? (

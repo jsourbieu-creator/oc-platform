@@ -1,10 +1,11 @@
 import { NAV_ITEMS, isAvailable } from "@/lib/navigation";
+import blason from "@/assets/blason.svg";
 
 export function Sidebar({ view, goto, badges = {} }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <div className="brand-badge">OC</div>
+        <img src={blason} alt="Blason OC" className="brand-badge" />
         <div>
           <div style={{ fontWeight: 700, fontSize: "0.85rem", lineHeight: 1.2 }}>Olympique</div>
           <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", lineHeight: 1.2 }}>Castelblangeoise</div>

@@ -147,6 +147,27 @@ export function ClassementsPage() {
         </div>
       )}
 
+      {rankings && rankings.official.length > 0 && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="label-title">Podium</div>
+          <div className="podium-row">
+            {[rankings.official[1], rankings.official[0], rankings.official[2]].map((p, i) => {
+              if (!p) return <div key={i} style={{ width: 90 }} />;
+              const heights = [70, 100, 55]; // 2e, 1er, 3e
+              return (
+                <div key={p.club_member_id} className="podium-step">
+                  <div className="podium-name">{p.name}</div>
+                  <div className="podium-score">{fmtScore(p.ballon_dor_score)}</div>
+                  <div className="podium-bar" style={{ height: heights[i], background: p.rank === 1 ? "var(--oc-gradient)" : `linear-gradient(180deg, ${PODIUM_COLORS[p.rank - 1]}, ${PODIUM_COLORS[p.rank - 1]})` }}>
+                    <span className="rank">{p.rank}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {rankings && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="label-title">Classement officiel</div>

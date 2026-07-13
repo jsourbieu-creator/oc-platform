@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import blason from "@/assets/blason.svg";
 
 const ROLE_LABELS = {
   super_admin: "Super admin",
@@ -22,13 +23,20 @@ export function DashboardHome() {
   }, [activeClubId, token]);
 
   const club = memberships.find((m) => m.club_id === activeClubId);
+  const activeSeason = seasons?.find((s) => s.status === "active");
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 4 }}>Salut {user?.first_name} 👋</h1>
-      <p style={{ color: "var(--text-dim)", marginBottom: 20 }}>
-        {club?.club_name} — connecté en tant que {ROLE_LABELS[activeRole] ?? activeRole}.
-      </p>
+      <div className="hero-banner" style={{ marginBottom: 20 }}>
+        <div className="hero-content">
+          <img src={blason} alt="Blason OC" className="hero-blason" style={{ width: 64 }} />
+          <div className="hero-eyebrow">{club?.club_name}</div>
+          <div className="hero-title" style={{ fontSize: "1.9rem" }}>Salut {user?.first_name}</div>
+          <div className="hero-sub">
+            {ROLE_LABELS[activeRole] ?? activeRole}{activeSeason ? ` — Saison ${activeSeason.name}` : ""}
+          </div>
+        </div>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
         <div className="card">
@@ -46,15 +54,6 @@ export function DashboardHome() {
           {teams?.map((t) => (
             <div key={t.id} style={{ padding: "4px 0", fontSize: "0.9rem" }}>{t.name}</div>
           ))}
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="subtle">
-          Phases en place : fondations (auth, rôles), équipes/membres/invitations,
-          et calendrier/convocations. Les sections du menu grisées arriveront
-          phase après phase (la fusion du Ballon d'Or attend les fichiers du
-          module existant).
         </div>
       </div>
     </div>

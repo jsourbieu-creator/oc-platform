@@ -1,7 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700;1,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap');
 
 :root{
-  --oc-blue-600:#187CB5; --oc-navy-900:#123A5A; --oc-sky-400:#54B8DF; --oc-sky-50:#F0F9FD; --oc-white:#FFFFFF;
+  /* Bleus extraits du dégradé réel du blason (Fichier_1.svg) */
+  --oc-blue-deep:#196496; --oc-blue-mid:#3D9ECD; --oc-blue-bright:#54C4F0; --oc-blue-highlight:#51BFEC;
+  --oc-gradient: linear-gradient(90deg, var(--oc-blue-deep), var(--oc-blue-bright), var(--oc-blue-deep));
+
+  --oc-blue-600:var(--oc-blue-deep); --oc-navy-900:#0B1A2E; --oc-sky-400:var(--oc-blue-bright); --oc-sky-50:#EAF6FC; --oc-white:#FFFFFF;
   --neutral-950:#111827; --neutral-900:#1F2937; --neutral-700:#374151; --neutral-600:#4B5563;
   --neutral-500:#6B7280; --neutral-400:#9CA3AF; --neutral-300:#D1D5DB; --neutral-200:#E5E7EB;
   --neutral-100:#F3F4F6; --neutral-50:#F8FAFC;
@@ -17,8 +21,8 @@
   --text:var(--neutral-950); --text-dim:var(--neutral-500); --border:#E5E7EB; --border-focus:var(--oc-blue-600);
 }
 [data-theme="dark"]{
-  --bg:var(--oc-navy-900); --surface:#0F2E48; --surface-alt:#153A5C;
-  --text:var(--neutral-50); --text-dim:#9CC3DD; --border:rgba(255,255,255,0.10);
+  --bg:var(--oc-navy-900); --surface:#132A44; --surface-alt:#1A3A5C;
+  --text:#EAF4FB; --text-dim:#8FB0C9; --border:rgba(255,255,255,0.10);
 }
 
 *{ box-sizing:border-box; }
@@ -27,7 +31,30 @@ body{
   background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;
 }
-h1,h2,h3,.display{ font-family:'Barlow Condensed',sans-serif; font-weight:800; letter-spacing:0.01em; margin:0; }
+h1,h2,h3,.display{ font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:0.01em; margin:0; }
+
+/* ── Hero : réservé aux moments forts (connexion, accueil, trophées) ──── */
+.hero-banner{
+  position:relative; overflow:hidden; border-radius:var(--radius-xl);
+  background:radial-gradient(ellipse at center, #0F3A5C 0%, #071628 70%);
+  padding:44px 20px; text-align:center; color:#fff;
+}
+.hero-banner::before{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, rgba(255,255,255,.5) 50%, transparent),
+    radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,.4) 50%, transparent),
+    radial-gradient(1.5px 1.5px at 40% 75%, rgba(255,255,255,.3) 50%, transparent),
+    radial-gradient(1px 1px at 85% 60%, rgba(255,255,255,.4) 50%, transparent),
+    radial-gradient(1px 1px at 10% 85%, rgba(255,255,255,.3) 50%, transparent),
+    radial-gradient(1px 1px at 55% 45%, rgba(255,255,255,.25) 50%, transparent);
+  opacity:.85;
+}
+.hero-content{ position:relative; z-index:1; }
+.hero-blason{ width:88px; filter:drop-shadow(0 0 26px rgba(84,196,240,0.55)); margin-bottom:14px; }
+.hero-eyebrow{ color:var(--oc-blue-bright); font-size:0.72rem; letter-spacing:0.12em; font-weight:700; text-transform:uppercase; }
+.hero-title{ font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; color:#fff; font-size:2.1rem; line-height:1.08; margin:8px 0 4px; }
+.hero-sub{ color:#9FC3DA; font-size:0.95rem; }
 
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
@@ -38,7 +65,7 @@ h1,h2,h3,.display{ font-family:'Barlow Condensed',sans-serif; font-weight:800; l
 .btn:active{ transform:scale(0.98); }
 .btn:disabled{ opacity:0.4; cursor:not-allowed; }
 .btn-primary{ background:var(--oc-blue-600); color:#fff; }
-.btn-primary:hover{ filter:brightness(1.08); }
+.btn-primary:hover{ filter:brightness(1.15); }
 .btn-secondary{ background:var(--surface-alt); color:var(--text); border-color:var(--border); }
 .btn-ghost{ background:transparent; color:var(--text-dim); }
 .btn-danger{ background:var(--danger-600); color:#fff; }
@@ -53,6 +80,7 @@ label{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color
 .field{ margin-bottom:16px; }
 
 .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; box-shadow:var(--shadow-sm); }
+.card.active{ border-color:var(--oc-blue-bright); box-shadow:0 0 0 3px rgba(84,196,240,0.22); }
 .error-box{ background:var(--danger-100); color:var(--danger-600); padding:11px 14px; border-radius:var(--radius-sm); font-size:0.88rem; margin-bottom:14px; }
 .info-box{ background:var(--info-100); color:var(--info-600); padding:11px 14px; border-radius:var(--radius-sm); font-size:0.88rem; margin-bottom:14px; }
 
@@ -69,11 +97,7 @@ label{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color
 .dashboard-content{ flex:1; padding:20px; padding-bottom:96px; max-width:900px; width:100%; margin:0 auto; }
 @media (min-width:1024px){ .dashboard-content{ padding-bottom:20px; } }
 
-.brand-badge{
-  width:36px; height:36px; border-radius:50%; background:var(--oc-blue-600); color:#fff;
-  display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed'; font-weight:800;
-  flex-shrink:0;
-}
+.brand-badge{ width:36px; height:36px; flex-shrink:0; filter:drop-shadow(0 2px 4px rgba(25,100,150,0.35)); }
 
 .sidebar{ display:none; }
 @media (min-width:1024px){
@@ -123,10 +147,17 @@ label{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color
 .label-title{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-dim); font-weight:700; margin-bottom:10px; }
 .subtle{ font-size:0.85rem; color:var(--text-dim); }
 
-
-
 .list-row{
   display:flex; align-items:center; justify-content:space-between; gap:12px;
   padding:10px 0; border-bottom:1px solid var(--border); font-size:0.9rem;
 }
 .list-row:last-child{ border-bottom:none; }
+
+/* Podium classement */
+.podium-row{ display:flex; align-items:flex-end; justify-content:center; gap:12px; margin:8px 0 20px; }
+.podium-step{ display:flex; flex-direction:column; align-items:center; gap:6px; width:90px; }
+.podium-bar{ width:100%; border-radius:8px 8px 0 0; display:flex; align-items:flex-start; justify-content:center; padding-top:8px; }
+.podium-bar .rank{ font-family:'Oswald',sans-serif; font-weight:700; font-size:1.5rem; color:#fff; }
+.podium-name{ font-weight:700; font-size:0.82rem; text-align:center; }
+.podium-score{ font-family:'Oswald',sans-serif; font-weight:600; color:var(--oc-blue-deep); }
+[data-theme="dark"] .podium-score{ color:var(--oc-blue-bright); }
