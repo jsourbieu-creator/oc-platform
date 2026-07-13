@@ -27,6 +27,7 @@ export function HomePage({ gotoConversation }) {
   const [form, setForm] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [myScore, setMyScore] = useState(undefined); // undefined=chargement, null=pas classé, objet sinon
 
   const load = useCallback(() => {
     if (!activeClubId) return;
@@ -34,6 +35,27 @@ export function HomePage({ gotoConversation }) {
   }, [activeClubId, token]);
 
   useEffect(load, [load]);
+
+  // Mon score Ballon d'Or : dérivé du classement de la saison active
+  useEffect(() => {
+    if (!activeClubId || !token || !user) { return; }
+    let alive = true;
+    api("seasons.php", "list", { club_id: activeClubId }, token)
+      .then((d) => {
+        const active = (d.seasons ?? []).find((s) => s.status === "active");
+        if (!active) { if (alive) setMyScore(null); return; }
+        return api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: active.id }, token)
+          .then((r) => {
+            if (!alive) return;
+            const full = `${user.first_name} ${user.last_name}`.trim().toLowerCase();
+            const all = [...(r.official ?? []), ...(r.provisional ?? [])];
+            const mine = all.find((p) => (p.name ?? "").trim().toLowerCase() === full);
+            setMyScore(mine ?? null);
+          });
+      })
+      .catch(() => { if (alive) setMyScore(null); });
+    return () => { alive = false; };
+  }, [activeClubId, token, user]);
 
   useEffect(() => {
     if (!activeClubId) return;
