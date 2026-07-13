@@ -119,14 +119,12 @@ export function HomePage({ gotoConversation }) {
 
       <div className="stat-tiles">
         <StatTile
-          tint="coral"
           icon={(() => { const I = nextEvent ? (EVENT_TYPES[nextEvent.type] ?? EVENT_TYPES.match).icon : CalendarDays; return <I size={20} />; })()}
           value={nextEvent === undefined ? "…" : nextEvent ? nextEvent.title : "Aucune"}
           label={nextEvent ? `${fmtTime(nextEvent.starts_at)}` : "Prochaine séance"}
           tint="blue"
         />
         <StatTile
-          tint="lime"
           icon={<Star size={20} />}
           value={myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}
           label={myScore ? "Mon score Ballon d'Or" : "Pas encore classé"}
