@@ -29,7 +29,7 @@ switch ($action) {
 
         $stmt = db()->prepare('
             SELECT cm.id, cm.user_id, cm.role, cm.status, cm.joined_at,
-                   u.first_name, u.last_name, u.email, u.phone
+                   u.first_name, u.last_name, u.email, u.phone, u.avatar_url
             FROM club_members cm JOIN users u ON u.id = cm.user_id
             WHERE cm.club_id = ?
             ORDER BY FIELD(cm.status, "active", "invited", "suspended", "archived"),

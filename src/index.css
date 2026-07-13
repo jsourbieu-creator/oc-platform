@@ -235,6 +235,43 @@ label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color
   display:inline-flex; align-items:center; justify-content:center;
 }
 
+/* ── Modal événement (façon TeamPulse) ──────────────────────────────── */
+.event-modal-overlay{
+  position:fixed; inset:0; background:rgba(6,12,20,0.55); backdrop-filter:blur(3px);
+  z-index:100; display:flex; align-items:flex-end; justify-content:center;
+}
+@media (min-width:640px){ .event-modal-overlay{ align-items:center; } }
+.event-modal{
+  background:var(--surface); width:100%; max-width:560px; max-height:92vh; overflow-y:auto;
+  border-radius:var(--radius-xl) var(--radius-xl) 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+  animation:modalUp .22s cubic-bezier(.22,.9,.3,1) both;
+}
+@media (min-width:640px){ .event-modal{ border-radius:var(--radius-xl); max-height:88vh; } }
+@keyframes modalUp{ from{ opacity:0; transform:translateY(24px); } to{ opacity:1; transform:none; } }
+.event-modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.event-modal-close{ width:34px; height:34px; border-radius:50%; border:none; background:var(--surface-alt); color:var(--text-dim); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+
+.tab-switch{ display:flex; gap:4px; background:var(--surface-alt); border-radius:var(--radius-md); padding:4px; margin-bottom:18px; }
+.tab-switch-item{
+  flex:1; text-align:center; padding:9px; border-radius:calc(var(--radius-md) - 4px); font-weight:700; font-size:0.85rem;
+  cursor:pointer; color:var(--text-dim); transition:background .15s ease, color .15s ease;
+}
+.tab-switch-item.active{ background:var(--surface); color:var(--text); box-shadow:var(--shadow-sm); }
+
+.progress-track{ height:8px; border-radius:var(--radius-full); background:var(--surface-alt); overflow:hidden; }
+.progress-fill{ height:100%; border-radius:var(--radius-full); background:var(--oc-gradient); transition:width .3s ease; }
+
+.participant-row{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.participant-row:last-child{ border-bottom:none; }
+.participant-row-body{ flex:1; min-width:0; }
+.participant-status-icon{ width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff; }
+
+.sticky-cta{
+  position:sticky; bottom:calc(-20px - env(safe-area-inset-bottom)); left:0; right:0; margin:16px -20px -20px; padding:14px 20px calc(14px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg, transparent, var(--surface) 30%);
+}
+.sticky-cta button{ background:var(--oc-gradient); color:#fff; box-shadow:var(--shadow-md); }
+
 /* ── Animations ─────────────────────────────────────────────── */
 @keyframes fadeUp{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
 .view-enter{ animation:fadeUp .32s cubic-bezier(.22,.9,.3,1) both; }

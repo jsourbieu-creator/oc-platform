@@ -1,4 +1,25 @@
-import { fmtDateBadge, initials, avatarColor } from "@/lib/events";
+import { fmtDateBadge, initials, avatarColor, avatarSrc } from "@/lib/events";
+import { useState } from "react";
+
+/** Avatar rond : photo réelle si dispo, sinon initiales colorées */
+export function Avatar({ name, userId, avatarUrl, size = 26, ring = true }) {
+  const [broken, setBroken] = useState(false);
+  const showPhoto = avatarUrl && userId && !broken;
+  return (
+    <div
+      title={name}
+      style={{
+        width: size, height: size, borderRadius: "50%", background: avatarColor(name ?? "?"), color: "#fff",
+        display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.38, fontWeight: 700,
+        border: ring ? "2px solid var(--surface)" : "none", flexShrink: 0, overflow: "hidden",
+      }}
+    >
+      {showPhoto
+        ? <img src={avatarSrc(userId)} alt={name} onError={() => setBroken(true)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        : initials((name ?? "?").split(" ")[0], (name ?? "").split(" ")[1])}
+    </div>
+  );
+}
 
 /** Date compacte façon TeamPulse : barre colorée + jour/mois en texte simple */
 export function DateBadge({ date, color = "var(--oc-blue-deep)" }) {
@@ -29,7 +50,7 @@ export function CountChip({ value, tint }) {
   );
 }
 
-/** Avatars empilés (initiales) avec débordement "+N" */
+/** Avatars empilés (photo ou initiales) avec débordement "+N" */
 export function AvatarStack({ people, max = 4 }) {
   if (!people?.length) return null;
   const shown = people.slice(0, max);
@@ -37,16 +58,8 @@ export function AvatarStack({ people, max = 4 }) {
   return (
     <div style={{ display: "flex", alignItems: "center" }}>
       {shown.map((p, i) => (
-        <div
-          key={i}
-          title={p.name}
-          style={{
-            width: 26, height: 26, borderRadius: "50%", background: avatarColor(p.name), color: "#fff",
-            display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.62rem", fontWeight: 700,
-            border: "2px solid var(--surface)", marginLeft: i === 0 ? 0 : -8, flexShrink: 0,
-          }}
-        >
-          {initials(p.name.split(" ")[0], p.name.split(" ")[1])}
+        <div key={i} style={{ marginLeft: i === 0 ? 0 : -8 }}>
+          <Avatar name={p.name} userId={p.user_id} avatarUrl={p.avatar_url} />
         </div>
       ))}
       {overflow > 0 && (

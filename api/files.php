@@ -136,6 +136,57 @@ switch ($action) {
         json_out(['ok' => true]);
         break;
 
+    // Photo de profil : un seul fichier par utilisateur, stocké à part
+    // (pas de club_id — un avatar appartient à la personne, pas au club).
+    case 'avatar_upload':
+        $me = current_user();
+        if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) json_error('Fichier manquant ou upload échoué.');
+        $file = $_FILES['file'];
+        if ($file['size'] > 5 * 1024 * 1024) json_error('Image trop volumineuse (max 5 Mo).');
+
+        $mime = mime_content_type($file['tmp_name']) ?: $file['type'];
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            json_error("Format non supporté ($mime). Utilise une image JPEG, PNG ou WebP.");
+        }
+
+        $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'][$mime];
+        $stored = "user_{$me['id']}." . $ext;
+        $dir = ensure_uploads_dir('avatars');
+
+        // Retire un éventuel ancien avatar d'extension différente
+        $stmt = db()->prepare('SELECT avatar_url FROM users WHERE id = ?');
+        $stmt->execute([(int) $me['id']]);
+        $old = $stmt->fetchColumn();
+        if ($old && $old !== $stored) @unlink("$dir/$old");
+
+        if (!move_uploaded_file($file['tmp_name'], "$dir/$stored")) {
+            json_error('Échec de l\'enregistrement sur le serveur.', 500);
+        }
+
+        $stmt = db()->prepare('UPDATE users SET avatar_url = ? WHERE id = ?');
+        $stmt->execute([$stored, (int) $me['id']]);
+        json_out(['ok' => true, 'avatar' => $stored]);
+        break;
+
+    // Volontairement public (pas de current_user()) : une simple balise
+    // <img src="..."> ne peut pas envoyer d'en-tête Authorization. Une
+    // photo de profil de club amateur n'est pas une donnée sensible.
+    case 'avatar_get':
+        $userId = (int) ($in['user_id'] ?? ($_GET['user_id'] ?? 0));
+        $stmt = db()->prepare('SELECT avatar_url FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $filename = $stmt->fetchColumn();
+        if (!$filename) json_error('Pas de photo de profil.', 404);
+
+        $path = rtrim(UPLOADS_DIR, '/') . "/avatars/$filename";
+        if (!is_file($path)) json_error('Photo absente du stockage.', 404);
+
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+        header('Content-Type: image/' . ($ext === 'jpg' ? 'jpeg' : $ext));
+        header('Cache-Control: private, max-age=86400');
+        readfile($path);
+        exit;
+
     default:
         json_error('Action inconnue.', 404);
 }

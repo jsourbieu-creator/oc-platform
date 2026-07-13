@@ -64,7 +64,7 @@ switch ($action) {
             $myConv = array_column($stmt->fetchAll(), 'status', 'event_id');
 
             $stmt = db()->prepare("
-                SELECT c.event_id, u.first_name, u.last_name
+                SELECT c.event_id, u.id AS user_id, u.first_name, u.last_name, u.avatar_url
                 FROM convocations c
                 JOIN club_members cm ON cm.id = c.club_member_id
                 JOIN users u ON u.id = cm.user_id
@@ -73,7 +73,7 @@ switch ($action) {
             $stmt->execute($ids);
             $confirmedNames = [];
             foreach ($stmt->fetchAll() as $r) {
-                $confirmedNames[$r['event_id']][] = trim("{$r['first_name']} {$r['last_name']}");
+                $confirmedNames[$r['event_id']][] = ['name' => trim("{$r['first_name']} {$r['last_name']}"), 'user_id' => $r['user_id'], 'avatar_url' => $r['avatar_url']];
             }
 
             foreach ($events as &$e) {
@@ -254,6 +254,14 @@ switch ($action) {
         $event = event_in_club_or_404($eventId, $clubId);
         if ($event['status'] === 'cancelled') json_error('Cet événement est annulé.');
 
+        // Un admin/coach peut renseigner la dispo à la place d'un membre
+        // (ex. joueur qui a oublié de répondre) — sinon, on répond pour soi.
+        $targetMemberId = $myMemberId;
+        if (!empty($in['target_member_id']) && (int) $in['target_member_id'] !== $myMemberId) {
+            require_permission((int) $me['id'], $clubId, 'manage_events');
+            $targetMemberId = (int) $in['target_member_id'];
+        }
+
         $status = $in['status'] ?? '';
         if (!in_array($status, ['present', 'absent', 'injured'], true)) json_error('Réponse invalide.');
         $comment = trim($in['comment'] ?? '');
@@ -263,7 +271,7 @@ switch ($action) {
             VALUES (?,?,?,?)
             ON DUPLICATE KEY UPDATE status = VALUES(status), comment = VALUES(comment)
         ');
-        $stmt->execute([$eventId, $myMemberId, $status, $comment ?: null]);
+        $stmt->execute([$eventId, $targetMemberId, $status, $comment ?: null]);
         json_out(['ok' => true]);
         break;
 
@@ -276,14 +284,15 @@ switch ($action) {
         event_in_club_or_404($eventId, $clubId);
 
         $stmt = db()->prepare('
-            SELECT ea.status, ea.comment, ea.updated_at, u.first_name, u.last_name
-            FROM event_availabilities ea
-            JOIN club_members cm ON cm.id = ea.club_member_id
+            SELECT cm.id AS club_member_id, u.id AS user_id, u.first_name, u.last_name, u.avatar_url,
+                   ea.status, ea.comment, ea.updated_at
+            FROM club_members cm
             JOIN users u ON u.id = cm.user_id
-            WHERE ea.event_id = ?
+            LEFT JOIN event_availabilities ea ON ea.club_member_id = cm.id AND ea.event_id = ?
+            WHERE cm.club_id = ? AND cm.status = "active"
             ORDER BY FIELD(ea.status, "present", "injured", "absent"), u.last_name
         ');
-        $stmt->execute([$eventId]);
+        $stmt->execute([$eventId, $clubId]);
         json_out(['availabilities' => $stmt->fetchAll()]);
         break;
 

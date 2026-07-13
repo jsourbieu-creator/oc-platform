@@ -1,13 +1,13 @@
-import { CalendarDays, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle } from "lucide-react";
+import { CalendarDays, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle, Search, Check } from "lucide-react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import {
   EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, CONV_LABELS,
-  fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents,
+  fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
 import { REAL_STATUS_LABELS, fmtScore } from "@/lib/ballondor";
-import { DateBadge, AvatarStack, StatTile, CountChip } from "@/components/ui";
+import { DateBadge, AvatarStack, StatTile, CountChip, Avatar } from "@/components/ui";
 import blason from "@/assets/blason.svg";
 
 const ROLE_LABELS = {
@@ -235,8 +235,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount);
   const confirmedCount = e.conv_counts?.confirmed ?? 0;
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
-  const confirmedPeople = (e.confirmed_names ?? []).map((name) => ({ name }));
-  const [menuOpen, setMenuOpen] = useState(false);
+  const confirmedPeople = e.confirmed_names ?? [];
   const [convBusy, setConvBusy] = useState(false);
 
   const quickRespond = async (status) => {
@@ -256,38 +255,20 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
 
   return (
     <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1, position: "relative" }}>
-      <div style={{ display: "flex", gap: 12 }}>
-        <div style={{ cursor: "pointer", display: "flex", gap: 12, flex: 1, minWidth: 0 }} onClick={toggle}>
-          <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><t.icon size={15} />{e.title}</strong>
-              {cancelled && <span className="badge badge-neutral">Annulé</span>}
-              {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
-            </div>
-            <div className="subtle">
-              {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}
-              {e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
-            </div>
+      <div style={{ cursor: "pointer", display: "flex", gap: 12 }} onClick={toggle}>
+        <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><t.icon size={15} />{e.title}</strong>
+            {cancelled && <span className="badge badge-neutral">Annulé</span>}
+            {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
+          </div>
+          <div className="subtle">
+            {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}
+            {e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
           </div>
         </div>
-        {manage && (
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <button className="btn btn-ghost btn-sm" style={{ width: "auto", padding: "4px 8px", fontSize: "1.1rem" }} onClick={() => setMenuOpen((v) => !v)}><Ellipsis size={17} /></button>
-            {menuOpen && (
-              <div style={{
-                position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-md)", zIndex: 10, minWidth: 140, overflow: "hidden",
-              }}>
-                <MenuItem onClick={() => { setMenuOpen(false); onEdit(e); }}>Modifier</MenuItem>
-                {cancelled
-                  ? <MenuItem onClick={() => { setMenuOpen(false); onStatus(e.id, "scheduled"); }}>Rétablir</MenuItem>
-                  : <MenuItem color="var(--warning-600)" onClick={() => { setMenuOpen(false); onStatus(e.id, "cancelled"); }}>Annuler</MenuItem>}
-                <MenuItem color="var(--danger-600)" onClick={() => { setMenuOpen(false); onDelete(e.id); }}>Supprimer</MenuItem>
-              </div>
-            )}
-          </div>
-        )}
+        <Ellipsis size={17} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
@@ -327,11 +308,11 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
       )}
 
       <div style={{ textAlign: "center", marginTop: 6 }}>
-        <span className="subtle" style={{ cursor: "pointer" }} onClick={toggle}>{open ? "▲ Moins de détails" : "▼ Plus de détails (blessé, convocations, présences réelles)"}</span>
+        <span className="subtle" style={{ cursor: "pointer" }} onClick={toggle}>Voir tous les détails</span>
       </div>
 
       {open && (
-        <EventDetail event={e} reload={reload} manage={manage} members={members} onEdit={onEdit} onStatus={onStatus} onDelete={onDelete} />
+        <EventModal event={e} onClose={toggle} reload={reload} manage={manage} members={members} onEdit={onEdit} onStatus={onStatus} onDelete={onDelete} />
       )}
     </div>
   );
@@ -348,26 +329,66 @@ function MenuItem({ children, onClick, color }) {
   );
 }
 
-function EventDetail({ event: e, reload, manage, members, onEdit, onStatus, onDelete }) {
-  const { token, activeClubId } = useAuth();
+/** Modal plein écran façon TeamPulse : en-tête + onglets Informations/Participants */
+function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStatus, onDelete }) {
+  const [tab, setTab] = useState("infos");
+  const [menuOpen, setMenuOpen] = useState(false);
   const cancelled = e.status === "cancelled";
-  const [error, setError] = useState("");
-  const [availList, setAvailList] = useState(null);
-  const [showAvail, setShowAvail] = useState(false);
-
-  const loadAvail = useCallback(() => {
-    api("events.php", "availability_list", { club_id: activeClubId, event_id: e.id }, token)
-      .then((d) => setAvailList(d.availabilities)).catch((e2) => setError(e2.message));
-  }, [activeClubId, e.id, token]);
 
   return (
-    <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
-      {error && <div className="error-box">{error}</div>}
+    <div className="event-modal-overlay" onClick={onClose}>
+      <div className="event-modal" onClick={(ev) => ev.stopPropagation()}>
+        <div className="event-modal-header">
+          <button className="event-modal-close" onClick={onClose}><X size={17} /></button>
+          <div style={{ textAlign: "center", flex: 1, minWidth: 0 }}>
+            <strong style={{ fontSize: "1.05rem" }}>{e.title}</strong>
+            <div className="subtle" style={{ textTransform: "capitalize" }}>{fmtDateBadgeLabel(e)} à {fmtTime(e.starts_at)}</div>
+          </div>
+          {manage ? (
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              <button className="event-modal-close" onClick={() => setMenuOpen((v) => !v)}><Ellipsis size={17} /></button>
+              {menuOpen && (
+                <div style={{
+                  position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-md)", zIndex: 10, minWidth: 140, overflow: "hidden",
+                }}>
+                  <MenuItem onClick={() => { setMenuOpen(false); onClose(); onEdit(e); }}>Modifier</MenuItem>
+                  {cancelled
+                    ? <MenuItem onClick={() => { setMenuOpen(false); onStatus(e.id, "scheduled"); }}>Rétablir</MenuItem>
+                    : <MenuItem color="var(--warning-600)" onClick={() => { setMenuOpen(false); onStatus(e.id, "cancelled"); }}>Annuler</MenuItem>}
+                  <MenuItem color="var(--danger-600)" onClick={() => { setMenuOpen(false); onClose(); onDelete(e.id); }}>Supprimer</MenuItem>
+                </div>
+              )}
+            </div>
+          ) : <div style={{ width: 34 }} />}
+        </div>
 
-      {(e.meet_at || e.notes) && (
-        <div style={{ marginBottom: 12 }}>
-          {e.meet_at && <div style={{ fontSize: "0.88rem", display: "flex", alignItems: "center", gap: 6 }}><Clock size={13} />Rendez-vous à <strong>{fmtTime(e.meet_at)}</strong></div>}
-          {e.notes && <div className="subtle" style={{ whiteSpace: "pre-wrap", marginTop: 4 }}>{e.notes}</div>}
+        <div className="tab-switch">
+          <div className={`tab-switch-item ${tab === "infos" ? "active" : ""}`} onClick={() => setTab("infos")}>Informations</div>
+          <div className={`tab-switch-item ${tab === "participants" ? "active" : ""}`} onClick={() => setTab("participants")}>Participants</div>
+        </div>
+
+        {tab === "infos" && <InfosTab event={e} reload={reload} manage={manage} members={members} />}
+        {tab === "participants" && <ParticipantsTab event={e} manage={manage} />}
+      </div>
+    </div>
+  );
+}
+
+function fmtDateBadgeLabel(e) {
+  const d = new Date(e.starts_at.replace(" ", "T"));
+  return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+}
+
+function InfosTab({ event: e, reload, manage, members }) {
+  const cancelled = e.status === "cancelled";
+  return (
+    <div>
+      {(e.meet_at || e.notes || e.location) && (
+        <div className="card" style={{ marginBottom: 14, boxShadow: "none" }}>
+          {e.meet_at && <div style={{ fontSize: "0.88rem", display: "flex", alignItems: "center", gap: 6, marginBottom: e.notes || e.location ? 8 : 0 }}><Clock size={13} />Rendez-vous à <strong>{fmtTime(e.meet_at)}</strong></div>}
+          {e.location && <div className="subtle" style={{ marginBottom: e.notes ? 8 : 0 }}>{e.location}</div>}
+          {e.notes && <div className="subtle" style={{ whiteSpace: "pre-wrap" }}>{e.notes}</div>}
         </div>
       )}
 
@@ -378,21 +399,106 @@ function EventDetail({ event: e, reload, manage, members, onEdit, onStatus, onDe
       {manage && e.type === "match" && !cancelled && <ConvocationManager event={e} reload={reload} members={members} />}
 
       {manage && !cancelled && <PresenceValidator event={e} members={members} />}
+    </div>
+  );
+}
 
-      <button className="btn btn-ghost btn-sm" onClick={() => { setShowAvail((v) => !v); if (!showAvail) loadAvail(); }}>
-        {showAvail ? "Masquer les réponses" : "Voir les réponses de dispo"}
-      </button>
+function ParticipantsTab({ event: e, manage }) {
+  const { token, activeClubId } = useAuth();
+  const [list, setList] = useState(null);
+  const [search, setSearch] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [error, setError] = useState("");
 
-      {showAvail && (
-        <div style={{ marginTop: 10 }}>
-          {availList === null && <div className="spinner" />}
-          {availList?.length === 0 && <div className="subtle">Personne n'a encore répondu.</div>}
-          {availList?.map((a, i) => (
-            <div key={i} className="list-row" style={{ padding: "6px 0" }}>
-              <span>{a.first_name} {a.last_name}{a.comment ? <span className="subtle"> — {a.comment}</span> : ""}</span>
-              <span className="badge" style={{ background: AVAIL_COLORS[a.status], color: "#fff" }}>{AVAIL_LABELS[a.status]}</span>
-            </div>
-          ))}
+  const load = useCallback(() => {
+    api("events.php", "availability_list", { club_id: activeClubId, event_id: e.id }, token)
+      .then((d) => setList(d.availabilities)).catch((e2) => setError(e2.message));
+  }, [activeClubId, e.id, token]);
+
+  useEffect(load, [load]);
+
+  const setFor = async (memberId, status) => {
+    setError("");
+    try {
+      await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, target_member_id: memberId, status }, token);
+      load();
+    } catch (e2) { setError(e2.message); }
+  };
+
+  if (list === null) return <div className="spinner" />;
+
+  const q = search.trim().toLowerCase();
+  const filtered = q ? list.filter((p) => `${p.first_name} ${p.last_name}`.toLowerCase().includes(q)) : list;
+  const responded = list.filter((p) => p.status).length;
+  const rate = list.length ? Math.round((100 * responded) / list.length) : 0;
+
+  const SECTIONS = [
+    { key: "present", label: "Présents" },
+    { key: "injured", label: "Blessés" },
+    { key: "absent", label: "Absents" },
+    { key: null, label: "En attente" },
+  ];
+
+  return (
+    <div>
+      {error && <div className="error-box">{error}</div>}
+      <div style={{ position: "relative", marginBottom: 16 }}>
+        <Search size={16} style={{ position: "absolute", left: 12, top: 12, color: "var(--text-dim)" }} />
+        <input type="text" placeholder="Rechercher…" value={search} onChange={(e2) => setSearch(e2.target.value)} style={{ paddingLeft: 36 }} />
+      </div>
+
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", marginBottom: 6 }}>
+          <span className="subtle">Taux de réponse</span>
+          <span className="num" style={{ fontWeight: 700 }}>{responded}/{list.length}</span>
+        </div>
+        <div className="progress-track"><div className="progress-fill" style={{ width: `${rate}%` }} /></div>
+      </div>
+
+      {SECTIONS.map((sec) => {
+        const items = filtered.filter((p) => p.status === sec.key);
+        if (!items.length) return null;
+        return (
+          <div key={sec.label} style={{ marginBottom: 18 }}>
+            <div className="label-title">{sec.label} ({items.length})</div>
+            {items.map((p) => (
+              <div key={p.club_member_id} className="participant-row">
+                <Avatar name={`${p.first_name} ${p.last_name}`} userId={p.user_id} avatarUrl={p.avatar_url} size={38} />
+                <div className="participant-row-body">
+                  <strong style={{ fontSize: "0.9rem" }}>{p.first_name} {p.last_name}</strong>
+                  {p.comment && <div className="subtle" style={{ fontSize: "0.8rem" }}>{p.comment}</div>}
+                  {p.updated_at && <div className="subtle" style={{ fontSize: "0.72rem" }}>{timeAgo(p.updated_at)}</div>}
+                </div>
+                {editMode && manage ? (
+                  <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                    {Object.entries(AVAIL_LABELS).map(([v, l]) => (
+                      <button
+                        key={v} className="btn btn-sm" style={{
+                          width: "auto", padding: "5px 8px", fontSize: "0.68rem",
+                          background: p.status === v ? AVAIL_COLORS[v] : "transparent", color: p.status === v ? "#fff" : AVAIL_COLORS[v],
+                          border: `1px solid ${AVAIL_COLORS[v]}`,
+                        }}
+                        onClick={() => setFor(p.club_member_id, v)}
+                      >{l[0]}</button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="participant-status-icon" style={{ background: sec.key ? AVAIL_COLORS[sec.key] : "var(--neutral-400)" }}>
+                    {sec.key === "present" && <Check size={14} />}
+                    {sec.key === "absent" && <X size={14} />}
+                    {sec.key === "injured" && <span style={{ fontSize: 12 }}>!</span>}
+                    {!sec.key && <Clock size={14} />}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+      })}
+
+      {manage && (
+        <div className="sticky-cta">
+          <button className="btn" onClick={() => setEditMode((v) => !v)}>{editMode ? "Terminer l'édition" : "Éditer les présences"}</button>
         </div>
       )}
     </div>

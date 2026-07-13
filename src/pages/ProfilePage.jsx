@@ -1,9 +1,28 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { Avatar } from "@/components/ui";
 
 export function ProfilePage() {
   const { user, token, refresh } = useAuth();
+
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
+  const fileRef = useRef(null);
+
+  const uploadAvatar = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarBusy(true); setAvatarError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`api/files.php?action=avatar_upload`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+      await refresh();
+    } catch (e2) { setAvatarError(e2.message); } finally { setAvatarBusy(false); if (fileRef.current) fileRef.current.value = ""; }
+  };
 
   const [firstName, setFirstName] = useState(user?.first_name ?? "");
   const [lastName, setLastName] = useState(user?.last_name ?? "");
@@ -44,6 +63,16 @@ export function ProfilePage() {
   return (
     <div>
       <h1 className="page-title" style={{ marginBottom: 18 }}>Profil</h1>
+
+      <div className="card" style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 16 }}>
+        <Avatar name={`${user?.first_name} ${user?.last_name}`} userId={user?.id} avatarUrl={user?.avatar_url} size={64} ring={false} />
+        <div style={{ flex: 1 }}>
+          <div className="label-title" style={{ marginBottom: 6 }}>Photo de profil</div>
+          {avatarError && <div className="error-box" style={{ marginBottom: 8 }}>{avatarError}</div>}
+          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadAvatar} disabled={avatarBusy} />
+          {avatarBusy && <span className="subtle"> Envoi…</span>}
+        </div>
+      </div>
 
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="label-title">Mes informations</div>

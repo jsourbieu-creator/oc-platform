@@ -67,6 +67,26 @@ export function fromLocalInput(s) {
 
 export const canManageEvents = (role) => ["super_admin", "admin", "coach"].includes(role);
 
+/** URL de la photo de profil d'un utilisateur (à n'utiliser que si avatar_url est renseigné) */
+export function avatarSrc(userId) {
+  return `api/files.php?action=avatar_get&user_id=${userId}`;
+}
+
+/** "il y a 1 jour", "il y a 4 h", "il y a 53 min" */
+export function timeAgo(dateStr) {
+  if (!dateStr) return "";
+  const d = parseDT(dateStr);
+  if (!d) return "";
+  const diffMs = Date.now() - d.getTime();
+  const min = Math.round(diffMs / 60000);
+  if (min < 1) return "à l'instant";
+  if (min < 60) return `il y a ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `il y a ${h} h`;
+  const j = Math.round(h / 24);
+  return `il y a ${j} j`;
+}
+
 const MONTHS_SHORT = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 
 /** "2026-07-13 19:30:00" → { day: "13", month: "juil." } pour le badge de date */
