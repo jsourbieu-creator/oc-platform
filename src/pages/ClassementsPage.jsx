@@ -194,7 +194,7 @@ export function ClassementsPage() {
                 <strong>{p.name}</strong>
                 <span className="subtle">({p.sessions_played} séances, {p.attendance_rate}% présence)</span>
               </div>
-              <strong style={{ color: "var(--oc-blue-600)", fontSize: "1.1rem" }}>{fmtScore(p.ballon_dor_score)}</strong>
+              <strong className="num" style={{ color: "var(--oc-blue-600)", fontSize: "1.1rem" }}>{fmtScore(p.ballon_dor_score)}</strong>
             </div>
           ))}
         </div>
@@ -209,7 +209,7 @@ export function ClassementsPage() {
                 <strong>{p.name}</strong>
                 <div className="subtle">Encore {p.sessions_until_eligible} séance(s) pour intégrer le classement officiel</div>
               </div>
-              <span className="subtle">{fmtScore(p.ballon_dor_score)}</span>
+              <span className="subtle num">{fmtScore(p.ballon_dor_score)}</span>
             </div>
           ))}
         </div>

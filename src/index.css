@@ -1,9 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=DM+Mono:wght@500&display=swap');
 
 :root{
   /* Bleus extraits du dégradé réel du blason (Fichier_1.svg) */
   --oc-blue-deep:#196496; --oc-blue-mid:#3D9ECD; --oc-blue-bright:#54C4F0; --oc-blue-highlight:#51BFEC;
   --oc-gradient: linear-gradient(90deg, var(--oc-blue-deep), var(--oc-blue-bright), var(--oc-blue-deep));
+
+  /* Accent lime — clin d'œil à l'app budget J&A, réservé aux actions positives (présent, validations) */
+  --lime-500:#AAED4A; --lime-600:#75A82A; --lime-100:rgba(170,237,74,0.18);
 
   --oc-blue-600:var(--oc-blue-deep); --oc-navy-900:#0A141F; --oc-sky-400:var(--oc-blue-bright); --oc-sky-50:#EDF4FA; --oc-white:#FFFFFF;
   --neutral-950:#0C1826; --neutral-900:#1B2A3A; --neutral-700:#37485A; --neutral-600:#475B6E;
@@ -53,6 +56,7 @@ body::before{
 h1,h2,h3,.display{ font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-0.02em; margin:0; }
 .page-title{ font-size:clamp(1.9rem, 5vw, 2.35rem); letter-spacing:-0.035em; line-height:1.05; }
 svg{ flex-shrink:0; }
+.num{ font-family:'DM Mono',monospace; font-weight:500; }
 
 /* ── Hero : réservé aux moments forts (connexion, accueil, trophées) ──── */
 .hero-banner{
@@ -201,9 +205,9 @@ label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color
 .podium-row{ display:flex; align-items:flex-end; justify-content:center; gap:12px; margin:8px 0 20px; }
 .podium-step{ display:flex; flex-direction:column; align-items:center; gap:6px; width:90px; }
 .podium-bar{ width:100%; border-radius:8px 8px 0 0; display:flex; align-items:flex-start; justify-content:center; padding-top:8px; }
-.podium-bar .rank{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.5rem; color:#fff; }
+.podium-bar .rank{ font-family:'DM Mono',monospace; font-weight:500; font-size:1.5rem; color:#fff; }
 .podium-name{ font-weight:700; font-size:0.82rem; text-align:center; }
-.podium-score{ font-family:'Space Grotesk',sans-serif; font-weight:600; color:var(--oc-blue-deep); }
+.podium-score{ font-family:'DM Mono',monospace; font-weight:500; color:var(--oc-blue-deep); }
 [data-theme="dark"] .podium-score{ color:var(--oc-blue-bright); }
 
 /* Carte événement (calendrier/convocations/dispos/événements) */

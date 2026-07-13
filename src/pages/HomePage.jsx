@@ -1,4 +1,4 @@
-import { CalendarDays, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis } from "lucide-react";
+import { CalendarDays, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle } from "lucide-react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -318,7 +318,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
         <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={openConversation} disabled={convBusy}>
-          💬 {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
+          <MessageCircle size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
         </button>
       </div>
 

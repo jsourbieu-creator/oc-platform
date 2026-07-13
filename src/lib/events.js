@@ -13,7 +13,7 @@ export const AVAIL_LABELS = {
 };
 
 export const AVAIL_COLORS = {
-  present: "var(--success-600)",
+  present: "var(--lime-600)",
   absent: "var(--danger-600)",
   injured: "var(--warning-600)",
 };

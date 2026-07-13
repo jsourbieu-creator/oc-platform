@@ -7,20 +7,24 @@ export function DateBadge({ date, color = "var(--oc-blue-deep)" }) {
     <div style={{ display: "flex", gap: 10, flexShrink: 0, alignSelf: "stretch" }}>
       <div style={{ width: 4, borderRadius: 2, background: color }} />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center", minWidth: 38 }}>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.4rem", lineHeight: 1.05, color: "var(--text)" }}>{day}</div>
+        <div className="num" style={{ fontSize: "1.4rem", lineHeight: 1.05, color: "var(--text)" }}>{day}</div>
         <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-dim)" }}>{month}</div>
       </div>
     </div>
   );
 }
 
-/** Pastille de comptage colorée (présents/absents/sans réponse) */
+/** Pastille de comptage colorée (présents/absents/sans réponse) — aplat plein */
 export function CountChip({ value, tint }) {
-  const bg = { green: "var(--success-600)", orange: "var(--warning-600)", gray: "var(--neutral-400)" }[tint];
+  const styles = {
+    green: { bg: "var(--lime-500)", fg: "#16210A" },
+    orange: { bg: "var(--warning-600)", fg: "#fff" },
+    gray: { bg: "var(--neutral-400)", fg: "#fff" },
+  }[tint];
   return (
-    <span style={{
+    <span className="num" style={{
       display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 30, height: 26,
-      borderRadius: "var(--radius-sm)", background: bg, color: "#fff", fontWeight: 800, fontSize: "0.85rem", padding: "0 8px",
+      borderRadius: "var(--radius-sm)", background: styles.bg, color: styles.fg, fontWeight: 700, fontSize: "0.85rem", padding: "0 8px",
     }}>{value}</span>
   );
 }
@@ -81,7 +85,7 @@ export function Donut({ segments, size = 96, thickness = 12, centerLabel, center
       </svg>
       {(centerLabel || centerSub) && (
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          {centerLabel && <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.15rem" }}>{centerLabel}</div>}
+          {centerLabel && <div className="num" style={{ fontSize: "1.15rem" }}>{centerLabel}</div>}
           {centerSub && <div style={{ fontSize: "0.62rem", color: "var(--text-dim)" }}>{centerSub}</div>}
         </div>
       )}
@@ -92,18 +96,18 @@ export function Donut({ segments, size = 96, thickness = 12, centerLabel, center
 const TINTS = {
   blue: { bg: "rgba(84,196,240,0.14)", fg: "var(--oc-blue-deep)" },
   gold: { bg: "rgba(214,169,40,0.16)", fg: "#8A6B18" },
-  green: { bg: "var(--success-100)", fg: "var(--success-600)" },
+  green: { bg: "var(--lime-100)", fg: "var(--lime-600)" },
   red: { bg: "var(--danger-100)", fg: "var(--danger-600)" },
   neutral: { bg: "var(--surface-alt)", fg: "var(--text-dim)" },
 };
 
-/** Bloc "icône + gros chiffre + libellé" façon callout Alan */
+/** Bloc "icône + gros chiffre + libellé" façon callout Alan/J&A */
 export function StatTile({ icon, value, label, tint = "blue" }) {
   const t = TINTS[tint] ?? TINTS.blue;
   return (
     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", padding: "16px", flex: 1, minWidth: 130, boxShadow: "var(--shadow-sm)" }}>
       <div className="icon-chip" style={{ background: t.bg, color: t.fg, marginBottom: 10 }}>{icon}</div>
-      <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1, color: "var(--text)" }}>{value}</div>
+      <div className="num" style={{ fontSize: "1.75rem", letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>{value}</div>
       <div style={{ fontSize: "0.76rem", color: "var(--text-dim)", marginTop: 3 }}>{label}</div>
     </div>
   );
