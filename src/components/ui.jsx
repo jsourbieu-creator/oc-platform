@@ -101,10 +101,10 @@ const TINTS = {
 export function StatTile({ icon, value, label, tint = "blue" }) {
   const t = TINTS[tint] ?? TINTS.blue;
   return (
-    <div style={{ background: t.bg, borderRadius: "var(--radius-lg)", padding: "16px", flex: 1, minWidth: 130 }}>
-      <div style={{ fontSize: "1.3rem", marginBottom: 6 }}>{icon}</div>
-      <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.5rem", color: t.fg }}>{value}</div>
-      <div style={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>{label}</div>
+    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", padding: "16px", flex: 1, minWidth: 130, boxShadow: "var(--shadow-sm)" }}>
+      <div className="icon-chip" style={{ background: t.bg, color: t.fg, marginBottom: 10 }}>{icon}</div>
+      <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1, color: "var(--text)" }}>{value}</div>
+      <div style={{ fontSize: "0.76rem", color: "var(--text-dim)", marginTop: 3 }}>{label}</div>
     </div>
   );
 }

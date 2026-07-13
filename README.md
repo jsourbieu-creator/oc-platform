@@ -173,6 +173,8 @@ via phpMyAdmin.
 
 ## Ce qui n'est PAS encore fait
 
+Profil enrichi (photo de profil, équipe pro préférée, point fort / point
+faible, meilleur pied, mini-avatar) — demandé, planifié après la PWA.
 Export Excel/PDF natif (le CSV couvre l'essentiel, s'ouvre dans Excel),
 fusion du module Ballon d'Or cérémonie existant (PHP/SQLite séparé, projet
 « awards-castelblangeoise ») dans cette base commune, PWA (Phase 8).
