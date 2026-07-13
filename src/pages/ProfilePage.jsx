@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, StatTile } from "@/components/ui";
 import { fmtScore } from "@/lib/ballondor";
+import { Star, Activity, CheckCircle2 } from "lucide-react";
 
 export function ProfilePage() {
   const { user, token, activeClubId, refresh } = useAuth();
@@ -94,9 +95,9 @@ export function ProfilePage() {
 
       {myStats !== null && (
         <div className="stat-tiles" style={{ marginBottom: 16 }}>
-          <StatTile icon="⭐" value={myStats === undefined ? "…" : fmtScore(myStats.ballon_dor_score)} label="Score Ballon d'Or" tint="gold" />
-          <StatTile icon="🏃" value={myStats === undefined ? "…" : myStats.sessions_played} label="Séances jouées" tint="blue" />
-          <StatTile icon="✅" value={myStats === undefined ? "…" : `${myStats.attendance_rate}%`} label="Taux de présence" tint="green" />
+          <StatTile icon={<Star size={20} />} value={myStats === undefined ? "…" : fmtScore(myStats.ballon_dor_score)} label="Score Ballon d'Or" tint="gold" />
+          <StatTile icon={<Activity size={20} />} value={myStats === undefined ? "…" : myStats.sessions_played} label="Séances jouées" tint="blue" />
+          <StatTile icon={<CheckCircle2 size={20} />} value={myStats === undefined ? "…" : `${myStats.attendance_rate}%`} label="Taux de présence" tint="green" />
         </div>
       )}
 

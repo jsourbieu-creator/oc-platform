@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { Avatar } from "@/components/ui";
 
 const ROLE_LABELS = {
   super_admin: "Super admin",
@@ -58,9 +59,12 @@ export function MembersPage() {
           const isSelf = m.user_id === user?.id;
           return (
             <div key={m.id} className="list-row">
-              <div style={{ minWidth: 0 }}>
-                <strong>{m.first_name} {m.last_name}</strong>{isSelf && <span className="subtle"> (toi)</span>}
-                <div className="subtle" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{m.email}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                <Avatar name={`${m.first_name} ${m.last_name}`} userId={m.user_id} avatarUrl={m.avatar_url} size={34} />
+                <div style={{ minWidth: 0 }}>
+                  <strong>{m.first_name} {m.last_name}</strong>{isSelf && <span className="subtle"> (toi)</span>}
+                  <div className="subtle" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{m.email}</div>
+                </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                 {manage && !isSelf ? (
