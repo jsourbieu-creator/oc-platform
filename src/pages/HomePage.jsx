@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, CONV_LABELS,
+  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, CONV_LABELS,
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
 import { REAL_STATUS_LABELS, fmtScore } from "@/lib/ballondor";
@@ -146,7 +146,7 @@ export function HomePage({ gotoConversation }) {
         </button>
         {manage && (
           <button
-            className="btn btn-sm" style={{ borderRadius: "var(--radius-full)", background: "var(--gold-500)", color: "#fff" }}
+            className="btn btn-primary btn-sm" style={{ borderRadius: "var(--radius-full)" }}
             onClick={() => setForm(form ? null : { ...EMPTY_FORM })}
           >
             {form ? <><X size={13} style={{ marginRight: 5, verticalAlign: "-2px" }} />Annuler</> : "+ Ajouter"}
@@ -287,7 +287,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
             return (
               <button
                 key={v} className="btn btn-sm" style={{
-                  flex: "1 1 80px", background: active ? AVAIL_COLORS[v] : "transparent", color: active ? "#fff" : AVAIL_COLORS[v],
+                  flex: "1 1 80px", background: active ? AVAIL_FILL[v] : "transparent", color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
                   border: `1.5px solid ${AVAIL_COLORS[v]}`,
                 }}
                 onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
@@ -475,7 +475,7 @@ function ParticipantsTab({ event: e, manage }) {
                       <button
                         key={v} className="btn btn-sm" style={{
                           width: "auto", padding: "5px 8px", fontSize: "0.68rem",
-                          background: p.status === v ? AVAIL_COLORS[v] : "transparent", color: p.status === v ? "#fff" : AVAIL_COLORS[v],
+                          background: p.status === v ? AVAIL_FILL[v] : "transparent", color: p.status === v ? AVAIL_INK[v] : AVAIL_COLORS[v],
                           border: `1px solid ${AVAIL_COLORS[v]}`,
                         }}
                         onClick={() => setFor(p.club_member_id, v)}

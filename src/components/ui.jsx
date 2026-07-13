@@ -38,7 +38,7 @@ export function DateBadge({ date, color = "var(--oc-blue-deep)" }) {
 /** Pastille de comptage colorée (présents/absents/sans réponse) — aplat plein */
 export function CountChip({ value, tint }) {
   const styles = {
-    green: { bg: "var(--lime-500)", fg: "#16210A" },
+    green: { bg: "var(--lime-500)", fg: "var(--lime-ink)" },
     orange: { bg: "var(--warning-600)", fg: "#fff" },
     gray: { bg: "var(--neutral-400)", fg: "#fff" },
   }[tint];
@@ -107,7 +107,7 @@ export function Donut({ segments, size = 96, thickness = 12, centerLabel, center
 }
 
 const TINTS = {
-  blue: { bg: "rgba(84,196,240,0.14)", fg: "var(--oc-blue-deep)" },
+  blue: { bg: "rgba(18,180,242,0.14)", fg: "var(--electric-blue)" },
   gold: { bg: "rgba(214,169,40,0.16)", fg: "#8A6B18" },
   green: { bg: "var(--lime-100)", fg: "var(--lime-600)" },
   red: { bg: "var(--danger-100)", fg: "var(--danger-600)" },

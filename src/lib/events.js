@@ -18,6 +18,20 @@ export const AVAIL_COLORS = {
   injured: "var(--warning-600)",
 };
 
+/** Couleur de remplissage quand le statut est actif (le lime plein est bien plus vif que le contour) */
+export const AVAIL_FILL = {
+  present: "var(--lime-500)",
+  absent: "var(--danger-600)",
+  injured: "var(--warning-600)",
+};
+
+/** Couleur de texte sur le remplissage (le lime vif a besoin d'encre sombre, pas de blanc) */
+export const AVAIL_INK = {
+  present: "var(--lime-ink)",
+  absent: "#fff",
+  injured: "#fff",
+};
+
 export const CONV_LABELS = {
   pending: "En attente",
   confirmed: "Confirmée",
@@ -101,7 +115,7 @@ export function initials(firstName, lastName) {
   return `${(firstName?.[0] ?? "").toUpperCase()}${(lastName?.[0] ?? "").toUpperCase()}` || "?";
 }
 
-const AVATAR_PALETTE = ["#196496", "#3D9ECD", "#54C4F0", "#D6A928", "#B87333", "#8FB0C9", "#15803D", "#B5482E"];
+const AVATAR_PALETTE = ["#196496", "#12B4F2", "#3D9ECD", "#5F8A1E", "#4A5A68", "#FF7A1A"];
 
 /** Couleur déterministe (même nom → même couleur) pour un avatar */
 export function avatarColor(name) {
