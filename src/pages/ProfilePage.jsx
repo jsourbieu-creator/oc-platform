@@ -43,7 +43,7 @@ export function ProfilePage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Profil</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Profil</h1>
 
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="label-title">Mes informations</div>

@@ -1,12 +1,16 @@
+import { Newspaper, MessageCircle, ClipboardList, TriangleAlert, UserPlus, UserCheck, Star, Bell } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 const TYPE_ICONS = {
-  new_post: "📰",
-  new_comment: "💬",
-  convocation: "📋",
-  event_cancelled: "⚠️",
+  new_post: Newspaper,
+  new_comment: MessageCircle,
+  convocation: ClipboardList,
+  event_cancelled: TriangleAlert,
+  join_request: UserPlus,
+  join_approved: UserCheck,
+  rate_request: Star,
 };
 
 function fmtDateTime(s) {
@@ -42,7 +46,7 @@ export function NotificationsPage({ goto }) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h1 style={{ fontSize: "1.9rem" }}>Notifications</h1>
+        <h1 className="page-title">Notifications</h1>
         {unread > 0 && <button className="btn btn-ghost btn-sm" onClick={markAllRead}>Tout marquer lu ({unread})</button>}
       </div>
       {error && <div className="error-box">{error}</div>}
@@ -62,7 +66,7 @@ export function NotificationsPage({ goto }) {
               onClick={() => n.view && goto?.(n.view)}
             >
               <div style={{ minWidth: 0 }}>
-                <span style={{ marginRight: 8 }}>{TYPE_ICONS[n.type] ?? "🔔"}</span>
+                <span style={{ marginRight: 8, display: "inline-flex", verticalAlign: "-3px", color: "var(--text-dim)" }}>{(() => { const I = TYPE_ICONS[n.type] ?? Bell; return <I size={16} />; })()}</span>
                 <span style={{ fontWeight: n.read_at ? 400 : 700 }}>{n.text}</span>
                 <div className="subtle">{fmtDateTime(n.created_at)}</div>
               </div>

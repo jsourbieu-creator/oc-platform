@@ -21,7 +21,7 @@ export function Sidebar({ view, goto, badges = {} }) {
               className={`sidebar-item ${active ? "active" : ""} ${!available ? "disabled" : ""}`}
               onClick={() => available && goto(item.view)}
             >
-              <span className="sidebar-item-label"><span>{item.icon}</span>{item.label}</span>
+              <span className="sidebar-item-label"><item.icon size={17} strokeWidth={2} />{item.label}</span>
               {available && badges[item.view] > 0 && (
                 <span style={{ background: "var(--danger-600)", color: "#fff", borderRadius: "var(--radius-full)", fontSize: "0.65rem", fontWeight: 800, padding: "2px 7px" }}>
                   {badges[item.view] > 9 ? "9+" : badges[item.view]}

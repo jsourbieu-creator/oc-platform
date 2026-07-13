@@ -1,3 +1,4 @@
+import { Pin, MessageCircle, Flame } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -77,7 +78,7 @@ export function VestiairePage() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h1 style={{ fontSize: "1.9rem" }}>Vestiaire</h1>
+        <h1 className="page-title">Vestiaire</h1>
         {publish && (
           <button className="btn btn-secondary btn-sm" onClick={() => setForm(form ? null : { title: "", content: "" })}>
             {form ? "Annuler" : "+ Nouvelle annonce"}
@@ -135,7 +136,7 @@ function PostCard({ post: p, myMemberId, activeRole, onEdit, onDelete, onPin, on
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            {Number(p.pinned) === 1 && <span title="Épinglé">📌</span>}
+            {Number(p.pinned) === 1 && <span title="Épinglé" style={{ display: "inline-flex", color: "var(--oc-blue-deep)" }}><Pin size={15} /></span>}
             <strong style={{ fontSize: "1.05rem" }}>{p.title}</strong>
           </div>
           <div className="subtle">
@@ -166,7 +167,7 @@ function PostCard({ post: p, myMemberId, activeRole, onEdit, onDelete, onPin, on
       </div>
 
       <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => setShowComments((v) => !v)}>
-        💬 {p.comment_count} commentaire{p.comment_count > 1 ? "s" : ""}
+        <MessageCircle size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{p.comment_count} commentaire{p.comment_count > 1 ? "s" : ""}
       </button>
 
       {showComments && <Comments postId={p.id} myMemberId={myMemberId} moderate={moderate} />}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 
 const THEME_KEY = "oc_theme";
 
@@ -25,7 +26,7 @@ export function ThemeToggle() {
         localStorage.setItem(THEME_KEY, next);
       }}
     >
-      {theme === "light" ? "🌙" : "☀️"}
+      {theme === "light" ? <Moon size={17} /> : <Sun size={17} />}
     </button>
   );
 }

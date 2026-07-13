@@ -27,7 +27,7 @@ export function SettingsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Paramètres</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Paramètres</h1>
 
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="label-title">Apparence</div>

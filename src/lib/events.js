@@ -1,7 +1,9 @@
+import { Goal, Dumbbell, PartyPopper } from "lucide-react";
+
 export const EVENT_TYPES = {
-  match: { label: "Match", icon: "⚽", color: "var(--gold-500)" },
-  training: { label: "Entraînement", icon: "🏃", color: "var(--oc-blue-deep)" },
-  club_event: { label: "Événement club", icon: "🎉", color: "var(--oc-blue-bright)" },
+  match: { label: "Match", icon: Goal, color: "var(--gold-500)" },
+  training: { label: "Entraînement", icon: Dumbbell, color: "var(--oc-blue-deep)" },
+  club_event: { label: "Événement club", icon: PartyPopper, color: "var(--oc-blue-bright)" },
 };
 
 export const AVAIL_LABELS = {

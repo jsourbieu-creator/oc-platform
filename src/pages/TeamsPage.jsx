@@ -27,7 +27,7 @@ export function TeamsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Équipes & saisons</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Équipes & saisons</h1>
       {error && <div className="error-box">{error}</div>}
       <SeasonsBlock seasons={seasons} manage={manage} reload={load} />
       <TeamsBlock teams={teams} seasons={seasons} members={members} manage={manage} reload={load} />

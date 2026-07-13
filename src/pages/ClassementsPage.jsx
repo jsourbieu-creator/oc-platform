@@ -1,3 +1,4 @@
+import { Trophy, Star, Users } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -87,7 +88,7 @@ export function ClassementsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Classement Ballon d'Or</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Classement Ballon d'Or</h1>
       {error && <div className="error-box">{error}</div>}
       {notice && <div className="info-box">{notice}</div>}
 
@@ -150,9 +151,9 @@ export function ClassementsPage() {
 
       {rankings && (rankings.official.length > 0 || rankings.provisional.length > 0) && (
         <div className="stat-tiles">
-          <StatTile icon="🏆" value={rankings.official[0]?.name ?? "—"} label="En tête du classement" tint="gold" />
-          <StatTile icon="⭐" value={rankings.group_average !== null ? fmtScore(rankings.group_average) : "—"} label="Moyenne du groupe" tint="blue" />
-          <StatTile icon="👥" value={rankings.official.length + rankings.provisional.length} label="Joueurs classés" tint="green" />
+          <StatTile icon={<Trophy size={20} />} value={rankings.official[0]?.name ?? "—"} label="En tête du classement" tint="gold" />
+          <StatTile icon={<Star size={20} />} value={rankings.group_average !== null ? fmtScore(rankings.group_average) : "—"} label="Moyenne du groupe" tint="blue" />
+          <StatTile icon={<Users size={20} />} value={rankings.official.length + rankings.provisional.length} label="Joueurs classés" tint="green" />
         </div>
       )}
 

@@ -31,7 +31,7 @@ export function ConvocationsPage({ goto }) {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Convocations</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Convocations</h1>
       {error && <div className="error-box">{error}</div>}
       {events === null && <div className="spinner" />}
 
@@ -53,7 +53,7 @@ export function ConvocationsPage({ goto }) {
             <div key={e.id} className="event-row" style={{ flexWrap: "wrap" }}>
               <DateBadge date={e.starts_at} color={(EVENT_TYPES[e.type] ?? EVENT_TYPES.match).color} />
               <div className="event-row-body">
-                <strong>{(EVENT_TYPES[e.type] ?? EVENT_TYPES.match).icon} {e.title}</strong>
+                <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>{(() => { const I = (EVENT_TYPES[e.type] ?? EVENT_TYPES.match).icon; return <I size={15} />; })()}{e.title}</strong>
                 <span className={`badge ${e.my_convocation === "confirmed" ? "badge-info" : "badge-neutral"}`} style={{ marginLeft: 8 }}>{CONV_LABELS[e.my_convocation]}</span>
                 <div className="subtle">
                   {fmtTime(e.starts_at)}

@@ -1,3 +1,4 @@
+import { Activity, Star, Users, Target, Flame, TrendingUp } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,7 +33,7 @@ export function StatistiquesPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Statistiques collectives</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Statistiques collectives</h1>
       {error && <div className="error-box">{error}</div>}
 
       <div className="card" style={{ marginBottom: 16 }}>
@@ -52,9 +53,9 @@ export function StatistiquesPage() {
       {stats && (
         <>
           <div className="stat-tiles">
-            <StatTile icon="🏃" value={stats.total_sessions} label="Séances jouées" tint="blue" />
-            <StatTile icon="⭐" value={stats.group_average !== null ? fmtScore(stats.group_average) : "—"} label="Moyenne du groupe" tint="gold" />
-            <StatTile icon="👥" value={stats.nb_ranked_players} label="Joueurs classés" tint="green" />
+            <StatTile icon={<Activity size={20} />} value={stats.total_sessions} label="Séances jouées" tint="blue" />
+            <StatTile icon={<Star size={20} />} value={stats.group_average !== null ? fmtScore(stats.group_average) : "—"} label="Moyenne du groupe" tint="gold" />
+            <StatTile icon={<Users size={20} />} value={stats.nb_ranked_players} label="Joueurs classés" tint="green" />
           </div>
 
           <div className="card" style={{ marginBottom: 16, display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
@@ -91,9 +92,9 @@ export function StatistiquesPage() {
           </div>
 
           <div className="card">
-            {stats.most_regular && <div className="list-row"><span>🎯 Joueur le plus régulier</span><strong>{stats.most_regular.name}</strong></div>}
-            {stats.most_assiduous && <div className="list-row"><span>🔥 Joueur le plus assidu</span><strong>{stats.most_assiduous.name} ({stats.most_assiduous.value}%)</strong></div>}
-            {stats.best_progression && <div className="list-row"><span>📈 Meilleure progression</span><strong>{stats.best_progression.name} ({stats.best_progression.value > 0 ? "+" : ""}{fmtScore(stats.best_progression.value)})</strong></div>}
+            {stats.most_regular && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Target size={14} />Joueur le plus régulier</span><strong>{stats.most_regular.name}</strong></div>}
+            {stats.most_assiduous && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Flame size={14} />Joueur le plus assidu</span><strong>{stats.most_assiduous.name} ({stats.most_assiduous.value}%)</strong></div>}
+            {stats.best_progression && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><TrendingUp size={14} />Meilleure progression</span><strong>{stats.best_progression.name} ({stats.best_progression.value > 0 ? "+" : ""}{fmtScore(stats.best_progression.value)})</strong></div>}
           </div>
         </>
       )}

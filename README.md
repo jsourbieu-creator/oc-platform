@@ -156,8 +156,25 @@ via phpMyAdmin.
   convocations, taux de participation aux votes, joueur le plus
   régulier/assidu, meilleure progression — à l'échelle de la saison.
 
+## Passe design (post-refonte TeamPulse)
+
+- **Icônes** : tous les emojis d'interface remplacés par `lucide-react`
+  (navigation, types d'événements, notifications, trophées, boutons,
+  cloche, thème) — seules les réactions du Vestiaire restent des emojis,
+  car c'est du contenu, pas de l'iconographie.
+- **Typographie** : Oswald → **Space Grotesk** en display (titres, chiffres,
+  hero), tracking resserré (-0.02em) ; Inter conservé en texte avec
+  `cv05/cv11` ; labels plus discrets (0.68rem, tracking 0.08em).
+- **Couleurs** : neutres refroidis et teintés bleu (ancrés sur le blason),
+  mode sombre plus profond (#0A141F) avec sémantiques translucides,
+  success/warning/danger modernisés (émeraude/ambre), focus ring visible
+  (accessibilité), ombres plus douces, boutons primaires en dégradé du
+  blason (deep → mid).
+
 ## Ce qui n'est PAS encore fait
 
+Profil enrichi (photo de profil, équipe pro préférée, point fort / point
+faible, meilleur pied, mini-avatar) — demandé, planifié après la PWA.
 Export Excel/PDF natif (le CSV couvre l'essentiel, s'ouvre dans Excel),
 fusion du module Ballon d'Or cérémonie existant (PHP/SQLite séparé, projet
 « awards-castelblangeoise ») dans cette base commune, PWA (Phase 8).
