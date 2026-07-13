@@ -5,9 +5,15 @@ export const EVENT_TYPES = {
 };
 
 export const AVAIL_LABELS = {
-  available: "Disponible",
-  maybe: "Peut-être",
-  unavailable: "Indisponible",
+  present: "Présent",
+  absent: "Absent",
+  injured: "Blessé",
+};
+
+export const AVAIL_COLORS = {
+  present: "var(--success-600)",
+  absent: "var(--danger-600)",
+  injured: "var(--warning-600)",
 };
 
 export const CONV_LABELS = {

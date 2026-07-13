@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { AVAIL_LABELS, fmtDate, fmtTime, isPast, EVENT_TYPES } from "@/lib/events";
+import { AVAIL_LABELS, AVAIL_COLORS, fmtDate, fmtTime, isPast, EVENT_TYPES } from "@/lib/events";
 import { DateBadge } from "@/components/ui";
 
 export function AvailabilityPage() {
@@ -65,14 +65,25 @@ function Row({ event: e, setAvail }) {
         <strong>{t.icon} {e.title}</strong>
         {e.team_name && <span className="badge badge-info" style={{ marginLeft: 8 }}>{e.team_name}</span>}
         <div className="subtle">{fmtTime(e.starts_at)}</div>
-        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-          {Object.entries(AVAIL_LABELS).map(([v, l]) => (
-            <button
-              key={v}
-              className={`btn btn-sm ${e.my_availability === v ? "btn-primary" : "btn-secondary"}`}
-              onClick={() => setAvail(e.id, v)}
-            >{l}</button>
-          ))}
+        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+            const active = e.my_availability === v;
+            return (
+              <button
+                key={v}
+                onClick={() => setAvail(e.id, v)}
+                style={{
+                  flex: "1 1 90px", padding: "12px 10px", borderRadius: "var(--radius-sm)",
+                  fontWeight: 700, fontSize: "0.9rem", cursor: "pointer",
+                  background: active ? AVAIL_COLORS[v] : "transparent",
+                  color: active ? "#fff" : "var(--text-dim)",
+                  border: `1.5px solid ${active ? AVAIL_COLORS[v] : "var(--border)"}`,
+                  opacity: active ? 1 : 0.55,
+                  transition: "opacity .12s ease, background .12s ease",
+                }}
+              >{l}</button>
+            );
+          })}
         </div>
       </div>
     </div>

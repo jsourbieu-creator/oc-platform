@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { EVENT_TYPES, AVAIL_LABELS, CONV_LABELS, fmtDate, fmtTime, fmtMonthKey, isPast, canManageEvents } from "@/lib/events";
+import { EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, CONV_LABELS, fmtDate, fmtTime, fmtMonthKey, isPast, canManageEvents } from "@/lib/events";
 import { DateBadge, AvatarStack } from "@/components/ui";
 
 export function CalendarPage() {
@@ -58,7 +58,7 @@ export function CalendarPage() {
 function EventCard({ event: e, open, toggle, reload }) {
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   const cancelled = e.status === "cancelled";
-  const availableCount = e.avail_counts?.available ?? 0;
+  const availableCount = e.avail_counts?.present ?? 0;
   const confirmedCount = e.conv_counts?.confirmed ?? 0;
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
   const confirmedPeople = (e.confirmed_names ?? []).map((name) => ({ name }));
@@ -80,7 +80,7 @@ function EventCard({ event: e, open, toggle, reload }) {
               {e.opponent ? ` — vs ${e.opponent}` : ""}
             </div>
             <div className="subtle" style={{ marginTop: 4 }}>
-              {availableCount > 0 && <>✅ {availableCount} dispo{availableCount > 1 ? "s" : ""} </>}
+              {availableCount > 0 && <>✅ {availableCount} présent{availableCount > 1 ? "s" : ""} </>}
               {convokedTotal > 0 && <>📋 {confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""}</>}
             </div>
           </div>
@@ -140,13 +140,22 @@ function EventDetail({ event: e, reload }) {
         <div style={{ marginBottom: 12 }}>
           <div className="label-title">Ma disponibilité</div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {Object.entries(AVAIL_LABELS).map(([v, l]) => (
-              <button
-                key={v}
-                className={`btn btn-sm ${e.my_availability === v ? "btn-primary" : "btn-secondary"}`}
-                onClick={() => setAvail(v)}
-              >{l}</button>
-            ))}
+            {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+              const active = e.my_availability === v;
+              return (
+                <button
+                  key={v}
+                  className="btn btn-sm"
+                  style={{
+                    background: active ? AVAIL_COLORS[v] : "transparent",
+                    color: active ? "#fff" : "var(--text-dim)",
+                    border: `1.5px solid ${active ? AVAIL_COLORS[v] : "var(--border)"}`,
+                    opacity: active ? 1 : 0.6,
+                  }}
+                  onClick={() => setAvail(v)}
+                >{l}</button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -177,7 +186,7 @@ function EventDetail({ event: e, reload }) {
           {availList?.map((a, i) => (
             <div key={i} className="list-row" style={{ padding: "6px 0" }}>
               <span>{a.first_name} {a.last_name}{a.comment ? <span className="subtle"> — {a.comment}</span> : ""}</span>
-              <span className={`badge ${a.status === "available" ? "badge-info" : "badge-neutral"}`}>{AVAIL_LABELS[a.status]}</span>
+              <span className="badge" style={{ background: AVAIL_COLORS[a.status], color: "#fff" }}>{AVAIL_LABELS[a.status]}</span>
             </div>
           ))}
         </div>

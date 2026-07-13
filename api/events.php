@@ -252,7 +252,7 @@ switch ($action) {
         if ($event['status'] === 'cancelled') json_error('Cet événement est annulé.');
 
         $status = $in['status'] ?? '';
-        if (!in_array($status, ['available', 'unavailable', 'maybe'], true)) json_error('Réponse invalide.');
+        if (!in_array($status, ['present', 'absent', 'injured'], true)) json_error('Réponse invalide.');
         $comment = trim($in['comment'] ?? '');
 
         $stmt = db()->prepare('
@@ -278,7 +278,7 @@ switch ($action) {
             JOIN club_members cm ON cm.id = ea.club_member_id
             JOIN users u ON u.id = cm.user_id
             WHERE ea.event_id = ?
-            ORDER BY FIELD(ea.status, "available", "maybe", "unavailable"), u.last_name
+            ORDER BY FIELD(ea.status, "present", "injured", "absent"), u.last_name
         ');
         $stmt->execute([$eventId]);
         json_out(['availabilities' => $stmt->fetchAll()]);
