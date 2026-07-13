@@ -18,12 +18,27 @@ import { ConvocationsPage } from "@/pages/ConvocationsPage";
 import { VestiairePage } from "@/pages/VestiairePage";
 import { NotificationsPage } from "@/pages/NotificationsPage";
 import { MessagesPage } from "@/pages/MessagesPage";
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 function Root() {
   const [publicView, setPublicView] = useState("login"); // login | signup
   const [dashView, setDashView] = useState("home");
+  const [resetToken, setResetToken] = useState(() => new URLSearchParams(window.location.search).get("reset"));
   const { loading, token, user, memberships } = useAuth();
+
+  if (resetToken) {
+    return (
+      <ResetPasswordPage
+        token={resetToken}
+        done={() => {
+          window.history.replaceState({}, "", window.location.pathname);
+          setResetToken(null);
+          setPublicView("login");
+        }}
+      />
+    );
+  }
 
   if (loading) {
     return (

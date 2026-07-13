@@ -1,6 +1,6 @@
 import { NAV_ITEMS, isAvailable } from "@/lib/navigation";
 
-export function Sidebar({ view, goto }) {
+export function Sidebar({ view, goto, badges = {} }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -21,6 +21,11 @@ export function Sidebar({ view, goto }) {
               onClick={() => available && goto(item.view)}
             >
               <span className="sidebar-item-label"><span>{item.icon}</span>{item.label}</span>
+              {available && badges[item.view] > 0 && (
+                <span style={{ background: "var(--danger-600)", color: "#fff", borderRadius: "var(--radius-full)", fontSize: "0.65rem", fontWeight: 800, padding: "2px 7px" }}>
+                  {badges[item.view] > 9 ? "9+" : badges[item.view]}
+                </span>
+              )}
               {!available && <span className="badge badge-neutral">Phase {item.phase}</span>}
             </div>
           );

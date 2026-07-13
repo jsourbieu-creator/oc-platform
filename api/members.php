@@ -158,6 +158,9 @@ switch ($action) {
 
         $stmt = db()->prepare('UPDATE club_members SET status = ? WHERE id = ?');
         $stmt->execute([$newStatus, $memberId]);
+        if ($newStatus === 'active' && $target['status'] !== 'active') {
+            notify_members([(int) $memberId], 'join_approved', 'Bienvenue ! Ton adhésion au club est validée 🎉', 'home');
+        }
         log_action((int) $me['id'], 'member_set_status', "membre #$memberId → $newStatus");
         json_out(['ok' => true]);
         break;

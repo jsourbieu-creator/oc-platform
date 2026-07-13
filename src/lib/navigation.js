@@ -25,7 +25,7 @@ export const MOBILE_NAV_ITEMS = [
   NAV_ITEMS.find((i) => i.label === "Accueil"),
   NAV_ITEMS.find((i) => i.label === "Vestiaire"),
   NAV_ITEMS.find((i) => i.label === "Calendrier"),
-  NAV_ITEMS.find((i) => i.label === "Votes"),
+  NAV_ITEMS.find((i) => i.label === "Messages"),
   { label: "Plus", view: "plus", icon: "⋯", phase: 0 },
 ];
 

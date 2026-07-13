@@ -96,6 +96,21 @@ via phpMyAdmin.
 ⚠️ La Phase 5 nécessite d'importer `api/migrations/0007_phase5_messagerie.sql`
 via phpMyAdmin.
 
+## Itérations post-Phase 5
+
+- **Pastilles de non-lus** : badge rouge sur « Messages » et « Notifications »
+  dans la barre latérale et la barre mobile (poll combiné toutes les 25 s) ;
+  « Messages » remplace « Votes » (verrouillé) dans la barre mobile.
+- **Mot de passe oublié** : lien sur l'écran de connexion → e-mail avec lien
+  de réinitialisation (PHP `mail()`, jeton 1 h, usage unique, invalide toutes
+  les sessions ouvertes). Réponse identique que l'e-mail existe ou non.
+  Migration : `0008_password_resets.sql`.
+- **Adhésion sans code** (plateforme mono-club) : après inscription, bouton
+  « Demander à rejoindre le club » → les admins reçoivent une notification et
+  valident dans Membres (statut « En attente » → « Actif », le membre est
+  notifié). Le code d'invitation reste disponible en option (utile pour
+  pré-attribuer un rôle).
+
 ## Ce qui n'est PAS encore fait
 
 Documents/médiathèque

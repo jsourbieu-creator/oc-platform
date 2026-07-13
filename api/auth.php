@@ -124,6 +124,69 @@ switch ($action) {
         json_out(['ok' => true]);
         break;
 
+    // Demande de réinitialisation : envoie un lien par e-mail.
+    // Répond toujours ok (même e-mail inconnu) pour ne pas révéler qui a un compte.
+    case 'request_password_reset':
+        $email = strtolower(trim($in['email'] ?? ''));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) json_error('E-mail invalide.');
+
+        $stmt = db()->prepare('SELECT id, first_name FROM users WHERE email = ?');
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+
+        if ($user) {
+            // Un seul jeton valide à la fois par utilisateur
+            db()->prepare('DELETE FROM password_resets WHERE user_id = ?')->execute([(int) $user['id']]);
+
+            $token = bin2hex(random_bytes(32));
+            $stmt = db()->prepare('INSERT INTO password_resets (token, user_id, expires_at) VALUES (?,?,?)');
+            $stmt->execute([$token, (int) $user['id'], date('Y-m-d H:i:s', time() + 3600)]);
+
+            // URL de l'app construite côté serveur (jamais depuis le client)
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $appPath = rtrim(dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '/api/auth.php')), '/');
+            $link = "$scheme://$host$appPath/?reset=$token";
+
+            $subject = 'Réinitialisation de ton mot de passe — Olympique Castelblangeoise';
+            $body = "Salut {$user['first_name']},\n\n"
+                  . "Quelqu'un (sans doute toi) a demandé à réinitialiser le mot de passe de ton compte sur la plateforme du club.\n\n"
+                  . "Clique sur ce lien (valable 1 heure) :\n$link\n\n"
+                  . "Si tu n'es pas à l'origine de cette demande, ignore simplement cet e-mail.\n\n"
+                  . "— La plateforme de l'Olympique Castelblangeoise";
+            $headers = "From: Olympique Castelblangeoise <noreply@$host>\r\n"
+                     . "Content-Type: text/plain; charset=UTF-8\r\n";
+            @mail($email, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers);
+            log_action((int) $user['id'], 'request_password_reset');
+        }
+        json_out(['ok' => true]);
+        break;
+
+    case 'reset_password':
+        $token = trim($in['token'] ?? '');
+        $new = (string) ($in['new_password'] ?? '');
+        if ($token === '') json_error('Jeton manquant.');
+        if (strlen($new) < 8) json_error('Le mot de passe doit faire au moins 8 caractères.');
+
+        $stmt = db()->prepare('SELECT user_id, expires_at FROM password_resets WHERE token = ?');
+        $stmt->execute([$token]);
+        $reset = $stmt->fetch();
+        if (!$reset) json_error('Lien invalide ou déjà utilisé. Refais une demande.', 404);
+        if (strtotime($reset['expires_at']) < time()) {
+            db()->prepare('DELETE FROM password_resets WHERE token = ?')->execute([$token]);
+            json_error('Ce lien a expiré (1 h). Refais une demande.', 410);
+        }
+
+        $userId = (int) $reset['user_id'];
+        db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+            ->execute([password_hash($new, PASSWORD_DEFAULT), $userId]);
+        db()->prepare('DELETE FROM password_resets WHERE user_id = ?')->execute([$userId]);
+        // Sécurité : invalide toutes les sessions ouvertes
+        db()->prepare('DELETE FROM auth_tokens WHERE user_id = ?')->execute([$userId]);
+        log_action($userId, 'reset_password');
+        json_out(['ok' => true]);
+        break;
+
     default:
         json_error('Action inconnue.', 404);
 }

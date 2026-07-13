@@ -106,6 +106,51 @@ switch ($action) {
         json_out(['ok' => true]);
         break;
 
+    // Demande d'adhésion sans code (plateforme mono-club) : crée une
+    // adhésion "invited" que les admins valident dans Membres.
+    case 'request_join':
+        $me = current_user();
+        $club = db()->query('SELECT id, name FROM clubs ORDER BY id LIMIT 1')->fetch();
+        if (!$club) json_error('Aucun club n\'existe encore.', 404);
+        $clubId = (int) $club['id'];
+
+        $stmt = db()->prepare('SELECT id, status FROM club_members WHERE club_id = ? AND user_id = ?');
+        $stmt->execute([$clubId, (int) $me['id']]);
+        $existing = $stmt->fetch();
+        if ($existing) {
+            if ($existing['status'] === 'active') json_error('Tu es déjà membre du club.');
+            if ($existing['status'] === 'invited') json_error('Ta demande est déjà en attente de validation.');
+            json_error('Ton adhésion a été suspendue ou archivée : contacte un administrateur.', 403);
+        }
+
+        $stmt = db()->prepare("INSERT INTO club_members (club_id, user_id, role, status) VALUES (?,?,'player','invited')");
+        $stmt->execute([$clubId, (int) $me['id']]);
+
+        // Notifie les admins actifs
+        $stmt = db()->prepare("SELECT id FROM club_members WHERE club_id = ? AND role IN ('super_admin','admin') AND status = 'active'");
+        $stmt->execute([$clubId]);
+        notify_members(
+            array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN)),
+            'join_request',
+            "Demande d'adhésion : {$me['first_name']} {$me['last_name']}",
+            'membres'
+        );
+        log_action((int) $me['id'], 'request_join', $club['name']);
+        json_out(['ok' => true]);
+        break;
+
+    // Statut de ma relation au club unique (null = aucune demande)
+    case 'my_join_status':
+        $me = current_user();
+        $club = db()->query('SELECT id, name FROM clubs ORDER BY id LIMIT 1')->fetch();
+        if (!$club) json_out(['club_name' => null, 'status' => null]);
+
+        $stmt = db()->prepare('SELECT status FROM club_members WHERE club_id = ? AND user_id = ?');
+        $stmt->execute([(int) $club['id'], (int) $me['id']]);
+        $status = $stmt->fetchColumn() ?: null;
+        json_out(['club_name' => $club['name'], 'status' => $status]);
+        break;
+
     default:
         json_error('Action inconnue.', 404);
 }

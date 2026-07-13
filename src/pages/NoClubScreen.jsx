@@ -28,22 +28,7 @@ export function NoClubScreen() {
   if (needsSetup === null) return <div className="spinner" />;
 
   if (!needsSetup) {
-    return (
-      <div className="auth-screen">
-        <div className="auth-box" style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "2rem", marginBottom: 8 }}>👋</div>
-          <h2 style={{ fontSize: "1.4rem", marginBottom: 8 }}>Rejoindre le club</h2>
-          <p style={{ color: "var(--text-dim)", fontSize: "0.9rem" }}>
-            Ton compte existe mais n'est encore rattaché à aucun club. Si un
-            administrateur t'a transmis un code d'invitation, saisis-le ici.
-          </p>
-          <JoinWithCode />
-          <span onClick={signOut} style={{ color: "var(--oc-blue-600)", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}>
-            Se déconnecter
-          </span>
-        </div>
-      </div>
-    );
+    return <JoinScreen signOut={signOut} />;
   }
 
   return (
@@ -63,6 +48,80 @@ export function NoClubScreen() {
             <button className="btn btn-primary" disabled={loading}>{loading ? "Création…" : "Créer le club"}</button>
           </form>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function JoinScreen({ signOut }) {
+  const { token, refresh } = useAuth();
+  const [status, setStatus] = useState(undefined); // undefined = chargement
+  const [clubName, setClubName] = useState("");
+  const [showCode, setShowCode] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const loadStatus = () => {
+    api("clubs.php", "my_join_status", {}, token)
+      .then((d) => { setStatus(d.status); setClubName(d.club_name ?? "le club"); })
+      .catch((e) => { setError(e.message); setStatus(null); });
+  };
+  useEffect(loadStatus, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const requestJoin = async () => {
+    setError(""); setBusy(true);
+    try {
+      await api("clubs.php", "request_join", {}, token);
+      setStatus("invited");
+    } catch (e2) { setError(e2.message); } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="auth-screen">
+      <div className="auth-box" style={{ textAlign: "center" }}>
+        <div style={{ fontSize: "2rem", marginBottom: 8 }}>👋</div>
+        <h2 style={{ fontSize: "1.4rem", marginBottom: 8 }}>Rejoindre {clubName || "le club"}</h2>
+        {error && <div className="error-box" style={{ textAlign: "left" }}>{error}</div>}
+
+        {status === undefined && <div className="spinner" />}
+
+        {status === "invited" && (
+          <div>
+            <div className="info-box" style={{ textAlign: "left" }}>
+              Ta demande d'adhésion est envoyée ✅ Un administrateur du club doit
+              la valider — tu recevras l'accès dès que c'est fait.
+            </div>
+            <button className="btn btn-secondary btn-sm" style={{ marginBottom: 16 }} onClick={() => refresh()}>Vérifier à nouveau</button>
+          </div>
+        )}
+
+        {(status === "suspended" || status === "archived") && (
+          <p style={{ color: "var(--text-dim)", fontSize: "0.9rem" }}>
+            Ton adhésion a été suspendue ou archivée. Contacte un administrateur du club.
+          </p>
+        )}
+
+        {status === null && (
+          <div>
+            <p style={{ color: "var(--text-dim)", fontSize: "0.9rem" }}>
+              Ton compte est créé — il ne reste qu'à demander l'accès au club.
+              Un administrateur validera ta demande.
+            </p>
+            <button className="btn btn-primary" style={{ margin: "8px 0 14px" }} disabled={busy} onClick={requestJoin}>
+              {busy ? "Envoi…" : "Demander à rejoindre le club"}
+            </button>
+            <div style={{ marginBottom: 16 }}>
+              <span style={{ color: "var(--text-dim)", cursor: "pointer", fontSize: "0.82rem" }} onClick={() => setShowCode((v) => !v)}>
+                {showCode ? "Masquer" : "J'ai un code d'invitation"}
+              </span>
+              {showCode && <JoinWithCode />}
+            </div>
+          </div>
+        )}
+
+        <span onClick={signOut} style={{ color: "var(--oc-blue-600)", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}>
+          Se déconnecter
+        </span>
       </div>
     </div>
   );

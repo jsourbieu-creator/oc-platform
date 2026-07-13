@@ -9,7 +9,7 @@ const ROLE_LABELS = {
   board_member: "Bureau",
   player: "Joueur",
 };
-const STATUS_LABELS = { active: "Actif", invited: "Invité", suspended: "Suspendu", archived: "Archivé" };
+const STATUS_LABELS = { active: "Actif", invited: "En attente", suspended: "Suspendu", archived: "Archivé" };
 const canManage = (role) => role === "super_admin" || role === "admin";
 
 export function MembersPage() {

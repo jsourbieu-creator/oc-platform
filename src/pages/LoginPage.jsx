@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/lib/api";
 
 export function LoginPage({ goto }) {
   const { login } = useAuth();
@@ -7,6 +8,17 @@ export function LoginPage({ goto }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgot, setForgot] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+
+  const sendReset = async (e) => {
+    e.preventDefault();
+    setError(""); setLoading(true);
+    try {
+      await api("auth.php", "request_password_reset", { email });
+      setForgotSent(true);
+    } catch (e2) { setError(e2.message); } finally { setLoading(false); }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -28,6 +40,26 @@ export function LoginPage({ goto }) {
           <div style={{ color: "var(--text-dim)", fontSize: "0.9rem", marginTop: 4 }}>Connexion à ta plateforme de club</div>
         </div>
         <div className="card">
+          {forgot ? (
+            forgotSent ? (
+              <div>
+                <div className="info-box">Si un compte existe avec cet e-mail, un lien de réinitialisation vient d'être envoyé (valable 1 h). Pense à vérifier les spams.</div>
+                <span style={{ color: "var(--oc-blue-600)", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }} onClick={() => { setForgot(false); setForgotSent(false); }}>← Retour à la connexion</span>
+              </div>
+            ) : (
+              <form onSubmit={sendReset}>
+                {error && <div className="error-box">{error}</div>}
+                <div className="field">
+                  <label>E-mail du compte</label>
+                  <input type="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} />
+                </div>
+                <button className="btn btn-primary" disabled={loading}>{loading ? "Envoi…" : "M'envoyer un lien de réinitialisation"}</button>
+                <div style={{ textAlign: "center", marginTop: 12 }}>
+                  <span style={{ color: "var(--text-dim)", cursor: "pointer", fontSize: "0.85rem" }} onClick={() => setForgot(false)}>← Retour à la connexion</span>
+                </div>
+              </form>
+            )
+          ) : (
           <form onSubmit={submit}>
             {error && <div className="error-box">{error}</div>}
             <div className="field">
@@ -39,7 +71,11 @@ export function LoginPage({ goto }) {
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
             <button className="btn btn-primary" disabled={loading}>{loading ? "Connexion…" : "Se connecter"}</button>
+            <div style={{ textAlign: "center", marginTop: 12 }}>
+              <span style={{ color: "var(--text-dim)", cursor: "pointer", fontSize: "0.85rem" }} onClick={() => { setForgot(true); setError(""); }}>Mot de passe oublié ?</span>
+            </div>
           </form>
+          )}
         </div>
         <div style={{ textAlign: "center", marginTop: 16, fontSize: "0.9rem", color: "var(--text-dim)" }}>
           Pas encore de compte ?{" "}

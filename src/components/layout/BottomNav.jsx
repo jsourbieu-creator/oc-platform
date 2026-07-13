@@ -1,6 +1,6 @@
 import { MOBILE_NAV_ITEMS, isAvailable } from "@/lib/navigation";
 
-export function BottomNav({ view, goto }) {
+export function BottomNav({ view, goto, badges = {} }) {
   return (
     <nav className="bottom-nav">
       {MOBILE_NAV_ITEMS.map((item) => {
@@ -12,7 +12,14 @@ export function BottomNav({ view, goto }) {
             className={`bottom-nav-item ${active ? "active" : ""} ${!available ? "disabled" : ""}`}
             onClick={() => goto(available ? item.view : "plus")}
           >
-            <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>{item.icon}</span>
+            <span style={{ fontSize: "1.2rem", lineHeight: 1, position: "relative" }}>
+              {item.icon}
+              {badges[item.view] > 0 && (
+                <span style={{ position: "absolute", top: -4, right: -10, background: "var(--danger-600)", color: "#fff", borderRadius: "var(--radius-full)", fontSize: "0.55rem", fontWeight: 800, padding: "1px 5px", lineHeight: 1.4 }}>
+                  {badges[item.view] > 9 ? "9+" : badges[item.view]}
+                </span>
+              )}
+            </span>
             {item.label}
           </div>
         );

@@ -16,6 +16,7 @@ const ROLE_LABELS = {
 export function DashboardShell({ view, goto, children }) {
   const { user, memberships, activeClubId, setActiveClubId, activeRole, signOut, token } = useAuth();
   const [unread, setUnread] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     if (!activeClubId || !token) return;
@@ -24,15 +25,20 @@ export function DashboardShell({ view, goto, children }) {
       api("notifications.php", "unread_count", { club_id: activeClubId }, token)
         .then((d) => { if (alive) setUnread(d.count); })
         .catch(() => {});
+      api("messages.php", "unread_total", { club_id: activeClubId }, token)
+        .then((d) => { if (alive) setUnreadMessages(d.count); })
+        .catch(() => {});
     };
     poll();
-    const id = setInterval(poll, 60000);
+    const id = setInterval(poll, 25000);
     return () => { alive = false; clearInterval(id); };
   }, [activeClubId, token, view]);
 
+  const badges = { messages: unreadMessages, notifications: unread };
+
   return (
     <div className="dashboard-shell">
-      <Sidebar view={view} goto={goto} />
+      <Sidebar view={view} goto={goto} badges={badges} />
       <div className="dashboard-main">
         <header className="topbar">
           <div className="topbar-left">
@@ -59,7 +65,7 @@ export function DashboardShell({ view, goto, children }) {
         </header>
         <main className="dashboard-content">{children}</main>
       </div>
-      <BottomNav view={view} goto={goto} />
+      <BottomNav view={view} goto={goto} badges={badges} />
     </div>
   );
 }
