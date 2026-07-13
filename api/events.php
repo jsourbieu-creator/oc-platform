@@ -293,7 +293,10 @@ switch ($action) {
         require_permission((int) $me['id'], $clubId, 'manage_convocations');
 
         $eventId = (int) ($in['event_id'] ?? 0);
-        event_in_club_or_404($eventId, $clubId);
+        $event = event_in_club_or_404($eventId, $clubId);
+        if ($event['type'] !== 'match') {
+            json_error('Les convocations ne concernent que les matchs (effectif limité). Pour un entraînement, la disponibilité déclarée suffit.');
+        }
 
         $memberIds = array_values(array_unique(array_map('intval', (array) ($in['member_ids'] ?? []))));
 

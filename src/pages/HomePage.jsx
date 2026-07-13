@@ -1,0 +1,546 @@
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { api } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, CONV_LABELS,
+  fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents,
+} from "@/lib/events";
+import { REAL_STATUS_LABELS, fmtScore } from "@/lib/ballondor";
+import { DateBadge, AvatarStack, StatTile } from "@/components/ui";
+import blason from "@/assets/blason.svg";
+
+const ROLE_LABELS = {
+  super_admin: "Super admin", admin: "Administrateur", coach: "Entraîneur",
+  board_member: "Bureau", player: "Joueur",
+};
+
+const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
+
+export function HomePage() {
+  const { user, token, activeClubId, memberships, activeRole } = useAuth();
+  const manage = canManageEvents(activeRole);
+
+  const [seasons, setSeasons] = useState(null);
+  const [teams, setTeams] = useState(null);
+  const [members, setMembers] = useState(null);
+  const [events, setEvents] = useState(null);
+  const [showPast, setShowPast] = useState(false);
+  const [openId, setOpenId] = useState(null);
+  const [form, setForm] = useState(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [myScore, setMyScore] = useState(undefined);
+
+  const load = useCallback(() => {
+    if (!activeClubId) return;
+    api("events.php", "list", { club_id: activeClubId }, token).then((d) => setEvents(d.events)).catch((e) => setError(e.message));
+  }, [activeClubId, token]);
+
+  useEffect(load, [load]);
+
+  useEffect(() => {
+    if (!activeClubId) return;
+    api("seasons.php", "list", { club_id: activeClubId }, token).then((d) => setSeasons(d.seasons)).catch(() => setSeasons([]));
+    api("teams.php", "list", { club_id: activeClubId }, token).then((d) => setTeams(d.teams)).catch(() => setTeams([]));
+    api("members.php", "list", { club_id: activeClubId }, token).then((d) => setMembers(d.members.filter((m) => m.status === "active"))).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeClubId, token]);
+
+  useEffect(() => {
+    if (!activeClubId || !seasons) return;
+    const active = seasons.find((s) => s.status === "active");
+    if (!active) { setMyScore(null); return; }
+    Promise.all([
+      api("members.php", "list", { club_id: activeClubId }, token),
+      api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: active.id }, token),
+    ]).then(([m, r]) => {
+      const me = m.members.find((x) => x.user_id === user?.id);
+      const mine = [...r.official, ...r.provisional].find((p) => p.club_member_id === me?.id);
+      setMyScore(mine ?? null);
+    }).catch(() => setMyScore(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeClubId, seasons, token, user?.id]);
+
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError(""); setBusy(true);
+    const payload = {
+      club_id: activeClubId, type: form.type, title: form.title, opponent: form.opponent,
+      location: form.location, starts_at: fromLocalInput(form.starts_at), ends_at: fromLocalInput(form.ends_at),
+      meet_at: fromLocalInput(form.meet_at), repeat_weekly: !form.event_id && form.repeat_weekly,
+      repeat_until: form.repeat_until, notes: form.notes, team_id: form.team_id ? Number(form.team_id) : 0,
+    };
+    try {
+      if (form.event_id) await api("events.php", "update", { ...payload, event_id: form.event_id }, token);
+      else await api("events.php", "create", payload, token);
+      setForm(null);
+      load();
+    } catch (e2) { setError(e2.message); } finally { setBusy(false); }
+  };
+
+  const edit = (ev) => setForm({
+    event_id: ev.id, type: ev.type, title: ev.title, opponent: ev.opponent ?? "",
+    location: ev.location ?? "", starts_at: toLocalInput(ev.starts_at), ends_at: toLocalInput(ev.ends_at),
+    meet_at: toLocalInput(ev.meet_at), notes: ev.notes ?? "", team_id: ev.team_id ?? "", repeat_weekly: false, repeat_until: "",
+  });
+
+  const setStatus = async (eventId, status) => {
+    setError("");
+    try { await api("events.php", "set_status", { club_id: activeClubId, event_id: eventId, status }, token); load(); }
+    catch (e2) { setError(e2.message); }
+  };
+
+  const remove = async (eventId) => {
+    if (!confirm("Supprimer définitivement cet événement (dispos, convocations et votes compris) ? Pour un simple report, préfère « Annuler ».")) return;
+    setError("");
+    try { await api("events.php", "delete", { club_id: activeClubId, event_id: eventId }, token); load(); }
+    catch (e2) { setError(e2.message); }
+  };
+
+  const club = memberships.find((m) => m.club_id === activeClubId);
+  const activeSeason = seasons?.find((s) => s.status === "active");
+  const visible = events?.filter((e) => showPast || !isPast(e.starts_at)) ?? [];
+  const nextEvent = events?.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled")[0];
+
+  const grouped = [];
+  let currentMonth = null;
+  for (const e of visible) {
+    const key = fmtMonthKey(e.starts_at);
+    if (key !== currentMonth) { grouped.push({ month: key, items: [] }); currentMonth = key; }
+    grouped[grouped.length - 1].items.push(e);
+  }
+
+  return (
+    <div>
+      <div className="hero-banner" style={{ marginBottom: 20 }}>
+        <div className="hero-content">
+          <img src={blason} alt="Blason OC" className="hero-blason" style={{ width: 64 }} />
+          <div className="hero-eyebrow">{club?.club_name}</div>
+          <div className="hero-title" style={{ fontSize: "1.9rem" }}>Salut {user?.first_name}</div>
+          <div className="hero-sub">{ROLE_LABELS[activeRole] ?? activeRole}{activeSeason ? ` — Saison ${activeSeason.name}` : ""}</div>
+        </div>
+      </div>
+
+      <div className="stat-tiles">
+        <StatTile
+          icon={nextEvent ? (EVENT_TYPES[nextEvent.type] ?? EVENT_TYPES.match).icon : "📅"}
+          value={nextEvent === undefined ? "…" : nextEvent ? nextEvent.title : "Aucune"}
+          label={nextEvent ? `${fmtTime(nextEvent.starts_at)}` : "Prochaine séance"}
+          tint="blue"
+        />
+        <StatTile
+          icon="⭐"
+          value={myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}
+          label={myScore ? "Mon score Ballon d'Or" : "Pas encore classé"}
+          tint="gold"
+        />
+        <StatTile icon="🛡️" value={teams?.length ?? "…"} label="Équipes" tint="green" />
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, gap: 8, flexWrap: "wrap" }}>
+        <h1 style={{ fontSize: "1.7rem" }}>Calendrier</h1>
+        <div style={{ display: "flex", gap: 8 }}>
+          {manage && (
+            <button className="btn btn-secondary btn-sm" onClick={() => setForm(form ? null : { ...EMPTY_FORM })}>
+              {form ? "Annuler" : "+ Nouvel événement"}
+            </button>
+          )}
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowPast((v) => !v)}>
+            {showPast ? "Masquer le passé" : "Voir le passé"}
+          </button>
+        </div>
+      </div>
+      {error && <div className="error-box">{error}</div>}
+
+      {form && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="label-title">{form.event_id ? "Modifier l'événement" : "Nouvel événement"}</div>
+          <form onSubmit={submit}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="field">
+                <label>Type</label>
+                <select value={form.type} onChange={(e) => set("type", e.target.value)}>
+                  {Object.entries(EVENT_TYPES).map(([v, t]) => <option key={v} value={v}>{t.label}</option>)}
+                </select>
+              </div>
+              <div className="field">
+                <label>Équipe (optionnel)</label>
+                <select value={form.team_id} onChange={(e) => set("team_id", e.target.value)}>
+                  <option value="">Tout le club</option>
+                  {teams?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="field"><label>Titre</label><input type="text" required placeholder="Match de championnat J5" value={form.title} onChange={(e) => set("title", e.target.value)} /></div>
+            {form.type === "match" && (
+              <div className="field"><label>Adversaire</label><input type="text" placeholder="FC Exemple" value={form.opponent} onChange={(e) => set("opponent", e.target.value)} /></div>
+            )}
+            <div className="field"><label>Lieu</label><input type="text" placeholder="Gymnase municipal" value={form.location} onChange={(e) => set("location", e.target.value)} /></div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="field"><label>Début</label><input type="datetime-local" required value={form.starts_at} onChange={(e) => set("starts_at", e.target.value)} /></div>
+              <div className="field"><label>Fin (optionnel)</label><input type="datetime-local" value={form.ends_at} onChange={(e) => set("ends_at", e.target.value)} /></div>
+            </div>
+            <div className="field"><label>Rendez-vous (optionnel)</label><input type="datetime-local" value={form.meet_at} onChange={(e) => set("meet_at", e.target.value)} /></div>
+            {!form.event_id && (
+              <div style={{ background: "var(--surface-alt)", borderRadius: "var(--radius-sm)", padding: "12px 14px", marginBottom: 16 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", color: "var(--text)", marginBottom: form.repeat_weekly ? 10 : 0, cursor: "pointer" }}>
+                  <input type="checkbox" checked={form.repeat_weekly} onChange={(e) => set("repeat_weekly", e.target.checked)} style={{ width: "auto" }} />
+                  Répéter chaque semaine (même jour, même heure)
+                </label>
+                {form.repeat_weekly && (
+                  <div className="field" style={{ marginBottom: 0 }}>
+                    <label>Jusqu'au (inclus)</label>
+                    <input type="date" required value={form.repeat_until} onChange={(e) => set("repeat_until", e.target.value)} />
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="field"><label>Notes (optionnel)</label><input type="text" placeholder="Maillots bleus, covoiturage…" value={form.notes} onChange={(e) => set("notes", e.target.value)} /></div>
+            <button className="btn btn-primary" disabled={busy}>{busy ? "Enregistrement…" : form.event_id ? "Enregistrer" : "Créer l'événement"}</button>
+          </form>
+        </div>
+      )}
+
+      {events === null && <div className="spinner" />}
+      {events !== null && visible.length === 0 && (
+        <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucun événement {showPast ? "" : "à venir"}.</p></div>
+      )}
+
+      {grouped.map((g) => (
+        <div key={g.month} style={{ marginBottom: 18 }}>
+          <div className="label-title" style={{ textTransform: "capitalize" }}>{g.month}</div>
+          {g.items.map((e) => (
+            <EventAccordionCard
+              key={e.id} event={e} open={openId === e.id} toggle={() => setOpenId(openId === e.id ? null : e.id)}
+              reload={load} manage={manage} members={members} onEdit={edit} onStatus={setStatus} onDelete={remove}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EventAccordionCard({ event: e, open, toggle, reload, manage, members, onEdit, onStatus, onDelete }) {
+  const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
+  const cancelled = e.status === "cancelled";
+  const presentCount = e.avail_counts?.present ?? 0;
+  const confirmedCount = e.conv_counts?.confirmed ?? 0;
+  const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
+  const confirmedPeople = (e.confirmed_names ?? []).map((name) => ({ name }));
+
+  return (
+    <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1 }}>
+      <div style={{ display: "flex", gap: 12, cursor: "pointer" }} onClick={toggle}>
+        <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
+        <div style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <strong>{t.icon} {e.title}</strong>
+              {cancelled && <span className="badge badge-neutral">Annulé</span>}
+              {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
+            </div>
+            <div className="subtle">
+              {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}
+              {e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
+            </div>
+            <div className="subtle" style={{ marginTop: 4 }}>
+              {presentCount > 0 && <>✅ {presentCount} présent{presentCount > 1 ? "s" : ""} </>}
+              {e.type === "match" && convokedTotal > 0 && <>📋 {confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""}</>}
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            <AvatarStack people={confirmedPeople} />
+            <span className="subtle">{open ? "▲" : "▼"}</span>
+          </div>
+        </div>
+      </div>
+      {open && (
+        <EventDetail event={e} reload={reload} manage={manage} members={members} onEdit={onEdit} onStatus={onStatus} onDelete={onDelete} />
+      )}
+    </div>
+  );
+}
+
+function EventDetail({ event: e, reload, manage, members, onEdit, onStatus, onDelete }) {
+  const { token, activeClubId } = useAuth();
+  const cancelled = e.status === "cancelled";
+  const [error, setError] = useState("");
+  const [availList, setAvailList] = useState(null);
+  const [showAvail, setShowAvail] = useState(false);
+
+  const setAvail = async (status) => {
+    setError("");
+    try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); if (showAvail) loadAvail(); }
+    catch (e2) { setError(e2.message); }
+  };
+
+  const loadAvail = useCallback(() => {
+    api("events.php", "availability_list", { club_id: activeClubId, event_id: e.id }, token)
+      .then((d) => setAvailList(d.availabilities)).catch((e2) => setError(e2.message));
+  }, [activeClubId, e.id, token]);
+
+  return (
+    <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+      {error && <div className="error-box">{error}</div>}
+
+      {(e.meet_at || e.notes) && (
+        <div style={{ marginBottom: 12 }}>
+          {e.meet_at && <div style={{ fontSize: "0.88rem" }}>🕐 Rendez-vous à <strong>{fmtTime(e.meet_at)}</strong></div>}
+          {e.notes && <div className="subtle" style={{ whiteSpace: "pre-wrap", marginTop: 4 }}>{e.notes}</div>}
+        </div>
+      )}
+
+      {!cancelled && !isPast(e.starts_at) && (
+        <div style={{ marginBottom: 14 }}>
+          <div className="label-title">Ma disponibilité</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+              const active = e.my_availability === v;
+              return (
+                <button
+                  key={v} className="btn btn-sm"
+                  style={{
+                    background: active ? AVAIL_COLORS[v] : "transparent", color: active ? "#fff" : "var(--text-dim)",
+                    border: `1.5px solid ${active ? AVAIL_COLORS[v] : "var(--border)"}`, opacity: active ? 1 : 0.6,
+                  }}
+                  onClick={() => setAvail(v)}
+                >{l}</button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {manage && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
+          <button className="btn btn-ghost btn-sm" onClick={() => onEdit(e)}>Modifier</button>
+          {cancelled
+            ? <button className="btn btn-ghost btn-sm" onClick={() => onStatus(e.id, "scheduled")}>Rétablir</button>
+            : <button className="btn btn-ghost btn-sm" style={{ color: "var(--warning-600)" }} onClick={() => onStatus(e.id, "cancelled")}>Annuler</button>}
+          <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger-600)" }} onClick={() => onDelete(e.id)}>Suppr.</button>
+        </div>
+      )}
+
+      {manage && e.type === "match" && !cancelled && <ConvocationManager event={e} reload={reload} members={members} />}
+
+      {manage && !cancelled && <PresenceValidator event={e} members={members} />}
+
+      <button className="btn btn-ghost btn-sm" onClick={() => { setShowAvail((v) => !v); if (!showAvail) loadAvail(); }}>
+        {showAvail ? "Masquer les réponses" : "Voir les réponses de dispo"}
+      </button>
+
+      {showAvail && (
+        <div style={{ marginTop: 10 }}>
+          {availList === null && <div className="spinner" />}
+          {availList?.length === 0 && <div className="subtle">Personne n'a encore répondu.</div>}
+          {availList?.map((a, i) => (
+            <div key={i} className="list-row" style={{ padding: "6px 0" }}>
+              <span>{a.first_name} {a.last_name}{a.comment ? <span className="subtle"> — {a.comment}</span> : ""}</span>
+              <span className="badge" style={{ background: AVAIL_COLORS[a.status], color: "#fff" }}>{AVAIL_LABELS[a.status]}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Sélection de l'effectif convoqué — réservée aux matchs (squad limité, ex. 10 joueurs) */
+function ConvocationManager({ event: e, reload, members }) {
+  const { token, activeClubId } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState(new Set());
+  const [convList, setConvList] = useState(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const openManager = async () => {
+    setOpen((v) => !v);
+    if (open) return;
+    setError("");
+    try {
+      const c = await api("events.php", "convocation_list", { club_id: activeClubId, event_id: e.id }, token);
+      setConvList(c.convocations);
+      setSelected(new Set(c.convocations.map((x) => x.club_member_id)));
+    } catch (e2) { setError(e2.message); }
+  };
+
+  const toggleMember = (id) => {
+    const s = new Set(selected);
+    s.has(id) ? s.delete(id) : s.add(id);
+    setSelected(s);
+  };
+
+  const save = async () => {
+    setError(""); setBusy(true);
+    try {
+      await api("events.php", "convoke_set", { club_id: activeClubId, event_id: e.id, member_ids: [...selected] }, token);
+      setOpen(false);
+      reload();
+    } catch (e2) { setError(e2.message); } finally { setBusy(false); }
+  };
+
+  const statusOf = (memberId) => convList?.find((c) => c.club_member_id === memberId)?.status;
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <button className="btn btn-secondary btn-sm" onClick={openManager}>
+        ⚽ {open ? "Fermer les convocations" : "Gérer les convocations (match)"}
+      </button>
+      {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
+      {open && (
+        <div style={{ width: "100%", marginTop: 10 }}>
+          <p className="subtle" style={{ marginTop: 0 }}>Sélectionne les joueurs convoqués pour ce match (effectif limité).</p>
+          {!members && <div className="spinner" />}
+          {members?.map((m) => (
+            <label key={m.id} className="list-row" style={{ padding: "6px 0", cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggleMember(m.id)} style={{ width: "auto" }} />
+                {m.first_name} {m.last_name}
+              </span>
+              {statusOf(m.id) && <span className={`badge ${statusOf(m.id) === "confirmed" ? "badge-info" : "badge-neutral"}`}>{CONV_LABELS[statusOf(m.id)]}</span>}
+            </label>
+          ))}
+          {members && (
+            <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }} disabled={busy} onClick={save}>
+              {busy ? "Enregistrement…" : `Convoquer ${selected.size} joueur${selected.size > 1 ? "s" : ""}`}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Validation de la présence réelle + session de vote — scoping automatique à cette séance */
+function PresenceValidator({ event: e, members }) {
+  const { token, activeClubId } = useAuth();
+  const [candidates, setCandidates] = useState(null);
+  const [statuses, setStatuses] = useState({});
+  const [addMemberId, setAddMemberId] = useState("");
+  const [session, setSession] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const loadCandidates = useCallback(() => {
+    setError(""); setNotice("");
+    api("evaluations.php", "attendance_candidates", { club_id: activeClubId, event_id: e.id }, token)
+      .then((d) => {
+        setCandidates(d.candidates);
+        const map = {};
+        d.candidates.forEach((c) => { if (c.real_status) map[c.club_member_id] = c.real_status; });
+        setStatuses(map);
+      }).catch((err) => setError(err.message));
+    api("evaluations.php", "vote_session_status", { club_id: activeClubId, event_id: e.id }, token)
+      .then(setSession).catch(() => setSession(null));
+  }, [activeClubId, e.id, token]);
+
+  const toggleOpen = () => { setOpen((v) => !v); if (!open && candidates === null) loadCandidates(); };
+
+  const setStatus = (mid, status) => setStatuses((s) => ({ ...s, [mid]: status }));
+
+  const addMember = () => {
+    if (!addMemberId || !candidates) return;
+    const m = members?.find((x) => x.id === Number(addMemberId));
+    if (!m || candidates.some((c) => c.club_member_id === m.id)) return;
+    setCandidates([...candidates, { club_member_id: m.id, name: `${m.first_name} ${m.last_name}`, real_status: null }]);
+    setAddMemberId("");
+  };
+
+  const save = async () => {
+    const rows = Object.entries(statuses).map(([mid, real_status]) => ({ club_member_id: Number(mid), real_status }));
+    if (!rows.length) return;
+    setSaving(true); setError(""); setNotice("");
+    try {
+      await api("evaluations.php", "attendance_set", { club_id: activeClubId, event_id: e.id, attendances: rows }, token);
+      setNotice("Présences enregistrées.");
+      loadCandidates();
+    } catch (err) { setError(err.message); } finally { setSaving(false); }
+  };
+
+  const presentCount = Object.values(statuses).filter((s) => s === "present").length;
+
+  const openVotes = async () => {
+    setError(""); setNotice("");
+    try { await api("evaluations.php", "vote_session_open", { club_id: activeClubId, event_id: e.id }, token); loadCandidates(); }
+    catch (err) { setError(err.message); }
+  };
+  const closeVotes = async () => {
+    setError(""); setNotice("");
+    try { await api("evaluations.php", "vote_session_close", { club_id: activeClubId, event_id: e.id }, token); loadCandidates(); }
+    catch (err) { setError(err.message); }
+  };
+
+  const availableToAdd = useMemo(
+    () => (members ?? []).filter((m) => !candidates?.some((c) => c.club_member_id === m.id)),
+    [members, candidates]
+  );
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <button className="btn btn-secondary btn-sm" onClick={toggleOpen}>
+        🧍 {open ? "Fermer les présences réelles" : "Présences réelles & votes"}
+      </button>
+      {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
+      {notice && <div className="info-box" style={{ marginTop: 8 }}>{notice}</div>}
+
+      {open && (
+        <div style={{ marginTop: 10 }}>
+          {candidates === null && <div className="spinner" />}
+          {candidates !== null && (
+            <>
+              <div className="label-title">Qui était réellement présent ({presentCount})</div>
+              {candidates.length === 0 && <p className="subtle">Personne pour l'instant — ajoute des joueurs manuellement ci-dessous.</p>}
+              {candidates.map((c) => (
+                <div key={c.club_member_id} className="list-row" style={{ flexWrap: "wrap" }}>
+                  <strong>{c.name}</strong>
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    {Object.entries(REAL_STATUS_LABELS).map(([v, l]) => (
+                      <button key={v} className={`btn btn-sm ${statuses[c.club_member_id] === v ? "btn-primary" : "btn-secondary"}`} onClick={() => setStatus(c.club_member_id, v)}>{l}</button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                <select style={{ flex: 1, minWidth: 160 }} value={addMemberId} onChange={(e2) => setAddMemberId(e2.target.value)}>
+                  <option value="">+ Ajouter un membre…</option>
+                  {availableToAdd.map((m) => <option key={m.id} value={m.id}>{m.first_name} {m.last_name}</option>)}
+                </select>
+                <button className="btn btn-secondary" style={{ width: "auto" }} onClick={addMember} disabled={!addMemberId}>Ajouter</button>
+              </div>
+              <button className="btn btn-primary" style={{ marginTop: 10 }} onClick={save} disabled={saving}>
+                {saving ? "Enregistrement…" : "Enregistrer les présences"}
+              </button>
+
+              {presentCount > 0 && (
+                <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                  <div className="label-title">Session de vote</div>
+                  {!session?.session && (
+                    <>
+                      <p className="subtle">Les votes ne sont pas encore ouverts.</p>
+                      <button className="btn btn-primary btn-sm" onClick={openVotes}>Ouvrir les votes</button>
+                    </>
+                  )}
+                  {session?.session?.status === "open" && (
+                    <>
+                      <p className="subtle">{session.submitted_count} / {session.present_count} ont validé leur vote.</p>
+                      <button className="btn btn-danger btn-sm" onClick={closeVotes}>Clôturer les votes</button>
+                    </>
+                  )}
+                  {session?.session?.status === "closed" && (
+                    <p className="subtle" style={{ margin: 0 }}>Votes clôturés — {session.submitted_count} / {session.present_count} avaient voté.</p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

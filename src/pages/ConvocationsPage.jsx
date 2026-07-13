@@ -40,7 +40,7 @@ export function ConvocationsPage({ goto }) {
           <p className="subtle" style={{ margin: 0 }}>
             Tu n'as aucune convocation pour le moment.
             {canManageEvents(activeRole) && (
-              <> Pour convoquer des joueurs, ouvre un événement dans le <span style={{ color: "var(--oc-blue-600)", cursor: "pointer", fontWeight: 700 }} onClick={() => goto?.("calendrier")}>Calendrier</span> → « Gérer les convocations ».</>
+              <> Pour convoquer des joueurs à un match, ouvre-le depuis l'<span style={{ color: "var(--oc-blue-600)", cursor: "pointer", fontWeight: 700 }} onClick={() => goto?.("home")}>Accueil</span> → « Gérer les convocations ».</>
             )}
           </p>
         </div>

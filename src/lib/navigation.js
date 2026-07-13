@@ -1,10 +1,6 @@
 export const NAV_ITEMS = [
   { label: "Accueil", view: "home", icon: "🏠", phase: 0 },
   { label: "Vestiaire", view: "vestiaire", icon: "📰", phase: 4 },
-  { label: "Calendrier", view: "calendrier", icon: "📅", phase: 3 },
-  { label: "Événements", view: "evenements", icon: "🎉", phase: 3 },
-  { label: "Disponibilités", view: "disponibilites", icon: "✅", phase: 3 },
-  { label: "Présences", view: "presences", icon: "🧍", phase: 2 },
   { label: "Convocations", view: "convocations", icon: "📋", phase: 3 },
   { label: "Équipes", view: "equipes", icon: "🛡️", phase: 1 },
   { label: "Membres", view: "membres", icon: "👥", phase: 1 },
@@ -24,7 +20,7 @@ export const NAV_ITEMS = [
 export const MOBILE_NAV_ITEMS = [
   NAV_ITEMS.find((i) => i.label === "Accueil"),
   NAV_ITEMS.find((i) => i.label === "Vestiaire"),
-  NAV_ITEMS.find((i) => i.label === "Calendrier"),
+  NAV_ITEMS.find((i) => i.label === "Votes"),
   NAV_ITEMS.find((i) => i.label === "Messages"),
   { label: "Plus", view: "plus", icon: "⋯", phase: 0 },
 ];

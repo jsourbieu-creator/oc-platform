@@ -4,18 +4,14 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { LoginPage } from "@/pages/LoginPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { NoClubScreen } from "@/pages/NoClubScreen";
-import { DashboardHome } from "@/pages/DashboardHome";
+import { HomePage } from "@/pages/HomePage";
 import { PlusPage } from "@/pages/PlusPage";
 import { TeamsPage } from "@/pages/TeamsPage";
 import { MembersPage } from "@/pages/MembersPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { AdminPage } from "@/pages/AdminPage";
-import { CalendarPage } from "@/pages/CalendarPage";
-import { EventsPage } from "@/pages/EventsPage";
-import { AvailabilityPage } from "@/pages/AvailabilityPage";
 import { ConvocationsPage } from "@/pages/ConvocationsPage";
-import { PresencesPage } from "@/pages/PresencesPage";
 import { VotePage } from "@/pages/VotePage";
 import { ClassementsPage } from "@/pages/ClassementsPage";
 import { TropheesPage } from "@/pages/TropheesPage";
@@ -65,18 +61,14 @@ function Root() {
 
   return (
     <DashboardShell view={dashView} goto={setDashView}>
-      {dashView === "home" && <DashboardHome />}
+      {dashView === "home" && <HomePage />}
       {dashView === "plus" && <PlusPage goto={setDashView} />}
       {dashView === "equipes" && <TeamsPage />}
       {dashView === "membres" && <MembersPage />}
       {dashView === "profil" && <ProfilePage />}
       {dashView === "parametres" && <SettingsPage />}
       {dashView === "administration" && <AdminPage />}
-      {dashView === "calendrier" && <CalendarPage />}
-      {dashView === "evenements" && <EventsPage goto={setDashView} />}
-      {dashView === "disponibilites" && <AvailabilityPage />}
       {dashView === "convocations" && <ConvocationsPage goto={setDashView} />}
-      {dashView === "presences" && <PresencesPage />}
       {dashView === "votes" && <VotePage />}
       {dashView === "classements" && <ClassementsPage />}
       {dashView === "trophees" && <TropheesPage />}
