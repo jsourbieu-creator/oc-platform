@@ -1,4 +1,4 @@
-import { CalendarDays, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle, Search, Check } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle, Search, Check } from "lucide-react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,6 +22,7 @@ export function HomePage({ gotoConversation }) {
   const [events, setEvents] = useState(null);
   const [showPast, setShowPast] = useState(false);
   const [scope, setScope] = useState("month"); // week | month | year
+  const [gridMonth, setGridMonth] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState(null); // "YYYY-MM-DD" ou null
   const [openId, setOpenId] = useState(null);
   const [form, setForm] = useState(null);
@@ -108,16 +109,17 @@ export function HomePage({ gotoConversation }) {
   const nextEvent = events?.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled")[0];
 
   const now = new Date();
+  const viewingOtherMonth = scope === "month" && (gridMonth.getFullYear() !== now.getFullYear() || gridMonth.getMonth() !== now.getMonth());
   const inScope = (dateStr) => {
     const d = new Date(dateStr.replace(" ", "T"));
     if (scope === "year") return d.getFullYear() === now.getFullYear();
-    if (scope === "month") return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    if (scope === "month") return d.getFullYear() === gridMonth.getFullYear() && d.getMonth() === gridMonth.getMonth();
     const dow = (now.getDay() + 6) % 7;
     const monday = new Date(now); monday.setHours(0, 0, 0, 0); monday.setDate(now.getDate() - dow);
     const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6); sunday.setHours(23, 59, 59, 999);
     return d >= monday && d <= sunday;
   };
-  const visible = (events ?? []).filter((e) => (showPast || !isPast(e.starts_at)) && inScope(e.starts_at) && (!selectedDay || e.starts_at.slice(0, 10) === selectedDay));
+  const visible = (events ?? []).filter((e) => (showPast || viewingOtherMonth || !isPast(e.starts_at)) && inScope(e.starts_at) && (!selectedDay || e.starts_at.slice(0, 10) === selectedDay));
 
   const grouped = [];
   let currentMonth = null;
@@ -155,7 +157,33 @@ export function HomePage({ gotoConversation }) {
         <StatTile icon={<Shield size={20} />} value={teams?.length ?? "…"} label="Équipes" tint="green" />
       </div>
 
+      <div style={{ display: "inline-flex", background: "var(--surface-alt)", borderRadius: "var(--radius-full)", padding: 3, marginBottom: 14, gap: 2 }}>
+        {[["week", "Semaine"], ["month", "Mois"], ["year", "Année"]].map(([v, l]) => (
+          <button
+            key={v}
+            onClick={() => { setScope(v); setSelectedDay(null); }}
+            style={{
+              border: "none", cursor: "pointer", padding: "6px 16px", borderRadius: "var(--radius-full)",
+              fontSize: "0.8rem", fontWeight: 700, fontFamily: "inherit",
+              background: scope === v ? "var(--surface)" : "transparent",
+              color: scope === v ? "var(--text)" : "var(--text-dim)",
+              boxShadow: scope === v ? "var(--shadow-1)" : "none",
+            }}
+          >{l}</button>
+        ))}
+      </div>
+
       {scope === "week" && <WeekStrip events={events} selectedDay={selectedDay} onSelect={setSelectedDay} />}
+      {scope === "month" && (
+        <MonthGrid
+          events={events}
+          month={gridMonth}
+          onPrev={() => { setSelectedDay(null); setGridMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1)); }}
+          onNext={() => { setSelectedDay(null); setGridMonth((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1)); }}
+          selectedDay={selectedDay}
+          onSelect={setSelectedDay}
+        />
+      )}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <button className="btn btn-secondary btn-sm" style={{ borderRadius: "var(--radius-full)" }} onClick={() => setShowPast((v) => !v)}>
@@ -275,6 +303,80 @@ function WeekStrip({ events, selectedDay, onSelect }) {
               <div className="num" style={{ fontSize: "1.05rem", lineHeight: 1.1 }}>{d.day}</div>
               <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", color: active ? "#fff" : "var(--text-dim)" }}>{d.label}</div>
               {d.hasEvent && <div style={{ width: 4, height: 4, borderRadius: "50%", background: active ? "#fff" : "var(--oc-blue-bright)", margin: "3px auto 0" }} />}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+
+function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
+  const year = month.getFullYear();
+  const m = month.getMonth();
+  const todayIso = new Date().toISOString().slice(0, 10);
+
+  // Lundi = premier jour. offset = nb de cases vides avant le 1er.
+  const first = new Date(year, m, 1);
+  const offset = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, m + 1, 0).getDate();
+
+  // Regroupe les événements du mois par jour (ISO)
+  const byDay = {};
+  for (const e of events ?? []) {
+    if (e.status === "cancelled") continue;
+    const iso = e.starts_at.slice(0, 10);
+    if (iso.slice(0, 7) === `${year}-${String(m + 1).padStart(2, "0")}`) {
+      (byDay[iso] = byDay[iso] || []).push(e);
+    }
+  }
+
+  const cells = [];
+  for (let i = 0; i < offset; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const iso = `${year}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    cells.push({ d, iso, events: byDay[iso] ?? [], isToday: iso === todayIso });
+  }
+
+  return (
+    <div className="card" style={{ marginBottom: 14, padding: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <button className="btn btn-ghost btn-sm" onClick={onPrev} aria-label="Mois précédent"><ChevronLeft size={18} /></button>
+        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.05rem" }}>{MONTH_NAMES[m]} {year}</div>
+        <button className="btn btn-ghost btn-sm" onClick={onNext} aria-label="Mois suivant"><ChevronRight size={18} /></button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+        {["L", "M", "M", "J", "V", "S", "D"].map((l, i) => (
+          <div key={i} style={{ textAlign: "center", fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-dim)", paddingBottom: 4 }}>{l}</div>
+        ))}
+        {cells.map((c, i) => {
+          if (!c) return <div key={`e${i}`} />;
+          const active = selectedDay === c.iso;
+          const types = [...new Set(c.events.map((e) => e.type))];
+          return (
+            <div
+              key={c.iso}
+              onClick={() => c.events.length ? onSelect(active ? null : c.iso) : null}
+              style={{
+                aspectRatio: "1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
+                borderRadius: "var(--radius-md)", cursor: c.events.length ? "pointer" : "default",
+                background: active ? "var(--oc-blue-deep)" : c.isToday ? "var(--surface-alt)" : "transparent",
+                color: active ? "#fff" : "var(--text)",
+                border: c.isToday && !active ? "1.5px solid var(--oc-blue-mid)" : "1.5px solid transparent",
+                transition: "background .12s ease",
+              }}
+            >
+              <span className="num" style={{ fontSize: "0.9rem", lineHeight: 1 }}>{c.d}</span>
+              {types.length > 0 && (
+                <span style={{ display: "flex", gap: 2 }}>
+                  {types.slice(0, 3).map((t) => (
+                    <span key={t} style={{ width: 5, height: 5, borderRadius: "50%", background: active ? "#fff" : (EVENT_TYPES[t] ?? EVENT_TYPES.match).color }} />
+                  ))}
+                </span>
+              )}
             </div>
           );
         })}
