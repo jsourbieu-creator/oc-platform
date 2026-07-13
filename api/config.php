@@ -174,3 +174,28 @@ function require_club_member(int $userId, int $clubId): void {
         json_error('Tu n\'es pas membre de ce club.', 403);
     }
 }
+
+/**
+ * Crée une notification pour une liste de membres (ids de club_members).
+ * Silencieux si la table n'existe pas encore (migration 0006 non importée) :
+ * les notifications sont un confort, elles ne doivent jamais casser l'action
+ * principale (publication, convocation…).
+ */
+function notify_members(array $memberIds, string $type, string $text, ?string $view = null): void {
+    $memberIds = array_values(array_unique(array_map('intval', $memberIds)));
+    if (!$memberIds) return;
+    try {
+        $stmt = db()->prepare('INSERT INTO notifications (club_member_id, type, text, view) VALUES (?,?,?,?)');
+        foreach ($memberIds as $mid) $stmt->execute([$mid, $type, mb_substr($text, 0, 255), $view]);
+    } catch (PDOException $e) {
+        // Table absente ou autre souci non bloquant : on ignore.
+    }
+}
+
+/** IDs de tous les membres actifs d'un club, avec exclusions optionnelles. */
+function active_member_ids(int $clubId, array $except = []): array {
+    $stmt = db()->prepare("SELECT id FROM club_members WHERE club_id = ? AND status = 'active'");
+    $stmt->execute([$clubId]);
+    $ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+    return array_values(array_diff($ids, array_map('intval', $except)));
+}

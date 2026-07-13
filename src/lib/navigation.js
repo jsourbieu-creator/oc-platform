@@ -29,7 +29,7 @@ export const MOBILE_NAV_ITEMS = [
   { label: "Plus", view: "plus", icon: "⋯", phase: 0 },
 ];
 
-export const CURRENT_PHASE = 3;
+export const CURRENT_PHASE = 4;
 
 // Phases sautées pour l'instant (ex. Phase 2 = fusion Ballon d'Or, en attente
 // des fichiers du module existant) : leurs sections restent verrouillées.

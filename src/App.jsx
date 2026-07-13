@@ -15,6 +15,8 @@ import { CalendarPage } from "@/pages/CalendarPage";
 import { EventsPage } from "@/pages/EventsPage";
 import { AvailabilityPage } from "@/pages/AvailabilityPage";
 import { ConvocationsPage } from "@/pages/ConvocationsPage";
+import { VestiairePage } from "@/pages/VestiairePage";
+import { NotificationsPage } from "@/pages/NotificationsPage";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 function Root() {
@@ -51,6 +53,8 @@ function Root() {
       {dashView === "evenements" && <EventsPage goto={setDashView} />}
       {dashView === "disponibilites" && <AvailabilityPage />}
       {dashView === "convocations" && <ConvocationsPage goto={setDashView} />}
+      {dashView === "vestiaire" && <VestiairePage />}
+      {dashView === "notifications" && <NotificationsPage goto={setDashView} />}
     </DashboardShell>
   );
 }

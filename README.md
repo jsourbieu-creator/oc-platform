@@ -1,4 +1,4 @@
-# Olympique Castelblangeoise — Plateforme (Phases 0-1-3)
+# Olympique Castelblangeoise — Plateforme (Phases 0-1-3-4)
 
 Plateforme complète de gestion du club, construite phase par phase à partir
 du cahier des charges. **Phase 0 : fondations** — architecture, auth, rôles
@@ -70,10 +70,24 @@ via phpMyAdmin (comme 0001).
 via phpMyAdmin. La Phase 2 (fusion Ballon d'Or) reste verrouillée en
 attendant les fichiers du module existant.
 
+## Ce qui est fait (Phase 4)
+
+- **Vestiaire** : fil d'annonces du club — publication par les coachs, le
+  bureau et les admins (permission `publish_posts`), épinglage, modification/
+  suppression (auteur ou modérateur), commentaires ouverts à tous les membres.
+- **Notifications** : notification interne à chaque nouvelle annonce, à
+  chaque nouvelle convocation (uniquement les nouveaux convoqués) et à chaque
+  annulation d'événement (convoqués + répondants) ; commentaire → notifie
+  l'auteur de l'annonce. Cloche 🔔 avec compteur non-lus dans la barre du
+  haut (rafraîchi toutes les 60 s — pas de temps réel sur mutualisé), page
+  dédiée avec « tout marquer lu » et navigation au tap.
+
+⚠️ La Phase 4 nécessite d'importer `api/migrations/0006_phase4_vestiaire.sql`
+via phpMyAdmin.
+
 ## Ce qui n'est PAS encore fait
 
-Vestiaire/notifications (Phase 4),
-messagerie (Phase 5 — ici en "polling" plutôt qu'en temps réel, faute de
+Messagerie (Phase 5 — ici en "polling" plutôt qu'en temps réel, faute de
 WebSocket sur hébergement mutualisé classique), documents/médiathèque
 (Phase 6), statistiques avancées/autres trophées (Phase 7), PWA (Phase 8).
 Le module Ballon d'Or déjà construit (PHP/SQLite séparé) n'est pas encore

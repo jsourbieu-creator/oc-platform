@@ -2,6 +2,8 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 const ROLE_LABELS = {
   super_admin: "Super admin",
@@ -12,7 +14,21 @@ const ROLE_LABELS = {
 };
 
 export function DashboardShell({ view, goto, children }) {
-  const { user, memberships, activeClubId, setActiveClubId, activeRole, signOut } = useAuth();
+  const { user, memberships, activeClubId, setActiveClubId, activeRole, signOut, token } = useAuth();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!activeClubId || !token) return;
+    let alive = true;
+    const poll = () => {
+      api("notifications.php", "unread_count", { club_id: activeClubId }, token)
+        .then((d) => { if (alive) setUnread(d.count); })
+        .catch(() => {});
+    };
+    poll();
+    const id = setInterval(poll, 60000);
+    return () => { alive = false; clearInterval(id); };
+  }, [activeClubId, token, view]);
 
   return (
     <div className="dashboard-shell">
@@ -31,6 +47,12 @@ export function DashboardShell({ view, goto, children }) {
           </div>
           <div className="topbar-right">
             <span className="subtle" style={{ display: "none" }}>{user?.first_name} {user?.last_name}</span>
+            <span onClick={() => goto("notifications")} style={{ cursor: "pointer", position: "relative", fontSize: "1.1rem" }} title="Notifications">
+              🔔
+              {unread > 0 && (
+                <span style={{ position: "absolute", top: -6, right: -8, background: "var(--danger-600)", color: "#fff", borderRadius: "var(--radius-full)", fontSize: "0.6rem", fontWeight: 800, padding: "1px 5px", lineHeight: 1.4 }}>{unread > 9 ? "9+" : unread}</span>
+              )}
+            </span>
             <ThemeToggle />
             <span onClick={signOut} className="subtle" style={{ cursor: "pointer" }}>Déconnexion</span>
           </div>

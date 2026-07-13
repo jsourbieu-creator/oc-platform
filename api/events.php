@@ -195,10 +195,19 @@ switch ($action) {
         $id = (int) ($in['event_id'] ?? 0);
         $status = $in['status'] ?? '';
         if (!in_array($status, ['scheduled', 'cancelled'], true)) json_error('Statut invalide.');
-        event_in_club_or_404($id, $clubId);
-
+        $event = event_in_club_or_404($id, $clubId);
         $stmt = db()->prepare('UPDATE events SET status = ? WHERE id = ? AND club_id = ?');
         $stmt->execute([$status, $id, $clubId]);
+
+        if ($status === 'cancelled') {
+            $stmt = db()->prepare('
+                SELECT club_member_id FROM convocations WHERE event_id = ?
+                UNION SELECT club_member_id FROM event_availabilities WHERE event_id = ?
+            ');
+            $stmt->execute([$id, $id]);
+            $concerned = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+            notify_members($concerned, 'event_cancelled', "Annulé : {$event['title']}", 'calendrier');
+        }
         log_action((int) $me['id'], 'event_set_status', "#$id → $status");
         json_out(['ok' => true]);
         break;
@@ -284,6 +293,11 @@ switch ($action) {
             }
         }
 
+        // Convoqués déjà en place (pour ne notifier que les nouveaux)
+        $stmt = db()->prepare('SELECT club_member_id FROM convocations WHERE event_id = ?');
+        $stmt->execute([$eventId]);
+        $already = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
         $pdo = db();
         $pdo->beginTransaction();
         try {
@@ -301,6 +315,11 @@ switch ($action) {
         } catch (Exception $e) {
             $pdo->rollBack();
             throw $e;
+        }
+
+        $newlyConvoked = array_values(array_diff($memberIds, $already));
+        if ($newlyConvoked) {
+            notify_members($newlyConvoked, 'convocation', "Tu es convoqué : {$event['title']}", 'convocations');
         }
         log_action((int) $me['id'], 'convoke_set', "événement #$eventId : " . count($memberIds) . ' convoqué(s)');
         json_out(['ok' => true]);
