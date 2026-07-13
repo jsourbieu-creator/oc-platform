@@ -50,7 +50,7 @@ switch ($action) {
             $ids = array_column($conversations, 'id');
             $ph = implode(',', array_fill(0, count($ids), '?'));
             $stmt = db()->prepare("
-                SELECT cp.conversation_id, cp.club_member_id, u.first_name, u.last_name
+                SELECT cp.conversation_id, cp.club_member_id, u.id AS user_id, u.first_name, u.last_name, u.avatar_url
                 FROM conversation_participants cp
                 JOIN club_members cm ON cm.id = cp.club_member_id
                 JOIN users u ON u.id = cm.user_id

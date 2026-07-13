@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { EVENT_TYPES, fmtDate, fmtTime } from "@/lib/events";
 import { SCORE_OPTIONS, fmtScore } from "@/lib/ballondor";
+import { Avatar } from "@/components/ui";
 
 export function VotePage() {
   const { token, activeClubId } = useAuth();
@@ -100,7 +101,9 @@ export function VotePage() {
           <div className="label-title">Note tes coéquipiers présents (1 à 10)</div>
           {status.ratees.map((r) => (
             <div key={r.club_member_id} className="field">
-              <label>{r.name}</label>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>
+                <Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}
+              </label>
               <select value={scores[r.club_member_id] ?? ""} onChange={(e) => setScores((s) => ({ ...s, [r.club_member_id]: e.target.value }))}>
                 <option value="">— note —</option>
                 {SCORE_OPTIONS.map((v) => <option key={v} value={v}>{fmtScore(v)}/10</option>)}
@@ -123,7 +126,7 @@ export function VotePage() {
           <div className="label-title">Récapitulatif — vérifie avant de valider</div>
           {status.ratees.map((r) => (
             <div key={r.club_member_id} className="list-row">
-              <span>{r.name}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={24} />{r.name}</span>
               <strong>{fmtScore(scores[r.club_member_id])}/10</strong>
             </div>
           ))}

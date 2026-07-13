@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { AvatarStack } from "@/components/ui";
 
 function fmtDateTime(s) {
   if (!s) return "";
@@ -86,10 +87,13 @@ export function MessagesPage({ pendingConversation, onConsumePending } = {}) {
         <div className="card">
           {conversations.map((c) => (
             <div key={c.id} className="list-row" style={{ cursor: "pointer" }} onClick={() => setOpenConv(c)}>
-              <div style={{ minWidth: 0 }}>
-                <strong style={{ fontWeight: Number(c.unread) > 0 ? 800 : 600 }}>{convTitle(c, myMemberId)}</strong>
-                <div className="subtle" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 420 }}>
-                  {c.last_message ?? "Aucun message"}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                <AvatarStack people={(c.participants ?? []).filter((p) => p.club_member_id !== myMemberId).map((p) => ({ name: `${p.first_name} ${p.last_name}`, user_id: p.user_id, avatar_url: p.avatar_url }))} max={3} />
+                <div style={{ minWidth: 0 }}>
+                  <strong style={{ fontWeight: Number(c.unread) > 0 ? 800 : 600 }}>{convTitle(c, myMemberId)}</strong>
+                  <div className="subtle" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 320 }}>
+                    {c.last_message ?? "Aucun message"}
+                  </div>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>

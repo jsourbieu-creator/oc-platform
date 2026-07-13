@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { Avatar } from "@/components/ui";
 
 const SEASON_STATUS = { draft: "Brouillon", active: "Active", closed: "Clôturée" };
 const canManage = (role) => role === "super_admin" || role === "admin";
@@ -244,10 +245,13 @@ function Roster({ team, members, manage, onDelete }) {
       {roster?.length === 0 && <div className="subtle" style={{ marginBottom: 8 }}>Effectif vide.</div>}
       {roster?.map((r) => (
         <div key={r.id} className="list-row" style={{ padding: "7px 0" }}>
-          <div>
-            {r.first_name} {r.last_name}
-            {Number(r.is_captain) === 1 && <span className="badge badge-info" style={{ marginLeft: 8 }}>Capitaine</span>}
-            {Number(r.is_goalkeeper) === 1 && <span className="badge badge-neutral" style={{ marginLeft: 6 }}>Gardien</span>}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Avatar name={`${r.first_name} ${r.last_name}`} userId={r.user_id} avatarUrl={r.avatar_url} size={30} />
+            <span>
+              {r.first_name} {r.last_name}
+              {Number(r.is_captain) === 1 && <span className="badge badge-info" style={{ marginLeft: 8 }}>Capitaine</span>}
+              {Number(r.is_goalkeeper) === 1 && <span className="badge badge-neutral" style={{ marginLeft: 6 }}>Gardien</span>}
+            </span>
           </div>
           {manage && (
             <div style={{ display: "flex", gap: 6 }}>

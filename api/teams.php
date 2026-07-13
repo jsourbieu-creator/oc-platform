@@ -73,7 +73,7 @@ switch ($action) {
 
         $stmt = db()->prepare('
             SELECT tm.id, tm.club_member_id, tm.is_captain, tm.is_goalkeeper,
-                   u.first_name, u.last_name, cm.role
+                   u.id AS user_id, u.first_name, u.last_name, u.avatar_url, cm.role
             FROM team_members tm
             JOIN club_members cm ON cm.id = tm.club_member_id
             JOIN users u ON u.id = cm.user_id

@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { fmtScore } from "@/lib/ballondor";
+import { Avatar } from "@/components/ui";
 
 const TROPHY_ICONS = {
   ballon_dor: Trophy,
@@ -89,6 +90,7 @@ export function TropheesPage() {
             <div key={t.code} className="list-row">
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ display: "inline-flex", color: "var(--gold-500)" }}>{(() => { const I = TROPHY_ICONS[t.code] ?? Medal; return <I size={22} />; })()}</span>
+                <Avatar name={t.player} userId={t.user_id} avatarUrl={t.avatar_url} size={30} />
                 <div>
                   <strong>{t.label}</strong>
                   <div className="subtle">{t.player}</div>

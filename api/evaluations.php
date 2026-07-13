@@ -63,6 +63,21 @@ function member_name_map(array $memberIds): array {
     return $map;
 }
 
+/** user_id + avatar_url par club_member_id (pour afficher de vraies photos) */
+function member_avatar_map(array $memberIds): array {
+    if (!$memberIds) return [];
+    $ph = implode(',', array_fill(0, count($memberIds), '?'));
+    $stmt = db()->prepare("
+        SELECT cm.id, u.id AS user_id, u.avatar_url
+        FROM club_members cm JOIN users u ON u.id = cm.user_id
+        WHERE cm.id IN ($ph)
+    ");
+    $stmt->execute($memberIds);
+    $map = [];
+    foreach ($stmt->fetchAll() as $r) $map[$r['id']] = ['user_id' => (int) $r['user_id'], 'avatar_url' => $r['avatar_url']];
+    return $map;
+}
+
 /**
  * Calcule, pour chaque membre ayant joué au moins une séance de la saison,
  * l'ensemble des métriques Ballon d'Or (réutilisé par season_rankings,
@@ -120,6 +135,7 @@ function compute_season_player_stats(int $clubId, array $season): array {
 
     $memberIds = array_unique(array_merge(array_keys($rawAverages), array_keys($eligibleCount)));
     $names = member_name_map($memberIds);
+    $avatars = member_avatar_map($memberIds);
 
     $players = [];
     foreach ($memberIds as $mid) {
@@ -165,6 +181,8 @@ function compute_season_player_stats(int $clubId, array $season): array {
         $players[$mid] = [
             'club_member_id' => $mid,
             'name' => $names[$mid] ?? '?',
+            'user_id' => $avatars[$mid]['user_id'] ?? null,
+            'avatar_url' => $avatars[$mid]['avatar_url'] ?? null,
             'sessions_played' => $sessionsPlayed,
             'attendance_rate' => round($attendanceRate * 100, 1),
             'raw_average' => round($raw, 2),
@@ -382,7 +400,11 @@ switch ($action) {
             $stmt->execute([$eventId, $myId]);
             $ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
             $names = member_name_map($ids);
-            $ratees = array_map(fn($mid) => ['club_member_id' => $mid, 'name' => $names[$mid] ?? '?'], $ids);
+            $avatars = member_avatar_map($ids);
+            $ratees = array_map(fn($mid) => [
+                'club_member_id' => $mid, 'name' => $names[$mid] ?? '?',
+                'user_id' => $avatars[$mid]['user_id'] ?? null, 'avatar_url' => $avatars[$mid]['avatar_url'] ?? null,
+            ], $ids);
             usort($ratees, fn($a, $b) => strcmp($a['name'], $b['name']));
         }
 
@@ -774,27 +796,27 @@ switch ($action) {
 
         $official = array_values(array_filter($players, fn($p) => $p['is_eligible']));
         $ballonDor = $pick($official ?: $players, 'ballon_dor_score', true);
-        if ($ballonDor) $trophies[] = ['code' => 'ballon_dor', 'label' => "Ballon d'Or", 'player' => $ballonDor['name'], 'value' => $ballonDor['ballon_dor_score']];
+        if ($ballonDor) $trophies[] = ['code' => 'ballon_dor', 'label' => "Ballon d'Or", 'player' => $ballonDor['name'], 'user_id' => $ballonDor['user_id'], 'avatar_url' => $ballonDor['avatar_url'], 'value' => $ballonDor['ballon_dor_score']];
 
         $regularEligible = array_filter($players, fn($p) => $p['sessions_played'] >= 5);
         $mostRegular = $pick($regularEligible, 'regularity_stddev', false);
-        if ($mostRegular) $trophies[] = ['code' => 'most_regular', 'label' => 'Joueur le plus régulier', 'player' => $mostRegular['name'], 'value' => $mostRegular['regularity']];
+        if ($mostRegular) $trophies[] = ['code' => 'most_regular', 'label' => 'Joueur le plus régulier', 'player' => $mostRegular['name'], 'user_id' => $mostRegular['user_id'], 'avatar_url' => $mostRegular['avatar_url'], 'value' => $mostRegular['regularity']];
 
         $mostAssiduous = $pick($players, 'attendance_rate', true);
-        if ($mostAssiduous) $trophies[] = ['code' => 'most_assiduous', 'label' => 'Joueur le plus assidu', 'player' => $mostAssiduous['name'], 'value' => $mostAssiduous['attendance_rate'] . '%'];
+        if ($mostAssiduous) $trophies[] = ['code' => 'most_assiduous', 'label' => 'Joueur le plus assidu', 'player' => $mostAssiduous['name'], 'user_id' => $mostAssiduous['user_id'], 'avatar_url' => $mostAssiduous['avatar_url'], 'value' => $mostAssiduous['attendance_rate'] . '%'];
 
         $bestProgression = $pick($players, 'progression', true);
-        if ($bestProgression) $trophies[] = ['code' => 'best_progression', 'label' => 'Meilleure progression', 'player' => $bestProgression['name'], 'value' => ($bestProgression['progression'] > 0 ? '+' : '') . $bestProgression['progression']];
+        if ($bestProgression) $trophies[] = ['code' => 'best_progression', 'label' => 'Meilleure progression', 'player' => $bestProgression['name'], 'user_id' => $bestProgression['user_id'], 'avatar_url' => $bestProgression['avatar_url'], 'value' => ($bestProgression['progression'] > 0 ? '+' : '') . $bestProgression['progression']];
 
         $closestPerception = $pick($players, 'avg_abs_gap', false);
-        if ($closestPerception) $trophies[] = ['code' => 'closest_perception', 'label' => 'Ressenti le plus proche du groupe', 'player' => $closestPerception['name'], 'value' => $closestPerception['avg_abs_gap']];
+        if ($closestPerception) $trophies[] = ['code' => 'closest_perception', 'label' => 'Ressenti le plus proche du groupe', 'player' => $closestPerception['name'], 'user_id' => $closestPerception['user_id'], 'avatar_url' => $closestPerception['avatar_url'], 'value' => $closestPerception['avg_abs_gap']];
 
         if ($season['humorous_trophies_enabled']) {
             $mostSevere = $pick($players, 'avg_gap', false);
-            if ($mostSevere) $trophies[] = ['code' => 'most_severe_self', 'label' => 'Le plus sévère avec lui-même', 'player' => $mostSevere['name'], 'value' => $mostSevere['avg_gap']];
+            if ($mostSevere) $trophies[] = ['code' => 'most_severe_self', 'label' => 'Le plus sévère avec lui-même', 'player' => $mostSevere['name'], 'user_id' => $mostSevere['user_id'], 'avatar_url' => $mostSevere['avatar_url'], 'value' => $mostSevere['avg_gap']];
 
             $mostOverrated = $pick($players, 'avg_gap', true);
-            if ($mostOverrated) $trophies[] = ['code' => 'most_overrated_self', 'label' => 'Celui qui se voit un peu trop beau', 'player' => $mostOverrated['name'], 'value' => '+' . $mostOverrated['avg_gap']];
+            if ($mostOverrated) $trophies[] = ['code' => 'most_overrated_self', 'label' => 'Celui qui se voit un peu trop beau', 'player' => $mostOverrated['name'], 'user_id' => $mostOverrated['user_id'], 'avatar_url' => $mostOverrated['avatar_url'], 'value' => '+' . $mostOverrated['avg_gap']];
         }
 
         json_out(['trophies' => $trophies, 'humorous_enabled' => (bool) $season['humorous_trophies_enabled']]);

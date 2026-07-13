@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { fmtScore } from "@/lib/ballondor";
-import { StatTile } from "@/components/ui";
+import { StatTile, Avatar } from "@/components/ui";
 
 const PODIUM_COLORS = ["var(--gold-500)", "var(--silver-400)", "var(--bronze-500)"];
 
@@ -166,6 +166,7 @@ export function ClassementsPage() {
               const heights = [70, 100, 55]; // 2e, 1er, 3e
               return (
                 <div key={p.club_member_id} className="podium-step">
+                  <Avatar name={p.name} userId={p.user_id} avatarUrl={p.avatar_url} size={i === 1 ? 42 : 34} />
                   <div className="podium-name">{p.name}</div>
                   <div className="podium-score">{fmtScore(p.ballon_dor_score)}</div>
                   <div className="podium-bar" style={{ height: heights[i], background: p.rank === 1 ? "var(--oc-gradient)" : `linear-gradient(180deg, ${PODIUM_COLORS[p.rank - 1]}, ${PODIUM_COLORS[p.rank - 1]})` }}>
@@ -191,6 +192,7 @@ export function ClassementsPage() {
                   color: p.rank <= 3 ? "#fff" : "var(--text-dim)",
                   display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.8rem",
                 }}>{p.rank}</span>
+                <Avatar name={p.name} userId={p.user_id} avatarUrl={p.avatar_url} size={28} />
                 <strong>{p.name}</strong>
                 <span className="subtle">({p.sessions_played} séances, {p.attendance_rate}% présence)</span>
               </div>
