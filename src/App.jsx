@@ -27,6 +27,7 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 function Root() {
   const [publicView, setPublicView] = useState("login"); // login | signup
   const [dashView, setDashView] = useState("home");
+  const [pendingConversation, setPendingConversation] = useState(null);
   const [resetToken, setResetToken] = useState(() => new URLSearchParams(window.location.search).get("reset"));
   const { loading, token, user, memberships } = useAuth();
 
@@ -61,7 +62,7 @@ function Root() {
 
   return (
     <DashboardShell view={dashView} goto={setDashView}>
-      {dashView === "home" && <HomePage />}
+      {dashView === "home" && <HomePage gotoConversation={(conv) => { setPendingConversation(conv); setDashView("messages"); }} />}
       {dashView === "plus" && <PlusPage goto={setDashView} />}
       {dashView === "equipes" && <TeamsPage />}
       {dashView === "membres" && <MembersPage />}
@@ -77,7 +78,7 @@ function Root() {
       {dashView === "medias" && <MediasPage />}
       {dashView === "vestiaire" && <VestiairePage />}
       {dashView === "notifications" && <NotificationsPage goto={setDashView} />}
-      {dashView === "messages" && <MessagesPage />}
+      {dashView === "messages" && <MessagesPage pendingConversation={pendingConversation} onConsumePending={() => setPendingConversation(null)} />}
     </DashboardShell>
   );
 }

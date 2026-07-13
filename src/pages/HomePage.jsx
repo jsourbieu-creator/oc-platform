@@ -16,7 +16,7 @@ const ROLE_LABELS = {
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
-export function HomePage() {
+export function HomePage({ gotoConversation }) {
   const { user, token, activeClubId, memberships, activeRole } = useAuth();
   const manage = canManageEvents(activeRole);
 
@@ -215,6 +215,7 @@ export function HomePage() {
             <EventAccordionCard
               key={e.id} event={e} open={openId === e.id} toggle={() => setOpenId(openId === e.id ? null : e.id)}
               reload={load} manage={manage} members={members} onEdit={edit} onStatus={setStatus} onDelete={remove}
+              gotoConversation={gotoConversation}
             />
           ))}
         </div>
@@ -223,7 +224,7 @@ export function HomePage() {
   );
 }
 
-function EventAccordionCard({ event: e, open, toggle, reload, manage, members, onEdit, onStatus, onDelete }) {
+function EventAccordionCard({ event: e, open, toggle, reload, manage, members, onEdit, onStatus, onDelete, gotoConversation }) {
   const { token, activeClubId } = useAuth();
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   const cancelled = e.status === "cancelled";
@@ -235,10 +236,21 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
   const confirmedPeople = (e.confirmed_names ?? []).map((name) => ({ name }));
   const [menuOpen, setMenuOpen] = useState(false);
+  const [convBusy, setConvBusy] = useState(false);
 
   const quickRespond = async (status) => {
     try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
     catch (_) { /* affiché en détail si besoin */ }
+  };
+
+  const openConversation = async (ev) => {
+    ev.stopPropagation();
+    setConvBusy(true);
+    try {
+      const d = await api("events.php", "conversation_get_or_create", { club_id: activeClubId, event_id: e.id }, token);
+      gotoConversation?.(d);
+      reload();
+    } catch (_) { /* silencieux, pas critique */ } finally { setConvBusy(false); }
   };
 
   return (
@@ -283,21 +295,30 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
           <CountChip value={absentCount} tint="orange" />
           <CountChip value={noResponseCount} tint="gray" />
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <AvatarStack people={confirmedPeople} />
-          {!cancelled && !isPast(e.starts_at) && (
-            <>
+        <AvatarStack people={confirmedPeople} />
+      </div>
+
+      {!cancelled && !isPast(e.starts_at) && (
+        <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+            const active = e.my_availability === v;
+            return (
               <button
-                className="btn btn-sm" style={{ width: "auto", background: e.my_availability === "present" ? "var(--success-600)" : "transparent", color: e.my_availability === "present" ? "#fff" : "var(--success-600)", border: "1.5px solid var(--success-600)" }}
-                onClick={(ev) => { ev.stopPropagation(); quickRespond("present"); }}
-              >Présent</button>
-              <button
-                className="btn btn-sm" style={{ width: "auto", background: e.my_availability === "absent" ? "var(--warning-600)" : "transparent", color: e.my_availability === "absent" ? "#fff" : "var(--warning-600)", border: "1.5px solid var(--warning-600)" }}
-                onClick={(ev) => { ev.stopPropagation(); quickRespond("absent"); }}
-              >Absent</button>
-            </>
-          )}
+                key={v} className="btn btn-sm" style={{
+                  flex: "1 1 80px", background: active ? AVAIL_COLORS[v] : "transparent", color: active ? "#fff" : AVAIL_COLORS[v],
+                  border: `1.5px solid ${AVAIL_COLORS[v]}`,
+                }}
+                onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
+              >{l}</button>
+            );
+          })}
         </div>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+        <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={openConversation} disabled={convBusy}>
+          💬 {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
+        </button>
       </div>
 
       {e.type === "match" && convokedTotal > 0 && (
@@ -333,12 +354,6 @@ function EventDetail({ event: e, reload, manage, members, onEdit, onStatus, onDe
   const [availList, setAvailList] = useState(null);
   const [showAvail, setShowAvail] = useState(false);
 
-  const setAvail = async (status) => {
-    setError("");
-    try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); if (showAvail) loadAvail(); }
-    catch (e2) { setError(e2.message); }
-  };
-
   const loadAvail = useCallback(() => {
     api("events.php", "availability_list", { club_id: activeClubId, event_id: e.id }, token)
       .then((d) => setAvailList(d.availabilities)).catch((e2) => setError(e2.message));
@@ -355,25 +370,8 @@ function EventDetail({ event: e, reload, manage, members, onEdit, onStatus, onDe
         </div>
       )}
 
-      {!cancelled && !isPast(e.starts_at) && (
-        <div style={{ marginBottom: 14 }}>
-          <div className="label-title">Ma disponibilité</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {Object.entries(AVAIL_LABELS).map(([v, l]) => {
-              const active = e.my_availability === v;
-              return (
-                <button
-                  key={v} className="btn btn-sm"
-                  style={{
-                    background: active ? AVAIL_COLORS[v] : "transparent", color: active ? "#fff" : "var(--text-dim)",
-                    border: `1.5px solid ${active ? AVAIL_COLORS[v] : "var(--border)"}`, opacity: active ? 1 : 0.6,
-                  }}
-                  onClick={() => setAvail(v)}
-                >{l}</button>
-              );
-            })}
-          </div>
-        </div>
+      {!cancelled && !isPast(e.starts_at) && e.my_availability && (
+        <CommentEditor event={e} reload={reload} />
       )}
 
       {manage && e.type === "match" && !cancelled && <ConvocationManager event={e} reload={reload} members={members} />}
@@ -400,7 +398,38 @@ function EventDetail({ event: e, reload, manage, members, onEdit, onStatus, onDe
   );
 }
 
-/** Sélection de l'effectif convoqué — réservée aux matchs (squad limité, ex. 10 joueurs) */
+/** Petit mot facultatif accroché à sa réponse de dispo (ex. "je ramène les bières") */
+function CommentEditor({ event: e, reload }) {
+  const { token, activeClubId } = useAuth();
+  const [value, setValue] = useState(e.my_comment ?? "");
+  const [saved, setSaved] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status: e.my_availability, comment: value }, token);
+      setSaved(true);
+      reload();
+    } catch (_) { /* pas bloquant */ } finally { setSaving(false); }
+  };
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div className="label-title">Un petit mot ? (optionnel)</div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <input
+          type="text" placeholder="Ex. je ramène les ballons, j'ai encore du boulot…" value={value}
+          onChange={(ev) => { setValue(ev.target.value); setSaved(false); }}
+          onKeyDown={(ev) => { if (ev.key === "Enter") save(); }}
+        />
+        <button className="btn btn-secondary btn-sm" style={{ width: "auto" }} disabled={saved || saving} onClick={save}>
+          {saving ? "…" : "OK"}
+        </button>
+      </div>
+    </div>
+  );
+}
 function ConvocationManager({ event: e, reload, members }) {
   const { token, activeClubId } = useAuth();
   const [open, setOpen] = useState(false);

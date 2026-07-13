@@ -18,7 +18,7 @@ function convTitle(c, myMemberId) {
   return others.map((p) => `${p.first_name} ${p.last_name}`).join(", ") || "Conversation";
 }
 
-export function MessagesPage() {
+export function MessagesPage({ pendingConversation, onConsumePending } = {}) {
   const { token, activeClubId } = useAuth();
   const [conversations, setConversations] = useState(null);
   const [myMemberId, setMyMemberId] = useState(null);
@@ -34,6 +34,14 @@ export function MessagesPage() {
   }, [activeClubId, token]);
 
   useEffect(loadConversations, [loadConversations]);
+
+  useEffect(() => {
+    if (!pendingConversation) return;
+    setOpenConv({ id: pendingConversation.id, title: pendingConversation.title, participants: [] });
+    onConsumePending?.();
+    loadConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingConversation]);
 
   // Poll léger de la liste (30 s) quand aucun fil n'est ouvert
   useEffect(() => {

@@ -53,9 +53,11 @@ switch ($action) {
             $convCounts = [];
             foreach ($stmt->fetchAll() as $r) $convCounts[$r['event_id']][$r['status']] = (int) $r['c'];
 
-            $stmt = db()->prepare("SELECT event_id, status FROM event_availabilities WHERE event_id IN ($ph) AND club_member_id = ?");
+            $stmt = db()->prepare("SELECT event_id, status, comment FROM event_availabilities WHERE event_id IN ($ph) AND club_member_id = ?");
             $stmt->execute([...$ids, $myMemberId]);
-            $myAvail = array_column($stmt->fetchAll(), 'status', 'event_id');
+            $myAvailRows = $stmt->fetchAll();
+            $myAvail = array_column($myAvailRows, 'status', 'event_id');
+            $myComment = array_column($myAvailRows, 'comment', 'event_id');
 
             $stmt = db()->prepare("SELECT event_id, status FROM convocations WHERE event_id IN ($ph) AND club_member_id = ?");
             $stmt->execute([...$ids, $myMemberId]);
@@ -78,6 +80,7 @@ switch ($action) {
                 $e['avail_counts'] = $availCounts[$e['id']] ?? new stdClass();
                 $e['conv_counts'] = $convCounts[$e['id']] ?? new stdClass();
                 $e['my_availability'] = $myAvail[$e['id']] ?? null;
+                $e['my_comment'] = $myComment[$e['id']] ?? '';
                 $e['my_convocation'] = $myConv[$e['id']] ?? null;
                 $e['confirmed_names'] = $confirmedNames[$e['id']] ?? [];
             }
@@ -384,6 +387,52 @@ switch ($action) {
             if (!$stmt->fetchColumn()) json_error('Tu n\'es pas convoqué à cet événement.', 404);
         }
         json_out(['ok' => true]);
+        break;
+
+    // Récupère la conversation de la séance si elle existe déjà, sinon la
+    // crée (tous les membres actifs du club) avec le titre de la séance.
+    case 'conversation_get_or_create':
+        $me = current_user();
+        $clubId = (int) ($in['club_id'] ?? 0);
+        require_club_member((int) $me['id'], $clubId);
+        $myMemberId = my_member_id((int) $me['id'], $clubId);
+
+        $eventId = (int) ($in['event_id'] ?? 0);
+        $event = event_in_club_or_404($eventId, $clubId);
+
+        if (!empty($event['conversation_id'])) {
+            $stmt = db()->prepare('SELECT title FROM conversations WHERE id = ?');
+            $stmt->execute([(int) $event['conversation_id']]);
+            json_out(['id' => (int) $event['conversation_id'], 'title' => $stmt->fetchColumn()]);
+        }
+
+        $title = $event['title'] . ' — ' . date('d/m', strtotime($event['starts_at']));
+
+        $stmt = db()->prepare("SELECT id FROM club_members WHERE club_id = ? AND status = 'active' AND id != ?");
+        $stmt->execute([$clubId, $myMemberId]);
+        $memberIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+        if (!$memberIds) json_error('Aucun autre membre actif à ajouter à la discussion.');
+
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('INSERT INTO conversations (club_id, title, created_by_member_id) VALUES (?,?,?)');
+            $stmt->execute([$clubId, $title, $myMemberId]);
+            $convId = (int) $pdo->lastInsertId();
+
+            $stmt = $pdo->prepare('INSERT INTO conversation_participants (conversation_id, club_member_id) VALUES (?,?)');
+            foreach ([$myMemberId, ...$memberIds] as $mid) $stmt->execute([$convId, $mid]);
+
+            $stmt = $pdo->prepare('UPDATE events SET conversation_id = ? WHERE id = ?');
+            $stmt->execute([$convId, $eventId]);
+
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+
+        json_out(['id' => $convId, 'title' => $title]);
         break;
 
     default:
