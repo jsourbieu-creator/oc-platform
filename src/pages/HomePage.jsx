@@ -112,16 +112,7 @@ export function HomePage({ gotoConversation }) {
         </div>
       </div>
 
-      {nextEvent && (
-        <div className="card" style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}>
-          <DateBadge date={nextEvent.starts_at} color={(EVENT_TYPES[nextEvent.type] ?? EVENT_TYPES.match).color} />
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div className="subtle" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.04em", fontWeight: 700 }}>Prochaine séance</div>
-            <strong style={{ fontSize: "0.95rem" }}>{nextEvent.title}</strong>
-            <div className="subtle">{fmtTime(nextEvent.starts_at)}{nextEvent.location ? ` — ${nextEvent.location}` : ""}</div>
-          </div>
-        </div>
-      )}
+      {nextEvent && <NextSessionHero event={nextEvent} reload={load} />}
 
       <div className="tab-switch" style={{ marginBottom: 14 }}>
         {[["week", "Semaine"], ["month", "Mois"], ["year", "Année"]].map(([v, l]) => (
@@ -210,6 +201,52 @@ export function HomePage({ gotoConversation }) {
           ))}
         </div>
       ))}
+    </div>
+  );
+}
+
+function NextSessionHero({ event: e, reload }) {
+  const { token, activeClubId } = useAuth();
+  const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
+
+  const respond = async (status) => {
+    try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
+    catch (_) { /* silencieux */ }
+  };
+
+  const presentCount = e.avail_counts?.present ?? 0;
+  const injuredCount = e.avail_counts?.injured ?? 0;
+  const absentCount = e.avail_counts?.absent ?? 0;
+
+  return (
+    <div className="hero-banner" style={{ marginBottom: 16, textAlign: "left", padding: "20px 20px 18px" }}>
+      <div className="hero-content">
+        <div className="hero-eyebrow" style={{ display: "flex", alignItems: "center", gap: 6 }}><t.icon size={12} />Prochaine séance</div>
+        <div className="hero-title" style={{ fontSize: "1.5rem", marginTop: 6 }}>{e.title}</div>
+        <div style={{ color: "#9FC3DA", fontSize: "0.85rem", marginTop: 2, marginBottom: 16 }}>
+          {fmtTime(e.starts_at)}{e.location ? ` · ${e.location}` : ""}
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+            const active = e.my_availability === v;
+            return (
+              <button
+                key={v} onClick={() => respond(v)}
+                style={{
+                  flex: 1, border: "none", borderRadius: "var(--radius-sm)", padding: "10px 6px", fontWeight: 700, fontSize: "0.82rem",
+                  background: active ? "#fff" : "rgba(255,255,255,0.14)", color: active ? "var(--oc-blue-deep)" : "#fff",
+                  cursor: "pointer",
+                }}
+              >{l}</button>
+            );
+          })}
+        </div>
+
+        <div style={{ color: "#9FC3DA", fontSize: "0.78rem" }}>
+          <strong style={{ color: "#fff" }}>{presentCount}</strong> présent{presentCount > 1 ? "s" : ""} · <strong style={{ color: "#fff" }}>{injuredCount}</strong> blessé{injuredCount > 1 ? "s" : ""} · <strong style={{ color: "#fff" }}>{absentCount}</strong> absent{absentCount > 1 ? "s" : ""}
+        </div>
+      </div>
     </div>
   );
 }
