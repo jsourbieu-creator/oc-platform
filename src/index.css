@@ -6,7 +6,12 @@
   --oc-gradient: linear-gradient(90deg, var(--oc-blue-deep), var(--oc-blue-bright), var(--oc-blue-deep));
 
   /* Accent lime — clin d'œil à l'app budget J&A, réservé aux actions positives (présent, validations) */
-  --lime-500:#B9F23C; --lime-600:#5F8A1E; --lime-100:rgba(185,242,60,0.20); --lime-ink:#16210A;
+  /* Couleurs de statut unifiées entre les puces de comptage et les boutons
+     présent/absent/blessé — mêmes teintes partout, extraites de l'appli réelle. */
+  --status-present:#D4F27E; --status-present-ink:#3A4A12;
+  --status-absent:#EF9064; --status-absent-ink:#7A3417;
+  --status-injured:#E5DFCE; --status-injured-ink:#5C5340;
+  --lime-500:#D4F27E; --lime-600:#5F8A1E; --lime-100:rgba(212,242,126,0.25); --lime-ink:#3A4A12;
   --electric-blue:#12B4F2;
 
   --oc-blue-600:var(--oc-blue-deep); --oc-navy-900:#0A141F; --oc-sky-400:var(--oc-blue-bright); --oc-sky-50:#EDF4FA; --oc-white:#FFFFFF;

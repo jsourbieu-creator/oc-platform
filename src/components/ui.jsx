@@ -38,9 +38,9 @@ export function DateBadge({ date, color = "var(--oc-blue-deep)" }) {
 /** Pastille de comptage colorée (présents/absents/sans réponse) — aplat plein */
 export function CountChip({ value, tint }) {
   const styles = {
-    green: { bg: "var(--lime-500)", fg: "var(--lime-ink)" },
-    orange: { bg: "var(--warning-600)", fg: "#fff" },
-    gray: { bg: "var(--neutral-400)", fg: "#fff" },
+    green: { bg: "var(--status-present)", fg: "var(--status-present-ink)" },
+    orange: { bg: "var(--status-absent)", fg: "var(--status-absent-ink)" },
+    gray: { bg: "var(--status-injured)", fg: "var(--status-injured-ink)" },
   }[tint];
   return (
     <span className="num" style={{

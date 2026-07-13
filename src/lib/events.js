@@ -13,23 +13,23 @@ export const AVAIL_LABELS = {
 };
 
 export const AVAIL_COLORS = {
-  present: "var(--lime-600)",
-  absent: "var(--danger-600)",
-  injured: "var(--warning-600)",
+  present: "var(--status-present-ink)",
+  absent: "var(--status-absent-ink)",
+  injured: "var(--status-injured-ink)",
 };
 
-/** Couleur de remplissage quand le statut est actif (le lime plein est bien plus vif que le contour) */
+/** Couleur de remplissage quand le statut est actif — identique aux puces de comptage */
 export const AVAIL_FILL = {
-  present: "var(--lime-500)",
-  absent: "var(--danger-600)",
-  injured: "var(--warning-600)",
+  present: "var(--status-present)",
+  absent: "var(--status-absent)",
+  injured: "var(--status-injured)",
 };
 
-/** Couleur de texte sur le remplissage (le lime vif a besoin d'encre sombre, pas de blanc) */
+/** Couleur de texte sur le remplissage (encre sombre assortie à chaque teinte claire) */
 export const AVAIL_INK = {
-  present: "var(--lime-ink)",
-  absent: "#fff",
-  injured: "#fff",
+  present: "var(--status-present-ink)",
+  absent: "var(--status-absent-ink)",
+  injured: "var(--status-injured-ink)",
 };
 
 export const CONV_LABELS = {
