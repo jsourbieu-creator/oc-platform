@@ -8,12 +8,6 @@ import {
 } from "@/lib/events";
 import { REAL_STATUS_LABELS, fmtScore } from "@/lib/ballondor";
 import { DateBadge, AvatarStack, StatTile, CountChip, Avatar } from "@/components/ui";
-import blason from "@/assets/blason.svg";
-
-const ROLE_LABELS = {
-  super_admin: "Super admin", admin: "Administrateur", coach: "Entraîneur",
-  board_member: "Bureau", player: "Joueur",
-};
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
@@ -26,11 +20,11 @@ export function HomePage({ gotoConversation }) {
   const [members, setMembers] = useState(null);
   const [events, setEvents] = useState(null);
   const [showPast, setShowPast] = useState(false);
+  const [scope, setScope] = useState("month"); // week | month | year
   const [openId, setOpenId] = useState(null);
   const [form, setForm] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [myScore, setMyScore] = useState(undefined);
 
   const load = useCallback(() => {
     if (!activeClubId) return;
@@ -46,21 +40,6 @@ export function HomePage({ gotoConversation }) {
     api("members.php", "list", { club_id: activeClubId }, token).then((d) => setMembers(d.members.filter((m) => m.status === "active"))).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClubId, token]);
-
-  useEffect(() => {
-    if (!activeClubId || !seasons) return;
-    const active = seasons.find((s) => s.status === "active");
-    if (!active) { setMyScore(null); return; }
-    Promise.all([
-      api("members.php", "list", { club_id: activeClubId }, token),
-      api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: active.id }, token),
-    ]).then(([m, r]) => {
-      const me = m.members.find((x) => x.user_id === user?.id);
-      const mine = [...r.official, ...r.provisional].find((p) => p.club_member_id === me?.id);
-      setMyScore(mine ?? null);
-    }).catch(() => setMyScore(null));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeClubId, seasons, token, user?.id]);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -102,8 +81,19 @@ export function HomePage({ gotoConversation }) {
 
   const club = memberships.find((m) => m.club_id === activeClubId);
   const activeSeason = seasons?.find((s) => s.status === "active");
-  const visible = events?.filter((e) => showPast || !isPast(e.starts_at)) ?? [];
   const nextEvent = events?.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled")[0];
+
+  const now = new Date();
+  const inScope = (dateStr) => {
+    const d = new Date(dateStr.replace(" ", "T"));
+    if (scope === "year") return d.getFullYear() === now.getFullYear();
+    if (scope === "month") return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    const dow = (now.getDay() + 6) % 7;
+    const monday = new Date(now); monday.setHours(0, 0, 0, 0); monday.setDate(now.getDate() - dow);
+    const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6); sunday.setHours(23, 59, 59, 999);
+    return d >= monday && d <= sunday;
+  };
+  const visible = (events ?? []).filter((e) => (showPast || !isPast(e.starts_at)) && inScope(e.starts_at));
 
   const grouped = [];
   let currentMonth = null;
@@ -115,29 +105,28 @@ export function HomePage({ gotoConversation }) {
 
   return (
     <div>
-      <div className="hero-banner" style={{ marginBottom: 20 }}>
-        <div className="hero-content">
-          <img src={blason} alt="Blason OC" className="hero-blason" style={{ width: 64 }} />
-          <div className="hero-eyebrow">{club?.club_name}</div>
-          <div className="hero-title" style={{ fontSize: "1.9rem" }}>Salut {user?.first_name}</div>
-          <div className="hero-sub">{ROLE_LABELS[activeRole] ?? activeRole}{activeSeason ? ` — Saison ${activeSeason.name}` : ""}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
+        <div>
+          <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Salut {user?.first_name}</h1>
+          <div className="subtle">{club?.club_name}{activeSeason ? ` · Saison ${activeSeason.name}` : ""}</div>
         </div>
       </div>
 
-      <div className="stat-tiles">
-        <StatTile
-          icon={(() => { const I = nextEvent ? (EVENT_TYPES[nextEvent.type] ?? EVENT_TYPES.match).icon : CalendarDays; return <I size={20} />; })()}
-          value={nextEvent === undefined ? "…" : nextEvent ? nextEvent.title : "Aucune"}
-          label={nextEvent ? `${fmtTime(nextEvent.starts_at)}` : "Prochaine séance"}
-          tint="blue"
-        />
-        <StatTile
-          icon={<Star size={20} />}
-          value={myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}
-          label={myScore ? "Mon score Ballon d'Or" : "Pas encore classé"}
-          tint="gold"
-        />
-        <StatTile icon={<Shield size={20} />} value={teams?.length ?? "…"} label="Équipes" tint="green" />
+      {nextEvent && (
+        <div className="card" style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}>
+          <DateBadge date={nextEvent.starts_at} color={(EVENT_TYPES[nextEvent.type] ?? EVENT_TYPES.match).color} />
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="subtle" style={{ fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.04em", fontWeight: 700 }}>Prochaine séance</div>
+            <strong style={{ fontSize: "0.95rem" }}>{nextEvent.title}</strong>
+            <div className="subtle">{fmtTime(nextEvent.starts_at)}{nextEvent.location ? ` — ${nextEvent.location}` : ""}</div>
+          </div>
+        </div>
+      )}
+
+      <div className="tab-switch" style={{ marginBottom: 14 }}>
+        {[["week", "Semaine"], ["month", "Mois"], ["year", "Année"]].map(([v, l]) => (
+          <div key={v} className={`tab-switch-item ${scope === v ? "active" : ""}`} onClick={() => setScope(v)}>{l}</div>
+        ))}
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>

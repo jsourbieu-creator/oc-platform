@@ -2,6 +2,8 @@ import { Pin, MessageCircle, Flame } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { CONV_LABELS, EVENT_TYPES, fmtTime, isPast } from "@/lib/events";
+import { DateBadge } from "@/components/ui";
 
 const ROLE_LABELS = {
   super_admin: "Super admin", admin: "Administrateur", coach: "Entraîneur",
@@ -86,6 +88,8 @@ export function VestiairePage() {
         )}
       </div>
       {error && <div className="error-box">{error}</div>}
+
+      <MyConvocations />
 
       {form && (
         <div className="card" style={{ marginBottom: 16 }}>
@@ -226,6 +230,63 @@ function Comments({ postId, myMemberId, moderate }) {
         <input type="text" placeholder="Ajouter un commentaire…" value={text} onChange={(e) => setText(e.target.value)} required style={{ flex: 1 }} />
         <button className="btn btn-secondary btn-sm" disabled={busy || !text.trim()}>Envoyer</button>
       </form>
+    </div>
+  );
+}
+
+/** Convocations aux matchs à confirmer/décliner — fusionné dans le Vestiaire */
+function MyConvocations() {
+  const { token, activeClubId } = useAuth();
+  const [events, setEvents] = useState(null);
+  const [error, setError] = useState("");
+  const [open, setOpen] = useState(true);
+
+  const load = useCallback(() => {
+    if (!activeClubId) return;
+    api("events.php", "list", { club_id: activeClubId }, token)
+      .then((d) => setEvents(d.events)).catch((e) => setError(e.message));
+  }, [activeClubId, token]);
+
+  useEffect(load, [load]);
+
+  const respond = async (eventId, status) => {
+    setError("");
+    try {
+      await api("events.php", "convocation_respond", { club_id: activeClubId, event_id: eventId, status }, token);
+      load();
+    } catch (e2) { setError(e2.message); }
+  };
+
+  const upcoming = (events ?? []).filter((e) => e.my_convocation && e.status !== "cancelled" && !isPast(e.starts_at));
+
+  if (events === null || upcoming.length === 0) return null;
+
+  return (
+    <div className="card" style={{ marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => setOpen((v) => !v)}>
+        <div className="label-title" style={{ margin: 0 }}>Mes convocations ({upcoming.length})</div>
+        <span className="subtle">{open ? "▲" : "▼"}</span>
+      </div>
+      {error && <div className="error-box" style={{ marginTop: 10 }}>{error}</div>}
+      {open && upcoming.map((e) => {
+        const T = (EVENT_TYPES[e.type] ?? EVENT_TYPES.match).icon;
+        return (
+          <div key={e.id} className="event-row" style={{ flexWrap: "wrap" }}>
+            <DateBadge date={e.starts_at} color={(EVENT_TYPES[e.type] ?? EVENT_TYPES.match).color} />
+            <div className="event-row-body">
+              <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><T size={15} />{e.title}</strong>
+              <span className={`badge ${e.my_convocation === "confirmed" ? "badge-info" : "badge-neutral"}`} style={{ marginLeft: 8 }}>{CONV_LABELS[e.my_convocation]}</span>
+              <div className="subtle">
+                {fmtTime(e.starts_at)}{e.meet_at ? ` — RDV ${fmtTime(e.meet_at)}` : ""}{e.location ? ` — ${e.location}` : ""}
+              </div>
+              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                <button className={`btn btn-sm ${e.my_convocation === "confirmed" ? "btn-primary" : "btn-secondary"}`} onClick={() => respond(e.id, "confirmed")}>Je confirme</button>
+                <button className={`btn btn-sm ${e.my_convocation === "declined" ? "btn-danger" : "btn-secondary"}`} onClick={() => respond(e.id, "declined")}>Je décline</button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

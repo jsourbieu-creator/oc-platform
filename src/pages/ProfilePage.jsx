@@ -1,10 +1,28 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { Avatar } from "@/components/ui";
+import { Avatar, StatTile } from "@/components/ui";
+import { fmtScore } from "@/lib/ballondor";
 
 export function ProfilePage() {
-  const { user, token, refresh } = useAuth();
+  const { user, token, activeClubId, refresh } = useAuth();
+
+  const [myStats, setMyStats] = useState(undefined); // undefined=chargement, null=pas classé
+
+  useEffect(() => {
+    if (!activeClubId) return;
+    api("seasons.php", "list", { club_id: activeClubId }, token).then(async (d) => {
+      const active = d.seasons.find((s) => s.status === "active");
+      if (!active) { setMyStats(null); return; }
+      const [m, r] = await Promise.all([
+        api("members.php", "list", { club_id: activeClubId }, token),
+        api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: active.id }, token),
+      ]);
+      const me = m.members.find((x) => x.user_id === user?.id);
+      const mine = [...r.official, ...r.provisional].find((p) => p.club_member_id === me?.id);
+      setMyStats(mine ?? null);
+    }).catch(() => setMyStats(null));
+  }, [activeClubId, token, user?.id]);
 
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [avatarError, setAvatarError] = useState("");
@@ -73,6 +91,14 @@ export function ProfilePage() {
           {avatarBusy && <span className="subtle"> Envoi…</span>}
         </div>
       </div>
+
+      {myStats !== null && (
+        <div className="stat-tiles" style={{ marginBottom: 16 }}>
+          <StatTile icon="⭐" value={myStats === undefined ? "…" : fmtScore(myStats.ballon_dor_score)} label="Score Ballon d'Or" tint="gold" />
+          <StatTile icon="🏃" value={myStats === undefined ? "…" : myStats.sessions_played} label="Séances jouées" tint="blue" />
+          <StatTile icon="✅" value={myStats === undefined ? "…" : `${myStats.attendance_rate}%`} label="Taux de présence" tint="green" />
+        </div>
+      )}
 
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="label-title">Mes informations</div>

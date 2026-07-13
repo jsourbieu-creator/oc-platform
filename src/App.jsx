@@ -5,13 +5,11 @@ import { LoginPage } from "@/pages/LoginPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { NoClubScreen } from "@/pages/NoClubScreen";
 import { HomePage } from "@/pages/HomePage";
-import { PlusPage } from "@/pages/PlusPage";
 import { TeamsPage } from "@/pages/TeamsPage";
 import { MembersPage } from "@/pages/MembersPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { AdminPage } from "@/pages/AdminPage";
-import { ConvocationsPage } from "@/pages/ConvocationsPage";
 import { VotePage } from "@/pages/VotePage";
 import { ClassementsPage } from "@/pages/ClassementsPage";
 import { TropheesPage } from "@/pages/TropheesPage";
@@ -63,13 +61,11 @@ function Root() {
   return (
     <DashboardShell view={dashView} goto={setDashView}>
       {dashView === "home" && <HomePage gotoConversation={(conv) => { setPendingConversation(conv); setDashView("messages"); }} />}
-      {dashView === "plus" && <PlusPage goto={setDashView} />}
       {dashView === "equipes" && <TeamsPage />}
       {dashView === "membres" && <MembersPage />}
       {dashView === "profil" && <ProfilePage />}
-      {dashView === "parametres" && <SettingsPage />}
+      {dashView === "parametres" && <SettingsPage goto={setDashView} />}
       {dashView === "administration" && <AdminPage />}
-      {dashView === "convocations" && <ConvocationsPage goto={setDashView} />}
       {dashView === "votes" && <VotePage />}
       {dashView === "classements" && <ClassementsPage />}
       {dashView === "trophees" && <TropheesPage />}

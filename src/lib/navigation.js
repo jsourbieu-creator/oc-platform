@@ -1,13 +1,12 @@
 import {
-  Home, Newspaper, ClipboardList, Shield, Users, MessageCircle, Star,
+  CalendarDays, Newspaper, Shield, Users, MessageCircle, Star,
   BarChart3, Trophy, Medal, FolderOpen, Images, Bell, CircleUser,
-  Settings, Wrench, Ellipsis,
+  Settings, Wrench,
 } from "lucide-react";
 
 export const NAV_ITEMS = [
-  { label: "Accueil", view: "home", icon: Home, phase: 0 },
+  { label: "Calendrier", view: "home", icon: CalendarDays, phase: 0 },
   { label: "Vestiaire", view: "vestiaire", icon: Newspaper, phase: 4 },
-  { label: "Convocations", view: "convocations", icon: ClipboardList, phase: 3 },
   { label: "Équipes", view: "equipes", icon: Shield, phase: 1 },
   { label: "Membres", view: "membres", icon: Users, phase: 1 },
   { label: "Messages", view: "messages", icon: MessageCircle, phase: 5 },
@@ -24,11 +23,11 @@ export const NAV_ITEMS = [
 ];
 
 export const MOBILE_NAV_ITEMS = [
-  NAV_ITEMS.find((i) => i.label === "Accueil"),
+  NAV_ITEMS.find((i) => i.label === "Calendrier"),
   NAV_ITEMS.find((i) => i.label === "Vestiaire"),
   NAV_ITEMS.find((i) => i.label === "Votes"),
-  NAV_ITEMS.find((i) => i.label === "Messages"),
-  { label: "Plus", view: "plus", icon: Ellipsis, phase: 0 },
+  NAV_ITEMS.find((i) => i.label === "Profil"),
+  NAV_ITEMS.find((i) => i.label === "Paramètres"),
 ];
 
 export const CURRENT_PHASE = 7;
