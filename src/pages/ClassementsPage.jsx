@@ -88,7 +88,7 @@ export function ClassementsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Classement Ballon d'Or</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Classement Ballon d'Or</h1>
       {error && <div className="error-box">{error}</div>}
       {notice && <div className="info-box">{notice}</div>}
 

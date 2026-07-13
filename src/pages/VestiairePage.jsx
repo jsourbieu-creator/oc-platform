@@ -78,7 +78,7 @@ export function VestiairePage() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h1 style={{ fontSize: "1.9rem" }}>Vestiaire</h1>
+        <h1 className="page-title">Vestiaire</h1>
         {publish && (
           <button className="btn btn-secondary btn-sm" onClick={() => setForm(form ? null : { title: "", content: "" })}>
             {form ? "Annuler" : "+ Nouvelle annonce"}

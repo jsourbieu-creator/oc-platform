@@ -31,7 +31,7 @@ export function ConvocationsPage({ goto }) {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Convocations</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Convocations</h1>
       {error && <div className="error-box">{error}</div>}
       {events === null && <div className="spinner" />}
 

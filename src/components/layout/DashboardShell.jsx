@@ -64,7 +64,7 @@ export function DashboardShell({ view, goto, children }) {
             <span onClick={signOut} className="subtle" style={{ cursor: "pointer" }}>Déconnexion</span>
           </div>
         </header>
-        <main className="dashboard-content">{children}</main>
+        <main className="dashboard-content"><div key={view} className="view-enter">{children}</div></main>
       </div>
       <BottomNav view={view} goto={goto} badges={badges} />
     </div>

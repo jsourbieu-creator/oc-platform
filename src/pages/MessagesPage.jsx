@@ -55,7 +55,7 @@ export function MessagesPage() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h1 style={{ fontSize: "1.9rem" }}>Messages</h1>
+        <h1 className="page-title">Messages</h1>
         <button className="btn btn-secondary btn-sm" onClick={() => setCreating((v) => !v)}>
           {creating ? "Annuler" : "+ Nouvelle conversation"}
         </button>

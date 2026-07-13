@@ -46,7 +46,7 @@ export function MembersPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Membres</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Membres</h1>
       {error && <div className="error-box">{error}</div>}
 
       {manage && <InvitationsBlock />}

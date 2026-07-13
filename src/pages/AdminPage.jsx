@@ -39,7 +39,7 @@ export function AdminPage() {
   if (activeRole !== "super_admin") {
     return (
       <div>
-        <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Administration</h1>
+        <h1 className="page-title" style={{ marginBottom: 18 }}>Administration</h1>
         <div className="card"><p className="subtle" style={{ margin: 0 }}>Section réservée au super-administrateur.</p></div>
       </div>
     );
@@ -47,7 +47,7 @@ export function AdminPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.9rem", marginBottom: 16 }}>Administration</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Administration</h1>
       {error && <div className="error-box">{error}</div>}
       <div className="card">
         <div className="label-title">Journal d'activité (100 dernières actions)</div>

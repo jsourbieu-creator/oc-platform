@@ -46,7 +46,7 @@ export function NotificationsPage({ goto }) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h1 style={{ fontSize: "1.9rem" }}>Notifications</h1>
+        <h1 className="page-title">Notifications</h1>
         {unread > 0 && <button className="btn btn-ghost btn-sm" onClick={markAllRead}>Tout marquer lu ({unread})</button>}
       </div>
       {error && <div className="error-box">{error}</div>}
