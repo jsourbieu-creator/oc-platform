@@ -117,12 +117,22 @@ export function HomePage({ gotoConversation }) {
         </div>
       </div>
 
-      {nextEvent && <NextSessionHero event={nextEvent} reload={load} />}
-
-      <div className="tab-switch" style={{ marginBottom: 14 }}>
-        {[["week", "Semaine"], ["month", "Mois"], ["year", "Année"]].map(([v, l]) => (
-          <div key={v} className={`tab-switch-item ${scope === v ? "active" : ""}`} onClick={() => { setScope(v); setSelectedDay(null); }}>{l}</div>
-        ))}
+      <div className="stat-tiles">
+        <StatTile
+          tint="coral"
+          icon={(() => { const I = nextEvent ? (EVENT_TYPES[nextEvent.type] ?? EVENT_TYPES.match).icon : CalendarDays; return <I size={20} />; })()}
+          value={nextEvent === undefined ? "…" : nextEvent ? nextEvent.title : "Aucune"}
+          label={nextEvent ? `${fmtTime(nextEvent.starts_at)}` : "Prochaine séance"}
+          tint="blue"
+        />
+        <StatTile
+          tint="lime"
+          icon={<Star size={20} />}
+          value={myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}
+          label={myScore ? "Mon score Ballon d'Or" : "Pas encore classé"}
+          tint="gold"
+        />
+        <StatTile icon={<Shield size={20} />} value={teams?.length ?? "…"} label="Équipes" tint="green" />
       </div>
 
       {scope === "week" && <WeekStrip events={events} selectedDay={selectedDay} onSelect={setSelectedDay} />}
