@@ -8,6 +8,7 @@ import {
 } from "@/lib/events";
 import { REAL_STATUS_LABELS, fmtScore } from "@/lib/ballondor";
 import { DateBadge, AvatarStack, StatTile, CountChip, Avatar } from "@/components/ui";
+import blason from "@/assets/blason.svg";
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
@@ -21,6 +22,7 @@ export function HomePage({ gotoConversation }) {
   const [events, setEvents] = useState(null);
   const [showPast, setShowPast] = useState(false);
   const [scope, setScope] = useState("month"); // week | month | year
+  const [selectedDay, setSelectedDay] = useState(null); // "YYYY-MM-DD" ou null
   const [openId, setOpenId] = useState(null);
   const [form, setForm] = useState(null);
   const [error, setError] = useState("");
@@ -93,7 +95,7 @@ export function HomePage({ gotoConversation }) {
     const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6); sunday.setHours(23, 59, 59, 999);
     return d >= monday && d <= sunday;
   };
-  const visible = (events ?? []).filter((e) => (showPast || !isPast(e.starts_at)) && inScope(e.starts_at));
+  const visible = (events ?? []).filter((e) => (showPast || !isPast(e.starts_at)) && inScope(e.starts_at) && (!selectedDay || e.starts_at.slice(0, 10) === selectedDay));
 
   const grouped = [];
   let currentMonth = null;
@@ -105,10 +107,13 @@ export function HomePage({ gotoConversation }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
-        <div>
-          <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Salut {user?.first_name}</h1>
-          <div className="subtle">{club?.club_name}{activeSeason ? ` · Saison ${activeSeason.name}` : ""}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img src={blason} alt="Blason OC" style={{ width: 36, height: 36 }} />
+          <div>
+            <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Salut {user?.first_name}</h1>
+            <div className="subtle">{club?.club_name}{activeSeason ? ` · Saison ${activeSeason.name}` : ""}</div>
+          </div>
         </div>
       </div>
 
@@ -116,9 +121,11 @@ export function HomePage({ gotoConversation }) {
 
       <div className="tab-switch" style={{ marginBottom: 14 }}>
         {[["week", "Semaine"], ["month", "Mois"], ["year", "Année"]].map(([v, l]) => (
-          <div key={v} className={`tab-switch-item ${scope === v ? "active" : ""}`} onClick={() => setScope(v)}>{l}</div>
+          <div key={v} className={`tab-switch-item ${scope === v ? "active" : ""}`} onClick={() => { setScope(v); setSelectedDay(null); }}>{l}</div>
         ))}
       </div>
+
+      {scope === "week" && <WeekStrip events={events} selectedDay={selectedDay} onSelect={setSelectedDay} />}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <button className="btn btn-secondary btn-sm" style={{ borderRadius: "var(--radius-full)" }} onClick={() => setShowPast((v) => !v)}>
@@ -201,6 +208,47 @@ export function HomePage({ gotoConversation }) {
           ))}
         </div>
       ))}
+    </div>
+  );
+}
+
+const DAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+function WeekStrip({ events, selectedDay, onSelect }) {
+  const now = new Date();
+  const dow = (now.getDay() + 6) % 7;
+  const monday = new Date(now); monday.setHours(0, 0, 0, 0); monday.setDate(now.getDate() - dow);
+
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday); d.setDate(monday.getDate() + i);
+    const iso = d.toISOString().slice(0, 10);
+    const isToday = iso === now.toISOString().slice(0, 10);
+    const hasEvent = (events ?? []).some((e) => e.starts_at.slice(0, 10) === iso && e.status !== "cancelled");
+    return { iso, day: d.getDate(), label: DAY_LABELS[i], isToday, hasEvent };
+  });
+
+  return (
+    <div className="card" style={{ marginBottom: 14, padding: 10 }}>
+      <div style={{ display: "flex", gap: 6, overflowX: "auto" }}>
+        {days.map((d) => {
+          const active = selectedDay === d.iso;
+          return (
+            <div
+              key={d.iso}
+              onClick={() => onSelect(active ? null : d.iso)}
+              style={{
+                flex: "0 0 44px", textAlign: "center", padding: "8px 0", borderRadius: "var(--radius-md)", cursor: "pointer",
+                background: active ? "var(--oc-blue-deep)" : "transparent", color: active ? "#fff" : "var(--text)",
+                border: d.isToday && !active ? "1.5px solid var(--oc-blue-deep)" : "1.5px solid transparent",
+              }}
+            >
+              <div className="num" style={{ fontSize: "1.05rem", lineHeight: 1.1 }}>{d.day}</div>
+              <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", color: active ? "#fff" : "var(--text-dim)" }}>{d.label}</div>
+              {d.hasEvent && <div style={{ width: 4, height: 4, borderRadius: "50%", background: active ? "#fff" : "var(--oc-blue-bright)", margin: "3px auto 0" }} />}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

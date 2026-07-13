@@ -1,7 +1,7 @@
 import {
   CalendarDays, Newspaper, Shield, Users, MessageCircle, Star,
   BarChart3, Trophy, Medal, FolderOpen, Images, Bell, CircleUser,
-  Settings, Wrench,
+  Settings, Wrench, Palette,
 } from "lucide-react";
 
 export const NAV_ITEMS = [
@@ -19,6 +19,7 @@ export const NAV_ITEMS = [
   { label: "Notifications", view: "notifications", icon: Bell, phase: 4 },
   { label: "Profil", view: "profil", icon: CircleUser, phase: 1 },
   { label: "Paramètres", view: "parametres", icon: Settings, phase: 1 },
+  { label: "Charte graphique", view: "design-system", icon: Palette, phase: 0 },
   { label: "Administration", view: "administration", icon: Wrench, phase: 1 },
 ];
 
