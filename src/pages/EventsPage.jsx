@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { EVENT_TYPES, fmtDate, fmtTime, isPast, toLocalInput, fromLocalInput, canManageEvents } from "@/lib/events";
 
-const EMPTY = { type: "match", title: "", opponent: "", location: "", starts_at: "", meet_at: "", notes: "", team_id: "" };
+const EMPTY = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
 export function EventsPage({ goto }) {
   const { token, activeClubId, activeRole } = useAuth();
@@ -50,7 +50,10 @@ export function EventsPage({ goto }) {
       opponent: form.opponent,
       location: form.location,
       starts_at: fromLocalInput(form.starts_at),
+      ends_at: fromLocalInput(form.ends_at),
       meet_at: fromLocalInput(form.meet_at),
+      repeat_weekly: !form.event_id && form.repeat_weekly,
+      repeat_until: form.repeat_until,
       notes: form.notes,
       team_id: form.team_id ? Number(form.team_id) : 0,
     };
@@ -68,7 +71,8 @@ export function EventsPage({ goto }) {
   const edit = (ev) => setForm({
     event_id: ev.id, type: ev.type, title: ev.title, opponent: ev.opponent ?? "",
     location: ev.location ?? "", starts_at: toLocalInput(ev.starts_at),
-    meet_at: toLocalInput(ev.meet_at), notes: ev.notes ?? "", team_id: ev.team_id ?? "",
+    ends_at: toLocalInput(ev.ends_at), meet_at: toLocalInput(ev.meet_at),
+    notes: ev.notes ?? "", team_id: ev.team_id ?? "", repeat_weekly: false, repeat_until: "",
   });
 
   const setStatus = async (eventId, status) => {
@@ -127,8 +131,23 @@ export function EventsPage({ goto }) {
             <div className="field"><label>Lieu</label><input type="text" placeholder="Gymnase municipal" value={form.location} onChange={(e) => set("location", e.target.value)} /></div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div className="field"><label>Début</label><input type="datetime-local" required value={form.starts_at} onChange={(e) => set("starts_at", e.target.value)} /></div>
-              <div className="field"><label>Rendez-vous (optionnel)</label><input type="datetime-local" value={form.meet_at} onChange={(e) => set("meet_at", e.target.value)} /></div>
+              <div className="field"><label>Fin (optionnel)</label><input type="datetime-local" value={form.ends_at} onChange={(e) => set("ends_at", e.target.value)} /></div>
             </div>
+            <div className="field"><label>Rendez-vous (optionnel)</label><input type="datetime-local" value={form.meet_at} onChange={(e) => set("meet_at", e.target.value)} /></div>
+            {!form.event_id && (
+              <div style={{ background: "var(--surface-alt)", borderRadius: "var(--radius-sm)", padding: "12px 14px", marginBottom: 16 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", color: "var(--text)", marginBottom: form.repeat_weekly ? 10 : 0, cursor: "pointer" }}>
+                  <input type="checkbox" checked={form.repeat_weekly} onChange={(e) => set("repeat_weekly", e.target.checked)} style={{ width: "auto" }} />
+                  Répéter chaque semaine (même jour, même heure)
+                </label>
+                {form.repeat_weekly && (
+                  <div className="field" style={{ marginBottom: 0 }}>
+                    <label>Jusqu'au (inclus)</label>
+                    <input type="date" required value={form.repeat_until} onChange={(e) => set("repeat_until", e.target.value)} />
+                  </div>
+                )}
+              </div>
+            )}
             <div className="field"><label>Notes (optionnel)</label><input type="text" placeholder="Maillots bleus, covoiturage…" value={form.notes} onChange={(e) => set("notes", e.target.value)} /></div>
             <button className="btn btn-primary" disabled={busy}>{busy ? "Enregistrement…" : form.event_id ? "Enregistrer" : "Créer l'événement"}</button>
           </form>
@@ -155,7 +174,7 @@ function EventList({ title, events, onEdit, onStatus, onDelete }) {
               <strong>{t.icon} {e.title}</strong>
               {cancelled && <span className="badge badge-neutral" style={{ marginLeft: 8 }}>Annulé</span>}
               {e.team_name && <span className="badge badge-info" style={{ marginLeft: 8 }}>{e.team_name}</span>}
-              <div className="subtle" style={{ textTransform: "capitalize" }}>{fmtDate(e.starts_at)} à {fmtTime(e.starts_at)}{e.location ? ` — ${e.location}` : ""}</div>
+              <div className="subtle" style={{ textTransform: "capitalize" }}>{fmtDate(e.starts_at)} à {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}{e.location ? ` — ${e.location}` : ""}</div>
             </div>
             <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
               <button className="btn btn-ghost btn-sm" onClick={() => onEdit(e)}>Modifier</button>

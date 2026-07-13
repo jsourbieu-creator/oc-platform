@@ -90,19 +90,65 @@ switch ($action) {
             if (!$stmt->fetchColumn()) json_error('Équipe introuvable dans ce club.', 404);
         }
 
-        $stmt = db()->prepare('INSERT INTO events (club_id, team_id, type, title, opponent, location, starts_at, meet_at, notes, created_by) VALUES (?,?,?,?,?,?,?,?,?,?)');
-        $stmt->execute([
-            $clubId, $teamId, $type, $title,
-            trim($in['opponent'] ?? '') ?: null,
-            trim($in['location'] ?? '') ?: null,
-            $startsAt,
-            trim($in['meet_at'] ?? '') ?: null,
-            trim($in['notes'] ?? '') ?: null,
-            (int) $me['id'],
-        ]);
-        $id = (int) db()->lastInsertId();
-        log_action((int) $me['id'], 'create_event', "#$id $title");
-        json_out(['ok' => true, 'id' => $id]);
+        $repeatWeekly = (bool) ($in['repeat_weekly'] ?? false);
+        $repeatUntil = trim($in['repeat_until'] ?? '');
+        if ($repeatWeekly && $repeatUntil === '') json_error('Date de fin de récurrence requise.');
+
+        // Construit la liste des dates de début (1 seule, ou hebdo jusqu'à repeat_until)
+        $startTs = strtotime($startsAt);
+        if ($startTs === false) json_error('Date de début invalide.');
+        $starts = [$startTs];
+        if ($repeatWeekly) {
+            $untilTs = strtotime($repeatUntil . ' 23:59:59');
+            if ($untilTs === false || $untilTs < $startTs) json_error('La fin de récurrence doit être après le début.');
+            $t = $startTs;
+            while (count($starts) < 60) { // garde-fou : 60 occurrences max (~14 mois)
+                $t = strtotime('+7 days', $t);
+                if ($t > $untilTs) break;
+                $starts[] = $t;
+            }
+        }
+
+        $endsAt = trim($in['ends_at'] ?? '');
+        $endsOffset = null;
+        if ($endsAt !== '') {
+            $endsTs = strtotime($endsAt);
+            if ($endsTs === false || $endsTs <= $startTs) json_error('L\'heure de fin doit être après le début.');
+            $endsOffset = $endsTs - $startTs;
+        }
+        $meetAt = trim($in['meet_at'] ?? '');
+        $meetOffset = null;
+        if ($meetAt !== '') {
+            $meetTs = strtotime($meetAt);
+            if ($meetTs === false) json_error('Heure de rendez-vous invalide.');
+            $meetOffset = $meetTs - $startTs; // généralement négatif (RDV avant le début)
+        }
+
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('INSERT INTO events (club_id, team_id, type, title, opponent, location, starts_at, ends_at, meet_at, notes, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
+            $ids = [];
+            foreach ($starts as $ts) {
+                $stmt->execute([
+                    $clubId, $teamId, $type, $title,
+                    trim($in['opponent'] ?? '') ?: null,
+                    trim($in['location'] ?? '') ?: null,
+                    date('Y-m-d H:i:s', $ts),
+                    $endsOffset !== null ? date('Y-m-d H:i:s', $ts + $endsOffset) : null,
+                    $meetOffset !== null ? date('Y-m-d H:i:s', $ts + $meetOffset) : null,
+                    trim($in['notes'] ?? '') ?: null,
+                    (int) $me['id'],
+                ]);
+                $ids[] = (int) $pdo->lastInsertId();
+            }
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+        log_action((int) $me['id'], 'create_event', count($ids) > 1 ? count($ids) . " occurrences « $title »" : "#{$ids[0]} $title");
+        json_out(['ok' => true, 'ids' => $ids, 'count' => count($ids)]);
         break;
 
     case 'update':
@@ -126,12 +172,13 @@ switch ($action) {
             if (!$stmt->fetchColumn()) json_error('Équipe introuvable dans ce club.', 404);
         }
 
-        $stmt = db()->prepare('UPDATE events SET team_id = ?, type = ?, title = ?, opponent = ?, location = ?, starts_at = ?, meet_at = ?, notes = ? WHERE id = ? AND club_id = ?');
+        $stmt = db()->prepare('UPDATE events SET team_id = ?, type = ?, title = ?, opponent = ?, location = ?, starts_at = ?, ends_at = ?, meet_at = ?, notes = ? WHERE id = ? AND club_id = ?');
         $stmt->execute([
             $teamId, $type, $title,
             trim($in['opponent'] ?? '') ?: null,
             trim($in['location'] ?? '') ?: null,
             $startsAt,
+            trim($in['ends_at'] ?? '') ?: null,
             trim($in['meet_at'] ?? '') ?: null,
             trim($in['notes'] ?? '') ?: null,
             $id, $clubId,

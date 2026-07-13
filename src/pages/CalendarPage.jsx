@@ -71,7 +71,7 @@ function EventCard({ event: e, open, toggle, reload }) {
             {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
           </div>
           <div className="subtle" style={{ textTransform: "capitalize" }}>
-            {fmtDate(e.starts_at)} à {fmtTime(e.starts_at)}
+            {fmtDate(e.starts_at)} à {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}
             {e.location ? ` — ${e.location}` : ""}
             {e.opponent ? ` — vs ${e.opponent}` : ""}
           </div>
