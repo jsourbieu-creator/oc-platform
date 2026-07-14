@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronLeft, ChevronRight, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle, Search, Check } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle, Search, Check } from "lucide-react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -131,30 +131,35 @@ export function HomePage({ gotoConversation }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src={blason} alt="Blason OC" style={{ width: 36, height: 36 }} />
-          <div>
-            <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Salut {user?.first_name}</h1>
-            <div className="subtle">{club?.club_name}{activeSeason ? ` · Saison ${activeSeason.name}` : ""}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 10 }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="eyebrow" style={{ fontSize: "0.7rem", fontWeight: 850, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
+            {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
           </div>
+          <h1 className="page-title" style={{ marginTop: 2 }}>Salut {user?.first_name}</h1>
         </div>
+        <img src={blason} alt="Blason OC" style={{ width: 46, height: 46, flexShrink: 0 }} />
       </div>
 
-      <div className="stat-tiles">
-        <StatTile
-          icon={(() => { const I = nextEvent ? (EVENT_TYPES[nextEvent.type] ?? EVENT_TYPES.match).icon : CalendarDays; return <I size={20} />; })()}
-          value={nextEvent === undefined ? "…" : nextEvent ? nextEvent.title : "Aucune"}
-          label={nextEvent ? `${fmtTime(nextEvent.starts_at)}` : "Prochaine séance"}
-          tint="blue"
-        />
-        <StatTile
-          icon={<Star size={20} />}
-          value={myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}
-          label={myScore ? "Mon score Ballon d'Or" : "Pas encore classé"}
-          tint="gold"
-        />
-        <StatTile icon={<Shield size={20} />} value={teams?.length ?? "…"} label="Équipes" tint="green" />
+      <NextSessionCard
+        event={nextEvent}
+        loading={nextEvent === undefined}
+        onOpen={() => { if (nextEvent) { setScope("month"); setGridMonth(new Date(nextEvent.starts_at.replace(" ", "T"))); setSelectedDay(nextEvent.starts_at.slice(0, 10)); } }}
+      />
+
+      <div className="kpi-grid" style={{ marginBottom: 16 }}>
+        <div className="kpi">
+          <b style={{ color: "var(--oc-yellow-700)" }}>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
+          <span>{myScore ? "Score Ballon d'Or" : "Pas classé"}</span>
+        </div>
+        <div className="kpi">
+          <b style={{ color: "var(--oc-blue-700)" }}>{teams?.length ?? "…"}</b>
+          <span>Équipes</span>
+        </div>
+        <div className="kpi">
+          <b style={{ color: "var(--oc-coral-700)" }}>{events === null ? "…" : (events.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled").length)}</b>
+          <span>À venir</span>
+        </div>
       </div>
 
       <div className="segmented" style={{ marginBottom: 14 }}>
@@ -302,6 +307,59 @@ function WeekStrip({ events, selectedDay, onSelect }) {
 }
 
 const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+
+function NextSessionCard({ event: e, loading, onOpen }) {
+  if (loading) return <div className="card" style={{ marginBottom: 16, height: 150 }}><div className="spinner" /></div>;
+
+  if (!e) {
+    return (
+      <div className="card" style={{ marginBottom: 16, textAlign: "center", padding: "28px 20px" }}>
+        <CalendarDays size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
+        <div style={{ fontWeight: 800 }}>Aucune séance à venir</div>
+        <div className="subtle" style={{ marginTop: 2 }}>Le calendrier est vide pour le moment.</div>
+      </div>
+    );
+  }
+
+  const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
+  const Icon = t.icon;
+  const d = new Date(e.starts_at.replace(" ", "T"));
+  const dayNum = d.getDate();
+  const monthShort = MONTH_NAMES[d.getMonth()].slice(0, 4);
+  const isCoral = e.type === "match";
+
+  return (
+    <div
+      className={`event-card-ds${isCoral ? " orange" : ""}`}
+      onClick={onOpen}
+      style={{ marginBottom: 16, cursor: "pointer" }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+        <span className="kicker">Prochaine séance</span>
+        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 14, background: "rgba(255,255,255,0.18)" }}>
+          <Icon size={20} color="#fff" />
+        </span>
+      </div>
+
+      <h3>{e.title}</h3>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", color: "rgba(255,255,255,0.9)", fontSize: "0.9rem", fontWeight: 600 }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <CalendarDays size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
+        </span>
+        {e.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin size={15} /> {e.location}</span>}
+      </div>
+
+      {e.opponent && <div style={{ marginTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>vs {e.opponent}</div>}
+
+      {e.team_name && (
+        <span style={{ display: "inline-block", marginTop: 12, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.18)", fontSize: "0.72rem", fontWeight: 800 }}>
+          {e.team_name}
+        </span>
+      )}
+    </div>
+  );
+}
 
 function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
   const year = month.getFullYear();
