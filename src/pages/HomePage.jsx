@@ -145,6 +145,11 @@ export function HomePage({ gotoConversation }) {
         event={nextEvent}
         loading={nextEvent === undefined}
         onOpen={() => { if (nextEvent) { setScope("month"); setGridMonth(new Date(nextEvent.starts_at.replace(" ", "T"))); setSelectedDay(nextEvent.starts_at.slice(0, 10)); } }}
+        onSetAvailability={async (eventId, status) => {
+          setError("");
+          try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: eventId, status }, token); load(); }
+          catch (e2) { setError(e2.message); }
+        }}
       />
 
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
@@ -308,7 +313,7 @@ function WeekStrip({ events, selectedDay, onSelect }) {
 
 const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
-function NextSessionCard({ event: e, loading, onOpen }) {
+function NextSessionCard({ event: e, loading, onOpen, onSetAvailability }) {
   if (loading) return <div className="card" style={{ marginBottom: 16, height: 150 }}><div className="spinner" /></div>;
 
   if (!e) {
@@ -329,34 +334,55 @@ function NextSessionCard({ event: e, loading, onOpen }) {
   const isCoral = e.type === "match";
 
   return (
-    <div
-      className={`event-card-ds${isCoral ? " orange" : ""}`}
-      onClick={onOpen}
-      style={{ marginBottom: 16, cursor: "pointer" }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-        <span className="kicker">Prochaine séance</span>
-        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 14, background: "rgba(255,255,255,0.18)" }}>
-          <Icon size={20} color="#fff" />
-        </span>
+    <div className={`event-card-ds${isCoral ? " orange" : ""}`} style={{ marginBottom: 16 }}>
+      <div onClick={onOpen} style={{ cursor: "pointer" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+          <span className="kicker">Prochaine séance</span>
+          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 14, background: "rgba(255,255,255,0.18)" }}>
+            <Icon size={20} color="#fff" />
+          </span>
+        </div>
+
+        <h3>{e.title}</h3>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", color: "rgba(255,255,255,0.9)", fontSize: "0.9rem", fontWeight: 600 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <CalendarDays size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
+          </span>
+          {e.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin size={15} /> {e.location}</span>}
+        </div>
+
+        {e.opponent && <div style={{ marginTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>vs {e.opponent}</div>}
+        {e.team_name && (
+          <span style={{ display: "inline-block", marginTop: 12, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.18)", fontSize: "0.72rem", fontWeight: 800 }}>
+            {e.team_name}
+          </span>
+        )}
       </div>
 
-      <h3>{e.title}</h3>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", color: "rgba(255,255,255,0.9)", fontSize: "0.9rem", fontWeight: 600 }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <CalendarDays size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
-        </span>
-        {e.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin size={15} /> {e.location}</span>}
+      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.2)" }}>
+        <div style={{ fontSize: "0.72rem", fontWeight: 850, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 8 }}>
+          Ma présence
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+            const active = e.my_availability === v;
+            return (
+              <button
+                key={v}
+                onClick={() => onSetAvailability(e.id, v)}
+                style={{
+                  flex: 1, border: "none", cursor: "pointer", padding: "10px 6px", borderRadius: 13,
+                  fontSize: "0.82rem", fontWeight: 850, fontFamily: "inherit",
+                  background: active ? "#fff" : "rgba(255,255,255,0.16)",
+                  color: active ? (isCoral ? "var(--oc-coral-700)" : "var(--oc-blue-700)") : "#fff",
+                  transition: ".15s",
+                }}
+              >{l}</button>
+            );
+          })}
+        </div>
       </div>
-
-      {e.opponent && <div style={{ marginTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>vs {e.opponent}</div>}
-
-      {e.team_name && (
-        <span style={{ display: "inline-block", marginTop: 12, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.18)", fontSize: "0.72rem", fontWeight: 800 }}>
-          {e.team_name}
-        </span>
-      )}
     </div>
   );
 }
