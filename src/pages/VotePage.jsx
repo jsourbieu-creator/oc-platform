@@ -429,9 +429,9 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
     <div>
       {teamStats && (
         <div className="stat-tiles" style={{ marginBottom: 16 }}>
-          <StatTile icon={<Activity size={18} />} value={teamStats.total_sessions} label="Séances jouées" tint="coral" solid />
-          <StatTile icon={<Star size={18} />} value={teamStats.group_average !== null ? fmtScore(teamStats.group_average) : "—"} label="Moyenne du groupe" tint="lime" solid />
-          <StatTile icon={<People size={18} />} value={teamStats.nb_ranked_players} label="Joueurs classés" tint="blue" solid />
+          <StatTile icon={<Activity size={18} />} value={`${teamStats.sessions_with_votes}/${teamStats.total_sessions}`} label="Séances notées" tint="coral" solid />
+          <StatTile icon={<Star size={18} />} value={teamStats.group_average !== null ? `${fmtScore(teamStats.group_average)}/10` : "—/10"} label="Moyenne du groupe" tint="lime" solid />
+          <StatTile icon={<People size={18} />} value={`${teamStats.nb_ranked_players}/${teamStats.total_members}`} label="Joueurs classés" tint="blue" solid />
         </div>
       )}
 

@@ -749,6 +749,17 @@ switch ($action) {
             if ($presentTotal > 0) $voteParticipationRate = round(100 * $submittedTotal / $presentTotal, 1);
         }
 
+        $sessionsWithVotes = 0;
+        if ($eventIds) {
+            $stmt = db()->prepare("SELECT COUNT(DISTINCT event_id) FROM evaluations WHERE event_id IN ($ph)");
+            $stmt->execute($eventIds);
+            $sessionsWithVotes = (int) $stmt->fetchColumn();
+        }
+
+        $stmt = db()->prepare("SELECT COUNT(*) FROM club_members WHERE club_id = ? AND status = 'active'");
+        $stmt->execute([$clubId]);
+        $totalMembers = (int) $stmt->fetchColumn();
+
         $pick = function (array $items, string $field, bool $max = true) {
             $items = array_filter($items, fn($p) => $p[$field] !== null);
             if (!$items) return null;
@@ -758,6 +769,8 @@ switch ($action) {
 
         json_out([
             'total_sessions' => $totalSessions,
+            'sessions_with_votes' => $sessionsWithVotes,
+            'total_members' => $totalMembers,
             'group_average' => $stats['group_average'] !== null ? round($stats['group_average'], 2) : null,
             'convocation_response_rate' => $convocationRespRate,
             'vote_participation_rate' => $voteParticipationRate,
