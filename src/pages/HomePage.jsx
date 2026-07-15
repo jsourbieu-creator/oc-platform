@@ -187,11 +187,6 @@ export function HomePage({ gotoConversation }) {
           <b>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
           <span>Ma présence</span>
         </div>
-        <div className="kpi solid-sky">
-          <Calendar size={18} weight="fill" style={{ opacity: 0.55, marginBottom: 8 }} />
-          <b>{events === null ? "…" : (events.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled").length)}</b>
-          <span>À venir</span>
-        </div>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
@@ -377,12 +372,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
         )}
       </div>
 
-      <div
-        style={{
-          marginTop: 18, margin: "18px -22px -22px", padding: "16px 22px",
-          background: "rgba(11,58,82,0.07)", position: "relative", zIndex: 1,
-        }}
-      >
+      <div style={{ marginTop: 20, position: "relative", zIndex: 1 }}>
         <div
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", marginBottom: (e.present_names?.length ?? 0) > 0 || onOpen ? 14 : 0 }}
           onClick={onOpen} role="button"

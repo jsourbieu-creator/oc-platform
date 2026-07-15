@@ -173,6 +173,21 @@ via phpMyAdmin.
 - Cette palette a été proposée visuellement (nuancier interactif) avant
   implémentation et validée telle quelle.
 
+## Itération design du 15/07 (suite) — navbar icônes seules, hero en un seul bloc
+
+- **Navbar mobile** : icônes seules (Phosphor), plus de label texte visible ;
+  l'onglet actif reçoit un **pointeur rond bleu ciel** (`--hero-sky`) derrière
+  l'icône au lieu de la pilule allongée précédente — direction confirmée par
+  les captures de référence (icônes seules, indicateur rond).
+- **Hero "prochaine séance" fusionné** : la bande de séparation entre le
+  titre/date et "Qui est là"/"Ma présence" (fond légèrement teinté + bordure
+  invisible par négatif de marge) a été supprimée — c'est maintenant un
+  bloc visuel continu, seule la respiration verticale sépare les sections.
+  Le titre de la séance est aussi passé de 24px à 28px.
+- **KPI recentrées sur 2 tuiles utiles** : Ballon d'Or (corail) et Ma
+  présence (lime). La tuile "À venir" (un simple total de 46, qui ne disait
+  rien à l'utilisateur) a été retirée.
+
 ## Itération design du 15/07 — retrait du statut Incertain, zéro bordure, hero actionnable
 
 - **Statut "Incertain" retiré** : décision produit — un 4ᵉ statut obligeait à

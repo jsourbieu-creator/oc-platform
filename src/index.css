@@ -282,22 +282,22 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
   box-shadow:var(--shadow-md);
 } }
 .bottom-nav-item{
-  flex:1; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:7px;
-  cursor:pointer; color:color-mix(in srgb, var(--nav-text) 45%, transparent);
-  border-radius:999px; transition:flex .28s var(--ease-spring), background .2s ease, color .2s ease;
-  min-width:0; overflow:hidden;
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--muted);
+  min-width:0; transition:color .2s ease;
 }
 .bottom-nav-item:active{ transform:scale(0.94); }
-.bottom-nav-item .nav-label{
-  display:none; font-size:0.72rem; font-weight:800; white-space:nowrap;
-}
-.bottom-nav-item.active .nav-label{ display:block; animation:fadeUp .22s var(--ease-standard) both; }
 .bottom-nav-item svg{ color:currentColor; }
-.bottom-nav-item.active{ flex:2.1; color:#fff; background:var(--oc-sky-600); box-shadow:0 8px 20px rgba(24,143,192,.35); }
-.bottom-nav-item.active svg{ color:#fff; filter:drop-shadow(0 0 5px rgba(255,255,255,0.75)); }
+.bottom-nav-item.active{ color:var(--hero-ink); }
+.bottom-nav-item.active .bottom-nav-icon{
+  background:var(--hero-sky); box-shadow:0 6px 16px rgba(143,211,238,.4);
+}
 .bottom-nav-item.disabled{ opacity:0.4; }
-.bottom-nav-item.disabled svg{ color:var(--text-dim); }
-.bottom-nav-icon{ line-height:1; position:relative; display:inline-flex; }
+.bottom-nav-item.disabled svg{ color:var(--muted); }
+.bottom-nav-icon{
+  line-height:1; position:relative; display:inline-flex; align-items:center; justify-content:center;
+  width:42px; height:42px; border-radius:50%; transition:background .2s var(--ease-spring), box-shadow .2s ease;
+}
 .bottom-nav-item.raised{
   width:46px; height:46px; flex:0 0 46px; margin-top:-22px;
   background:var(--oc-gradient); box-shadow:0 6px 18px rgba(25,100,150,0.45), 0 0 0 4px var(--surface);
@@ -429,7 +429,8 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
   border-radius:999px;
   box-shadow:var(--shadow-md);
 }
-[data-theme="dark"] .bottom-nav-item.active{ color:#fff; background:var(--oc-sky-600); }
+[data-theme="dark"] .bottom-nav-item.active{ color:var(--hero-ink); }
+[data-theme="dark"] .bottom-nav-item.active .bottom-nav-icon{ background:var(--hero-sky); }
 
 /* ═══ Composants OC Design System ═══ */
 .segmented{ display:inline-flex; background:var(--surface-soft); padding:6px; border-radius:18px; gap:6px; }
@@ -442,7 +443,7 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 .callout{ background:var(--oc-coral-50); border:none; color:#77402C; border-radius:20px; padding:16px; font-size:13px; line-height:1.55; box-shadow:var(--shadow-xs); }
 [data-theme="dark"] .callout{ color:var(--oc-coral-300); }
 
-.kpi-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.kpi-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
 .kpi{ background:var(--surface); border:none; border-radius:var(--radius-lg); padding:18px 16px; box-shadow:var(--shadow-xs); }
 .kpi b{ display:block; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:26px; letter-spacing:-0.01em; }
 .kpi span{ font-size:9px; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; margin-top:4px; }
@@ -473,4 +474,4 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 }
 .event-card-ds.orange{ background:linear-gradient(150deg, #FFB49B 0%, var(--kpi-coral) 100%); color:var(--kpi-coral-ink); }
 .event-card-ds .kicker{ font-size:10px; font-weight:900; letter-spacing:.11em; text-transform:uppercase; opacity:.68; position:relative; z-index:1; }
-.event-card-ds h3{ font-size:24px; margin:9px 0; letter-spacing:-.035em; position:relative; z-index:1; }
+.event-card-ds h3{ font-size:28px; margin:9px 0; letter-spacing:-.035em; position:relative; z-index:1; }
