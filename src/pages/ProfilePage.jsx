@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, StatTile } from "@/components/ui";
 import { fmtScore } from "@/lib/ballondor";
-import { Star, Activity, CheckCircle } from "react-bootstrap-icons";
+import { Star, Activity, CheckCircle, ClipboardCheck } from "react-bootstrap-icons";
 
 export function ProfilePage() {
   const { user, token, activeClubId, refresh } = useAuth();
@@ -98,6 +98,30 @@ export function ProfilePage() {
           <StatTile icon={<Star size={20} />} value={myStats === undefined ? "…" : fmtScore(myStats.ballon_dor_score)} label="Score Ballon d'Or" tint="gold" solid />
           <StatTile icon={<Activity size={20} />} value={myStats === undefined ? "…" : myStats.sessions_played} label="Séances jouées" tint="blue" />
           <StatTile icon={<CheckCircle size={20} />} value={myStats === undefined ? "…" : `${myStats.attendance_rate}%`} label="Taux de présence" tint="green" />
+        </div>
+      )}
+
+      {myStats && myStats.sessions_until_eligible > 0 && (
+        <div className="card" style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
+          <div className="icon-chip" style={{ background: "var(--oc-amber-100)", color: "var(--oc-amber-700)", flexShrink: 0 }}>
+            <ClipboardCheck size={20} />
+          </div>
+          <div>
+            <div style={{ fontWeight: 700 }}>Classement provisoire</div>
+            <p className="subtle" style={{ margin: "2px 0 0" }}>
+              Encore <strong>{myStats.sessions_until_eligible}</strong> séance{myStats.sessions_until_eligible > 1 ? "s" : ""} avant que ton score soit validé et intègre le classement officiel.
+              Il reste affiché en direct entre-temps, mais uniquement à titre indicatif.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {myStats && myStats.sessions_until_eligible === 0 && (
+        <div className="card" style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
+          <div className="icon-chip" style={{ background: "var(--oc-green-100)", color: "var(--oc-green-700)", flexShrink: 0 }}>
+            <CheckCircle size={20} />
+          </div>
+          <div style={{ fontWeight: 700 }}>Ton score est officiel et compte dans le classement de la saison ✓</div>
         </div>
       )}
 
