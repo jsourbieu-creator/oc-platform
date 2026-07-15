@@ -13,11 +13,12 @@ export const AVAIL_LABELS = {
   injured: "Blessé",
 };
 
+/** Couleur de texte à l'état INACTIF (fond translucide sombre) — teinte vive, lisible sur fond sombre */
 export const AVAIL_COLORS = {
-  present: "var(--status-present-ink)",
-  maybe: "var(--status-maybe-ink)",
-  absent: "var(--status-absent-ink)",
-  injured: "var(--status-injured-ink)",
+  present: "var(--status-present)",
+  maybe: "var(--status-maybe)",
+  absent: "var(--status-absent)",
+  injured: "var(--oc-bluegray-500)",
 };
 
 /** Couleur de remplissage quand le statut est actif — identique aux puces de comptage */
