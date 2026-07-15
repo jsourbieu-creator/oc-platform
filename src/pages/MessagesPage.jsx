@@ -84,24 +84,50 @@ export function MessagesPage({ pendingConversation, onConsumePending } = {}) {
       )}
 
       {conversations?.length > 0 && (
-        <div className="card">
-          {conversations.map((c) => (
-            <div key={c.id} className="list-row" style={{ cursor: "pointer" }} onClick={() => setOpenConv(c)}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                <AvatarStack people={(c.participants ?? []).filter((p) => p.club_member_id !== myMemberId).map((p) => ({ name: `${p.first_name} ${p.last_name}`, user_id: p.user_id, avatar_url: p.avatar_url }))} max={3} />
-                <div style={{ minWidth: 0 }}>
-                  <strong style={{ fontWeight: Number(c.unread) > 0 ? 800 : 600 }}>{convTitle(c, myMemberId)}</strong>
-                  <div className="subtle" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 320 }}>
-                    {c.last_message ?? "Aucun message"}
+        <div>
+          {conversations.map((c, i) => {
+            const others = (c.participants ?? []).filter((p) => p.club_member_id !== myMemberId)
+              .map((p) => ({ name: `${p.first_name} ${p.last_name}`, user_id: p.user_id, avatar_url: p.avatar_url }));
+            const unread = Number(c.unread) > 0;
+            return (
+              <div
+                key={c.id}
+                onClick={() => setOpenConv(c)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 4px", cursor: "pointer",
+                  borderBottom: i < conversations.length - 1 ? "1px solid var(--line)" : "none",
+                }}
+              >
+                {others.length <= 1
+                  ? <Avatar name={others[0]?.name ?? convTitle(c, myMemberId)} userId={others[0]?.user_id} avatarUrl={others[0]?.avatar_url} size={50} />
+                  : <AvatarStack people={others} max={3} />}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
+                    <strong style={{ fontSize: "0.98rem", fontWeight: unread ? 800 : 700 }}>{convTitle(c, myMemberId)}</strong>
+                    <span className="subtle" style={{ fontSize: "0.72rem", flexShrink: 0 }}>{fmtDateTime(c.last_message_at)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 2 }}>
+                    <span
+                      className={unread ? undefined : "subtle"}
+                      style={{
+                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0,
+                        fontSize: "0.86rem", color: unread ? "var(--text)" : undefined, fontWeight: unread ? 600 : 400,
+                      }}
+                    >
+                      {c.last_message ?? "Aucun message"}
+                    </span>
+                    {unread && (
+                      <span style={{
+                        flexShrink: 0, background: "var(--hero-sky)", color: "var(--hero-ink)",
+                        borderRadius: "999px", fontSize: "0.7rem", fontWeight: 800, minWidth: 20, height: 20,
+                        display: "flex", alignItems: "center", justifyContent: "center", padding: "0 6px",
+                      }}>{c.unread}</span>
+                    )}
                   </div>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                {Number(c.unread) > 0 && <span className="badge badge-info">{c.unread}</span>}
-                <span className="subtle">{fmtDateTime(c.last_message_at)}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

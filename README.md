@@ -173,6 +173,18 @@ via phpMyAdmin.
 - Cette palette a été proposée visuellement (nuancier interactif) avant
   implémentation et validée telle quelle.
 
+## Itération design du 15/07 (suite 5) — liste de conversations façon Messenger/WhatsApp
+
+- **Liste des messages repensée** : fini le bloc en carte fermée — avatar
+  plus grand (50px, comme un vrai avatar de contact), lignes plein bord
+  séparées par un simple filet fin (pas de carte), nom en gras + heure sur
+  la même ligne, aperçu du dernier message en dessous avec pastille de
+  non-lus ronde à droite quand pertinent — la disposition classique d'un
+  inbox de messagerie plutôt qu'une liste de fiches.
+- Les bulles de message (fil de discussion) gardent leur avatar par auteur
+  ajouté à l'itération précédente ; ce changement-ci concerne uniquement
+  l'écran de liste des conversations.
+
 ## Itération design du 15/07 (suite 4) — Bootstrap Icons + Vestiaire renommé Annonces
 
 - **Changement de bibliothèque d'icônes** : Phosphor → **Bootstrap Icons**
