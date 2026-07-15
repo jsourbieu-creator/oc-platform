@@ -168,10 +168,35 @@ export function HomePage({ gotoConversation }) {
         </div>
       </div>
 
-      <div className="segmented" style={{ marginBottom: 14 }}>
-        {[["upcoming", "À venir"], ["month", "Mois"]].map(([v, l]) => (
-          <button key={v} className={scope === v ? "active" : ""} onClick={() => { setScope(v); setSelectedDay(null); }}>{l}</button>
-        ))}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <div className="segmented">
+          {[["upcoming", "À venir"], ["month", "Mois"]].map(([v, l]) => (
+            <button key={v} className={scope === v ? "active" : ""} onClick={() => { setScope(v); setSelectedDay(null); }}>{l}</button>
+          ))}
+        </div>
+        <div style={{ flex: 1 }} />
+        <button
+          title={showPast ? "Masquer le passé" : "Voir le passé"}
+          onClick={() => setShowPast((v) => !v)}
+          style={{
+            width: 42, height: 42, borderRadius: "50%", border: "1px solid var(--line)", cursor: "pointer",
+            background: showPast ? "var(--oc-sky-100)" : "var(--surface)", color: showPast ? "var(--oc-sky-700)" : "var(--muted)",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}
+        ><RotateCcw size={17} /></button>
+        {manage && (
+          <button
+            title={form ? "Annuler" : "Ajouter une séance"}
+            onClick={() => setForm(form ? null : { ...EMPTY_FORM })}
+            style={{
+              width: 42, height: 42, borderRadius: "50%", border: "none", cursor: "pointer",
+              background: form ? "var(--oc-red-50)" : "var(--oc-sky-600)", color: form ? "var(--oc-red-700)" : "#fff",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              boxShadow: form ? "none" : "0 8px 18px rgba(24,143,192,.3)", fontSize: "1.3rem", fontWeight: 700,
+              transition: ".2s var(--ease-spring)",
+            }}
+          >{form ? <X size={18} /> : "+"}</button>
+        )}
       </div>
 
       {scope === "month" && (
@@ -185,19 +210,6 @@ export function HomePage({ gotoConversation }) {
         />
       )}
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        <button className="btn btn-secondary btn-sm" style={{ borderRadius: "var(--radius-full)" }} onClick={() => setShowPast((v) => !v)}>
-          <RotateCcw size={13} style={{ marginRight: 5, verticalAlign: "-2px" }} />{showPast ? "Masquer le passé" : "Passé"}
-        </button>
-        {manage && (
-          <button
-            className="btn btn-primary btn-sm" style={{ borderRadius: "var(--radius-full)" }}
-            onClick={() => setForm(form ? null : { ...EMPTY_FORM })}
-          >
-            {form ? <><X size={13} style={{ marginRight: 5, verticalAlign: "-2px" }} />Annuler</> : "+ Ajouter"}
-          </button>
-        )}
-      </div>
       {error && <div className="error-box">{error}</div>}
 
       {form && (
@@ -346,7 +358,15 @@ function NextSessionCard({ event: e, loading, onOpen, onSetAvailability }) {
     <div className={`event-card-ds${isCoral ? " orange" : ""}`} style={{ marginBottom: 16 }}>
       <div onClick={onOpen} style={{ cursor: "pointer" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-          <span className="kicker">Prochaine séance</span>
+          <span className="kicker">
+          Prochaine séance
+          {(() => {
+            const days = Math.ceil((new Date(e.starts_at.replace(" ", "T")) - Date.now()) / 86400000);
+            if (days <= 0) return " · Aujourd'hui";
+            if (days === 1) return " · Demain";
+            return ` · Dans ${days} jours`;
+          })()}
+        </span>
           <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 14, background: "rgba(255,255,255,0.18)" }}>
             <Icon size={20} color="#fff" />
           </span>

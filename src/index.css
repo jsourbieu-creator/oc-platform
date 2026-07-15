@@ -215,24 +215,45 @@ label{ font-size:12px; font-weight:850; color:var(--text); display:block; margin
 .sidebar-item-label{ display:flex; align-items:center; gap:10px; }
 
 .bottom-nav{
-  display:flex; position:fixed; z-index:20; gap:4px;
+  display:flex; position:fixed; z-index:20; gap:4px; align-items:stretch;
   bottom:calc(14px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
-  width:min(calc(100% - 20px), 430px); height:66px; padding:7px;
-  background:var(--nav);
-  border:1px solid var(--line); border-radius:24px;
-  box-shadow:var(--shadow-sm);
+  width:min(calc(100% - 20px), 430px); height:64px; padding:8px;
+  background:color-mix(in srgb, var(--nav) 92%, transparent);
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--line); border-radius:999px;
+  box-shadow:var(--shadow-md);
 }
-[data-theme="dark"] .bottom-nav{ box-shadow:0 12px 36px rgba(0,0,0,0.5); }
-@media (min-width:1024px){ .bottom-nav{ display:none; } }
+[data-theme="dark"] .bottom-nav{
+  display:flex; position:fixed; z-index:20; gap:4px; align-items:stretch;
+  bottom:calc(14px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+  width:min(calc(100% - 20px), 430px); height:64px; padding:8px;
+  background:color-mix(in srgb, var(--nav) 92%, transparent);
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--line); border-radius:999px;
+  box-shadow:var(--shadow-md);
+}
+@media (min-width:1024px){ .bottom-nav{
+  display:flex; position:fixed; z-index:20; gap:4px; align-items:stretch;
+  bottom:calc(14px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+  width:min(calc(100% - 20px), 430px); height:64px; padding:8px;
+  background:color-mix(in srgb, var(--nav) 92%, transparent);
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--line); border-radius:999px;
+  box-shadow:var(--shadow-md);
+} }
 .bottom-nav-item{
-  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-  font-size:0.6rem; font-weight:800; letter-spacing:0.01em; cursor:pointer;
-  color:color-mix(in srgb, var(--nav-text) 52%, transparent);
-  border-radius:999px; transition:.2s var(--ease-standard);
+  flex:1; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:7px;
+  cursor:pointer; color:color-mix(in srgb, var(--nav-text) 45%, transparent);
+  border-radius:999px; transition:flex .28s var(--ease-spring), background .2s ease, color .2s ease;
+  min-width:0; overflow:hidden;
 }
 .bottom-nav-item:active{ transform:scale(0.94); }
+.bottom-nav-item .nav-label{
+  display:none; font-size:0.72rem; font-weight:850; white-space:nowrap;
+}
+.bottom-nav-item.active .nav-label{ display:block; animation:fadeUp .22s var(--ease-standard) both; }
 .bottom-nav-item svg{ color:currentColor; }
-.bottom-nav-item.active{ color:var(--oc-sky-700); background:var(--oc-sky-50); box-shadow:none; }
+.bottom-nav-item.active{ flex:2.1; color:#fff; background:var(--oc-sky-600); box-shadow:0 8px 20px rgba(24,143,192,.35); }
 .bottom-nav-item.active svg{ color:#fff; filter:drop-shadow(0 0 5px rgba(255,255,255,0.75)); }
 .bottom-nav-item.disabled{ opacity:0.4; }
 .bottom-nav-item.disabled svg{ color:var(--text-dim); }
@@ -359,8 +380,16 @@ label{ font-size:12px; font-weight:850; color:var(--text); display:block; margin
 
 
 /* Nav inversée en mode sombre (signature OC Design System) */
-[data-theme="dark"] .bottom-nav{ box-shadow:0 16px 42px rgba(0,0,0,0.55); }
-[data-theme="dark"] .bottom-nav-item.active{ color:#188FC0; background:rgba(24,143,192,.12); }
+[data-theme="dark"] .bottom-nav{
+  display:flex; position:fixed; z-index:20; gap:4px; align-items:stretch;
+  bottom:calc(14px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+  width:min(calc(100% - 20px), 430px); height:64px; padding:8px;
+  background:color-mix(in srgb, var(--nav) 92%, transparent);
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--line); border-radius:999px;
+  box-shadow:var(--shadow-md);
+}
+[data-theme="dark"] .bottom-nav-item.active{ color:#fff; background:var(--oc-sky-600); }
 
 /* ═══ Composants OC Design System ═══ */
 .segmented{ display:inline-flex; background:var(--surface-soft); padding:6px; border-radius:18px; gap:6px; }
