@@ -156,6 +156,29 @@ via phpMyAdmin.
   convocations, taux de participation aux votes, joueur le plus
   régulier/assidu, meilleure progression — à l'échelle de la saison.
 
+## Itération design du 15/07 — retrait du statut Incertain, zéro bordure, hero actionnable
+
+- **Statut "Incertain" retiré** : décision produit — un 4ᵉ statut obligeait à
+  relancer les gens jusqu'à la dernière minute. Retour à 3 statuts nets :
+  Présent / Absent / Blessé. Migration `0016_availability_remove_maybe.sql`
+  (bascule les rares réponses "Incertain" déjà enregistrées en "Absent").
+- **Nouvelles couleurs de statut**, bien distinctes de l'orange déjà utilisé
+  ailleurs (KPI, hero) : présent en lime, absent en rouge-corail, blessé en
+  violet (`--status-present/absent/injured` + `-ink`).
+- **Zéro bordure sur tout le site** : sidebar, topbar, listes, avatars,
+  cercle décoratif du hero, contour "aujourd'hui" du calendrier — toutes les
+  bordures littérales ont été remplacées par de l'espacement ou des ombres
+  douces (`box-shadow`), jamais un trait.
+- **Hero "prochaine séance" repensé** : halo dégradé (au lieu du cercle à
+  bordure), et surtout **actionnable directement** — "Qui est là" (avatars +
+  compteur) et les 3 boutons Présent/Absent/Blessé sont dans la même carte,
+  sans avoir à ouvrir autre chose. Objectif : ouvrir l'app, voir la prochaine
+  séance, qui vient, et changer sa présence en un tap.
+- **Salutation d'accueil** : phrase du jour piochée dans un pool d'une
+  vingtaine de tournures foot (Cantona, clin d'œil Mourinho/Joga Bonito,
+  ton grandiloquent façon président de club) — une phrase par jour, stable
+  toute la journée, pas de flicker au rechargement.
+
 ## Passe design (post-refonte TeamPulse)
 
 - **Icônes** : tous les emojis d'interface remplacés par `lucide-react`

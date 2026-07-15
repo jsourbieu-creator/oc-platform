@@ -12,15 +12,39 @@ import { DateBadge, AvatarStack, StatTile, CountChip, Avatar } from "@/component
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
-/** Salutation qui varie selon l'heure, clin d'œil au vocabulaire du foot */
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 7) return "Prolongations";
-  if (h < 12) return "Échauffement";
-  if (h < 14) return "Mi-temps";
-  if (h < 18) return "Reprise";
-  if (h < 23) return "Coup d'envoi";
-  return "Prolongations";
+/**
+ * Salutation qui change chaque jour, clin d'œil au vocabulaire du foot —
+ * un peu de grandeur façon président de club, un peu de poésie Cantona,
+ * un peu d'auto-dérision façon "Special One". Une phrase par jour (pas de
+ * flicker à chaque rechargement), tirée d'un pool assez large pour ne pas
+ * se répéter trop souvent dans la saison.
+ */
+function greeting(firstName) {
+  const n = firstName || "champion";
+  const phrases = [
+    (n) => `Salut ${n}, prêt pour le beau jeu ?`,
+    (n) => `${n}, ici on ne vise que le sommet.`,
+    (n) => `On ne recule devant rien, ${n}.`,
+    (n) => `${n}, le meilleur groupe de la ligue t'attend.`,
+    (n) => `Joga Bonito, ${n}.`,
+    (n) => `${n}, les mouettes suivent le chalutier.`,
+    (n) => `On ne naît pas champion, ${n} — on le devient.`,
+    (n) => `${n}, l'Olympique n'a peur de personne.`,
+    (n) => `Chaque séance nous rapproche du sommet, ${n}.`,
+    (n) => `${n}, il n'y a pas de plan B.`,
+    (n) => `Spécial ? Non, juste sérieux, ${n}.`,
+    (n) => `${n}, la légende continue.`,
+    (n) => `Prêt à écrire l'histoire, ${n} ?`,
+    (n) => `${n}, ici c'est Castelblangeoise.`,
+    (n) => `On ne demande pas la permission de gagner, ${n}.`,
+    (n) => `${n}, le ballon est rond, la victoire aussi.`,
+    (n) => `Re ${n}. Le beau jeu n'attend pas.`,
+    (n) => `${n}, aujourd'hui, on transpire pour demain.`,
+    (n) => `L'ambition n'a pas de limite, ${n}.`,
+    (n) => `${n}, chaque contrôle compte.`,
+  ];
+  const dayIndex = Math.floor(Date.now() / 86400000);
+  return phrases[dayIndex % phrases.length](n);
 }
 
 export function HomePage({ gotoConversation }) {
@@ -143,7 +167,7 @@ export function HomePage({ gotoConversation }) {
         <div className="eyebrow" style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
           {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
         </div>
-        <h1 className="page-title" style={{ marginTop: 2 }}>{greeting()}, {user?.first_name}</h1>
+        <h1 className="page-title" style={{ marginTop: 2 }}>{greeting(user?.first_name)}</h1>
       </div>
 
       <NextSessionCard
@@ -363,14 +387,15 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
 
       <div
         style={{
-          marginTop: 16, margin: "16px -20px -20px", padding: "14px 20px",
-          background: "rgba(6,20,28,0.28)", borderRadius: "0 0 var(--radius-xl) var(--radius-xl)",
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+          marginTop: 18, margin: "18px -22px -22px", padding: "16px 22px",
+          background: "rgba(6,20,28,0.24)", position: "relative", zIndex: 1,
         }}
-        onClick={onOpen} role="button"
       >
-        <div>
-          <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 6 }}>
+        <div
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", marginBottom: (e.present_names?.length ?? 0) > 0 || onOpen ? 14 : 0 }}
+          onClick={onOpen} role="button"
+        >
+          <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)" }}>
             Qui est là
           </div>
           {(e.present_names?.length ?? 0) > 0 ? (
@@ -379,10 +404,32 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
               <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>{e.avail_counts?.present ?? 0} présent{(e.avail_counts?.present ?? 0) > 1 ? "s" : ""}</span>
             </div>
           ) : (
-            <span style={{ fontSize: "0.85rem", opacity: 0.8 }}>Personne n'a encore répondu</span>
+            <span style={{ fontSize: "0.82rem", opacity: 0.75 }}>Personne n'a encore répondu</span>
           )}
         </div>
-        <span style={{ fontSize: "0.78rem", fontWeight: 700, textDecoration: "underline", flexShrink: 0, cursor: "pointer" }}>Répondre</span>
+
+        <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 8 }}>
+          Ma présence
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+            const active = e.my_availability === v;
+            return (
+              <button
+                key={v}
+                onClick={() => onSetAvailability(e.id, v)}
+                style={{
+                  flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
+                  fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
+                  background: active ? "#fff" : "rgba(255,255,255,0.14)",
+                  color: active ? ({ present: "var(--status-present-ink)", absent: "var(--status-absent-ink)", injured: "var(--status-injured-ink)" }[v]) : "rgba(255,255,255,0.92)",
+                  transform: active ? "scale(1.02)" : "none",
+                  transition: ".18s var(--ease-spring)",
+                }}
+              >{l}</button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -444,7 +491,7 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
                 background: active ? "var(--oc-sky-600)" : respondedBg ?? (c.events.length ? "var(--oc-sky-50)" : "var(--oc-bluegray-50)"),
                 color: active ? "#fff" : respondedInk ?? (c.events.length ? "var(--oc-sky-700)" : "var(--text)"),
                 fontWeight: 800,
-                outline: c.isToday && !active ? "2px solid var(--oc-sky-500)" : "none", outlineOffset: -2,
+                boxShadow: c.isToday && !active ? "inset 0 0 0 100px var(--oc-sky-50)" : "none",
                 transition: "background .12s ease",
               }}
             >
@@ -469,10 +516,10 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   const cancelled = e.status === "cancelled";
   const presentCount = e.avail_counts?.present ?? 0;
-  const maybeCount = e.avail_counts?.maybe ?? 0;
-  const absentCount = (e.avail_counts?.absent ?? 0) + (e.avail_counts?.injured ?? 0);
+  const absentCount = e.avail_counts?.absent ?? 0;
+  const injuredCount = e.avail_counts?.injured ?? 0;
   const totalMembers = members?.length ?? 0;
-  const noResponseCount = Math.max(0, totalMembers - presentCount - maybeCount - absentCount);
+  const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
   const confirmedCount = e.conv_counts?.confirmed ?? 0;
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
   const confirmedPeople = e.confirmed_names ?? [];
@@ -518,8 +565,8 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: 6 }}>
           <CountChip value={presentCount} tint="green" />
-          <CountChip value={maybeCount} tint="amber" />
           <CountChip value={absentCount} tint="orange" />
+          <CountChip value={injuredCount} tint="violet" />
           <CountChip value={noResponseCount} tint="gray" />
         </div>
         <AvatarStack people={confirmedPeople} />
@@ -704,7 +751,6 @@ function ParticipantsTab({ event: e, manage }) {
 
   const SECTIONS = [
     { key: "present", label: "Présents" },
-    { key: "maybe", label: "Incertains" },
     { key: "injured", label: "Blessés" },
     { key: "absent", label: "Absents" },
     { key: null, label: "En attente" },
@@ -755,7 +801,6 @@ function ParticipantsTab({ event: e, manage }) {
                 ) : (
                   <div className="participant-status-icon" style={{ background: sec.key ? AVAIL_COLORS[sec.key] : "var(--neutral-400)" }}>
                     {sec.key === "present" && <Check size={14} />}
-                    {sec.key === "maybe" && <span style={{ fontSize: 12, fontWeight: 800 }}>?</span>}
                     {sec.key === "absent" && <X size={14} />}
                     {sec.key === "injured" && <span style={{ fontSize: 12 }}>!</span>}
                     {!sec.key && <Clock size={14} />}
@@ -977,7 +1022,7 @@ function PresenceValidator({ event: e, members }) {
               </button>
 
               {presentCount > 0 && (
-                <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                <div style={{ marginTop: 18 }}>
                   <div className="label-title">Session de vote</div>
                   {!session?.session && (
                     <>

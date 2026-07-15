@@ -8,7 +8,6 @@ export const EVENT_TYPES = {
 
 export const AVAIL_LABELS = {
   present: "Présent",
-  maybe: "Incertain",
   absent: "Absent",
   injured: "Blessé",
 };
@@ -16,15 +15,13 @@ export const AVAIL_LABELS = {
 /** Couleur de texte à l'état INACTIF (fond translucide sombre) — teinte vive, lisible sur fond sombre */
 export const AVAIL_COLORS = {
   present: "var(--status-present)",
-  maybe: "var(--status-maybe)",
   absent: "var(--status-absent)",
-  injured: "var(--oc-bluegray-500)",
+  injured: "var(--status-injured)",
 };
 
 /** Couleur de remplissage quand le statut est actif — identique aux puces de comptage */
 export const AVAIL_FILL = {
   present: "var(--status-present)",
-  maybe: "var(--status-maybe)",
   absent: "var(--status-absent)",
   injured: "var(--status-injured)",
 };
@@ -32,7 +29,6 @@ export const AVAIL_FILL = {
 /** Couleur de texte sur le remplissage (encre sombre assortie à chaque teinte claire) */
 export const AVAIL_INK = {
   present: "var(--status-present-ink)",
-  maybe: "var(--status-maybe-ink)",
   absent: "var(--status-absent-ink)",
   injured: "var(--status-injured-ink)",
 };

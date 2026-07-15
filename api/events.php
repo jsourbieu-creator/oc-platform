@@ -277,7 +277,7 @@ switch ($action) {
         }
 
         $status = $in['status'] ?? '';
-        if (!in_array($status, ['present', 'maybe', 'absent', 'injured'], true)) json_error('Réponse invalide.');
+        if (!in_array($status, ['present', 'absent', 'injured'], true)) json_error('Réponse invalide.');
         $comment = trim($in['comment'] ?? '');
 
         $stmt = db()->prepare('
@@ -304,7 +304,7 @@ switch ($action) {
             JOIN users u ON u.id = cm.user_id
             LEFT JOIN event_availabilities ea ON ea.club_member_id = cm.id AND ea.event_id = ?
             WHERE cm.club_id = ? AND cm.status = "active"
-            ORDER BY FIELD(ea.status, "present", "maybe", "injured", "absent"), u.last_name
+            ORDER BY FIELD(ea.status, "present", "injured", "absent"), u.last_name
         ');
         $stmt->execute([$eventId, $clubId]);
         json_out(['availabilities' => $stmt->fetchAll()]);

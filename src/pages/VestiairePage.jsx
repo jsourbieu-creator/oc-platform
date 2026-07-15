@@ -211,7 +211,7 @@ function Comments({ postId, myMemberId, moderate }) {
   };
 
   return (
-    <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
+    <div style={{ marginTop: 12 }}>
       {error && <div className="error-box">{error}</div>}
       {comments === null && <div className="spinner" />}
       {comments?.map((c) => (

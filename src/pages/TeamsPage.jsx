@@ -76,7 +76,7 @@ function SeasonsBlock({ seasons, manage, reload }) {
       {error && <div className="error-box">{error}</div>}
 
       {showForm && (
-        <form onSubmit={create} style={{ marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
+        <form onSubmit={create} style={{ marginBottom: 18, paddingBottom: 4 }}>
           <div className="field"><label>Nom</label><input type="text" required placeholder="2026-2027" value={name} onChange={(e) => setName(e.target.value)} /></div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div className="field"><label>Début</label><input type="date" required value={start} onChange={(e) => setStart(e.target.value)} /></div>

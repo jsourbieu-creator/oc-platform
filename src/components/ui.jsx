@@ -11,7 +11,7 @@ export function Avatar({ name, userId, avatarUrl, size = 26, ring = true }) {
       style={{
         width: size, height: size, borderRadius: "50%", background: avatarColor(name ?? "?"), color: "#fff",
         display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.38, fontWeight: 700,
-        border: ring ? "2px solid var(--surface)" : "none", flexShrink: 0, overflow: "hidden",
+        boxShadow: ring ? "0 2px 6px rgba(18,36,46,.16)" : "none", flexShrink: 0, overflow: "hidden",
       }}
     >
       {showPhoto
@@ -44,9 +44,9 @@ export function DateBadge({ date, color = "var(--electric-blue)", ink = "#fff" }
 export function CountChip({ value, tint }) {
   const styles = {
     green: { bg: "var(--status-present)", fg: "var(--status-present-ink)" },
-    amber: { bg: "var(--status-maybe)", fg: "var(--status-maybe-ink)" },
     orange: { bg: "var(--status-absent)", fg: "var(--status-absent-ink)" },
-    gray: { bg: "var(--status-injured)", fg: "var(--status-injured-ink)" },
+    violet: { bg: "var(--status-injured)", fg: "var(--status-injured-ink)" },
+    gray: { bg: "var(--surface-soft)", fg: "var(--text-dim)" },
   }[tint];
   return (
     <span className="num" style={{
@@ -72,7 +72,7 @@ export function AvatarStack({ people, max = 4 }) {
         <div style={{
           width: 26, height: 26, borderRadius: "50%", background: "var(--surface-alt)", color: "var(--text-dim)",
           display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.62rem", fontWeight: 700,
-          border: "2px solid var(--surface)", marginLeft: -8, flexShrink: 0,
+          boxShadow: "0 2px 6px rgba(18,36,46,.16)", marginLeft: -8, flexShrink: 0,
         }}>+{overflow}</div>
       )}
     </div>
