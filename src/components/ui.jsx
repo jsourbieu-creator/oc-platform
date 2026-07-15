@@ -108,11 +108,15 @@ export function Donut({ segments, size = 96, thickness = 12, centerLabel, center
 }
 
 const TINTS = {
-  blue: { bg: "rgba(18,180,242,0.14)", fg: "var(--electric-blue)" },
-  gold: { bg: "rgba(214,169,40,0.16)", fg: "#8A6B18" },
-  green: { bg: "var(--lime-100)", fg: "var(--lime-600)" },
-  red: { bg: "var(--danger-100)", fg: "var(--danger-600)" },
-  neutral: { bg: "var(--surface-alt)", fg: "var(--text-dim)" },
+  blue: { bg: "var(--oc-blue-100)", fg: "var(--oc-blue-700)" },
+  gold: { bg: "var(--oc-yellow-100)", fg: "var(--oc-yellow-700)" },
+  green: { bg: "var(--success-100)", fg: "var(--success-700)" },
+  red: { bg: "var(--danger-100)", fg: "var(--danger-700)" },
+  coral: { bg: "var(--oc-coral-100)", fg: "var(--oc-coral-700)" },
+  lime: { bg: "var(--oc-lime-100)", fg: "var(--oc-lime-700)" },
+  pink: { bg: "var(--oc-pink-100)", fg: "var(--oc-pink-700)" },
+  sage: { bg: "var(--oc-sage-100)", fg: "var(--oc-sage-700)" },
+  neutral: { bg: "var(--surface-soft)", fg: "var(--text-muted)" },
 };
 
 /** Bloc "icône + gros chiffre + libellé" façon callout Alan/J&A */

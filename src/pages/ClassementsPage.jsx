@@ -152,8 +152,8 @@ export function ClassementsPage() {
       {rankings && (rankings.official.length > 0 || rankings.provisional.length > 0) && (
         <div className="stat-tiles">
           <StatTile icon={<Trophy size={20} />} value={rankings.official[0]?.name ?? "—"} label="En tête du classement" tint="gold" />
-          <StatTile icon={<Star size={20} />} value={rankings.group_average !== null ? fmtScore(rankings.group_average) : "—"} label="Moyenne du groupe" tint="blue" />
-          <StatTile icon={<Users size={20} />} value={rankings.official.length + rankings.provisional.length} label="Joueurs classés" tint="green" />
+          <StatTile icon={<Star size={20} />} value={rankings.group_average !== null ? fmtScore(rankings.group_average) : "—"} label="Moyenne du groupe" tint="coral" />
+          <StatTile icon={<Users size={20} />} value={rankings.official.length + rankings.provisional.length} label="Joueurs classés" tint="lime" />
         </div>
       )}
 

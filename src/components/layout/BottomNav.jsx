@@ -20,7 +20,7 @@ export function BottomNav({ view, goto, badges = {} }) {
                 </span>
               )}
             </span>
-            {item.label}
+            <span className="nav-label">{item.label}</span>
           </div>
         );
       })}

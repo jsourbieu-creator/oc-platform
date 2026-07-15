@@ -10,7 +10,6 @@ import { MembersPage } from "@/pages/MembersPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { AdminPage } from "@/pages/AdminPage";
-import { DesignSystemPage } from "@/pages/DesignSystemPage";
 import { VotePage } from "@/pages/VotePage";
 import { ClassementsPage } from "@/pages/ClassementsPage";
 import { TropheesPage } from "@/pages/TropheesPage";
@@ -67,7 +66,6 @@ function Root() {
       {dashView === "profil" && <ProfilePage />}
       {dashView === "parametres" && <SettingsPage goto={setDashView} />}
       {dashView === "administration" && <AdminPage />}
-      {dashView === "design-system" && <DesignSystemPage />}
       {dashView === "votes" && <VotePage />}
       {dashView === "classements" && <ClassementsPage />}
       {dashView === "trophees" && <TropheesPage />}

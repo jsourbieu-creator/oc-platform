@@ -1,4 +1,5 @@
-import { CalendarDays, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle, Search, Check } from "lucide-react";
+import { createPortal } from "react-dom";
+import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle, Search, Check } from "lucide-react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,12 +22,14 @@ export function HomePage({ gotoConversation }) {
   const [members, setMembers] = useState(null);
   const [events, setEvents] = useState(null);
   const [showPast, setShowPast] = useState(false);
-  const [scope, setScope] = useState("month"); // week | month | year
+  const [scope, setScope] = useState("upcoming"); // upcoming | month
+  const [gridMonth, setGridMonth] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState(null); // "YYYY-MM-DD" ou null
   const [openId, setOpenId] = useState(null);
   const [form, setForm] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [myScore, setMyScore] = useState(undefined); // undefined=chargement, null=pas classé, objet sinon
 
   const load = useCallback(() => {
     if (!activeClubId) return;
@@ -34,6 +37,27 @@ export function HomePage({ gotoConversation }) {
   }, [activeClubId, token]);
 
   useEffect(load, [load]);
+
+  // Mon score Ballon d'Or : dérivé du classement de la saison active
+  useEffect(() => {
+    if (!activeClubId || !token || !user) { return; }
+    let alive = true;
+    api("seasons.php", "list", { club_id: activeClubId }, token)
+      .then((d) => {
+        const active = (d.seasons ?? []).find((s) => s.status === "active");
+        if (!active) { if (alive) setMyScore(null); return; }
+        return api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: active.id }, token)
+          .then((r) => {
+            if (!alive) return;
+            const full = `${user.first_name} ${user.last_name}`.trim().toLowerCase();
+            const all = [...(r.official ?? []), ...(r.provisional ?? [])];
+            const mine = all.find((p) => (p.name ?? "").trim().toLowerCase() === full);
+            setMyScore(mine ?? null);
+          });
+      })
+      .catch(() => { if (alive) setMyScore(null); });
+    return () => { alive = false; };
+  }, [activeClubId, token, user]);
 
   useEffect(() => {
     if (!activeClubId) return;
@@ -83,19 +107,20 @@ export function HomePage({ gotoConversation }) {
 
   const club = memberships.find((m) => m.club_id === activeClubId);
   const activeSeason = seasons?.find((s) => s.status === "active");
-  const nextEvent = events?.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled")[0];
+  const nextEvent = events?.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled")?.[0];
 
   const now = new Date();
+  const viewingOtherMonth = scope === "month" && (gridMonth.getFullYear() !== now.getFullYear() || gridMonth.getMonth() !== now.getMonth());
   const inScope = (dateStr) => {
     const d = new Date(dateStr.replace(" ", "T"));
-    if (scope === "year") return d.getFullYear() === now.getFullYear();
-    if (scope === "month") return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    if (scope === "upcoming") return true;
+    if (scope === "month") return d.getFullYear() === gridMonth.getFullYear() && d.getMonth() === gridMonth.getMonth();
     const dow = (now.getDay() + 6) % 7;
     const monday = new Date(now); monday.setHours(0, 0, 0, 0); monday.setDate(now.getDate() - dow);
     const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6); sunday.setHours(23, 59, 59, 999);
     return d >= monday && d <= sunday;
   };
-  const visible = (events ?? []).filter((e) => (showPast || !isPast(e.starts_at)) && inScope(e.starts_at) && (!selectedDay || e.starts_at.slice(0, 10) === selectedDay));
+  const visible = (events ?? []).filter((e) => (showPast || viewingOtherMonth || !isPast(e.starts_at)) && inScope(e.starts_at) && (!selectedDay || e.starts_at.slice(0, 10) === selectedDay));
 
   const grouped = [];
   let currentMonth = null;
@@ -107,39 +132,84 @@ export function HomePage({ gotoConversation }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src={blason} alt="Blason OC" style={{ width: 36, height: 36 }} />
-          <div>
-            <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Salut {user?.first_name}</h1>
-            <div className="subtle">{club?.club_name}{activeSeason ? ` · Saison ${activeSeason.name}` : ""}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 10 }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="eyebrow" style={{ fontSize: "0.7rem", fontWeight: 850, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
+            {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
           </div>
+          <h1 className="page-title" style={{ marginTop: 2 }}>Salut {user?.first_name}</h1>
+        </div>
+        <img src={blason} alt="Blason OC" style={{ width: 46, height: 46, flexShrink: 0 }} />
+      </div>
+
+      <NextSessionCard
+        event={nextEvent}
+        loading={nextEvent === undefined}
+        onOpen={() => { if (nextEvent) { setScope("month"); setGridMonth(new Date(nextEvent.starts_at.replace(" ", "T"))); setSelectedDay(nextEvent.starts_at.slice(0, 10)); } }}
+        onSetAvailability={async (eventId, status) => {
+          setError("");
+          try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: eventId, status }, token); load(); }
+          catch (e2) { setError(e2.message); }
+        }}
+      />
+
+      <div className="kpi-grid" style={{ marginBottom: 16 }}>
+        <div className="kpi">
+          <b style={{ color: "var(--oc-yellow-700)" }}>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
+          <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
+        </div>
+        <div className="kpi">
+          <b style={{ color: "var(--oc-blue-700)" }}>{teams?.length ?? "…"}</b>
+          <span>Équipes</span>
+        </div>
+        <div className="kpi">
+          <b style={{ color: "var(--oc-coral-700)" }}>{events === null ? "…" : (events.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled").length)}</b>
+          <span>À venir</span>
         </div>
       </div>
 
-      {nextEvent && <NextSessionHero event={nextEvent} reload={load} />}
-
-      <div className="tab-switch" style={{ marginBottom: 14 }}>
-        {[["week", "Semaine"], ["month", "Mois"], ["year", "Année"]].map(([v, l]) => (
-          <div key={v} className={`tab-switch-item ${scope === v ? "active" : ""}`} onClick={() => { setScope(v); setSelectedDay(null); }}>{l}</div>
-        ))}
-      </div>
-
-      {scope === "week" && <WeekStrip events={events} selectedDay={selectedDay} onSelect={setSelectedDay} />}
-
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        <button className="btn btn-secondary btn-sm" style={{ borderRadius: "var(--radius-full)" }} onClick={() => setShowPast((v) => !v)}>
-          <RotateCcw size={13} style={{ marginRight: 5, verticalAlign: "-2px" }} />{showPast ? "Masquer le passé" : "Passé"}
-        </button>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <div className="segmented">
+          {[["upcoming", "À venir"], ["month", "Mois"]].map(([v, l]) => (
+            <button key={v} className={scope === v ? "active" : ""} onClick={() => { setScope(v); setSelectedDay(null); }}>{l}</button>
+          ))}
+        </div>
+        <div style={{ flex: 1 }} />
+        <button
+          title={showPast ? "Masquer le passé" : "Voir le passé"}
+          onClick={() => setShowPast((v) => !v)}
+          style={{
+            width: 42, height: 42, borderRadius: "50%", border: "1px solid var(--line)", cursor: "pointer",
+            background: showPast ? "var(--oc-sky-100)" : "var(--surface)", color: showPast ? "var(--oc-sky-700)" : "var(--muted)",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}
+        ><RotateCcw size={17} /></button>
         {manage && (
           <button
-            className="btn btn-primary btn-sm" style={{ borderRadius: "var(--radius-full)" }}
+            title={form ? "Annuler" : "Ajouter une séance"}
             onClick={() => setForm(form ? null : { ...EMPTY_FORM })}
-          >
-            {form ? <><X size={13} style={{ marginRight: 5, verticalAlign: "-2px" }} />Annuler</> : "+ Ajouter"}
-          </button>
+            style={{
+              width: 42, height: 42, borderRadius: "50%", border: "none", cursor: "pointer",
+              background: form ? "var(--oc-red-50)" : "var(--oc-sky-600)", color: form ? "var(--oc-red-700)" : "#fff",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              boxShadow: form ? "none" : "0 8px 18px rgba(24,143,192,.3)", fontSize: "1.3rem", fontWeight: 700,
+              transition: ".2s var(--ease-spring)",
+            }}
+          >{form ? <X size={18} /> : "+"}</button>
         )}
       </div>
+
+      {scope === "month" && (
+        <MonthGrid
+          events={events}
+          month={gridMonth}
+          onPrev={() => { setSelectedDay(null); setGridMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1)); }}
+          onNext={() => { setSelectedDay(null); setGridMonth((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1)); }}
+          selectedDay={selectedDay}
+          onSelect={setSelectedDay}
+        />
+      )}
+
       {error && <div className="error-box">{error}</div>}
 
       {form && (
@@ -212,89 +282,159 @@ export function HomePage({ gotoConversation }) {
   );
 }
 
-const DAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
-function WeekStrip({ events, selectedDay, onSelect }) {
-  const now = new Date();
-  const dow = (now.getDay() + 6) % 7;
-  const monday = new Date(now); monday.setHours(0, 0, 0, 0); monday.setDate(now.getDate() - dow);
+function NextSessionCard({ event: e, loading, onOpen, onSetAvailability }) {
+  if (loading) return <div className="card" style={{ marginBottom: 16, height: 150 }}><div className="spinner" /></div>;
 
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday); d.setDate(monday.getDate() + i);
-    const iso = d.toISOString().slice(0, 10);
-    const isToday = iso === now.toISOString().slice(0, 10);
-    const hasEvent = (events ?? []).some((e) => e.starts_at.slice(0, 10) === iso && e.status !== "cancelled");
-    return { iso, day: d.getDate(), label: DAY_LABELS[i], isToday, hasEvent };
-  });
-
-  return (
-    <div className="card" style={{ marginBottom: 14, padding: 10 }}>
-      <div style={{ display: "flex", gap: 6, overflowX: "auto" }}>
-        {days.map((d) => {
-          const active = selectedDay === d.iso;
-          return (
-            <div
-              key={d.iso}
-              onClick={() => onSelect(active ? null : d.iso)}
-              style={{
-                flex: "0 0 44px", textAlign: "center", padding: "8px 0", borderRadius: "var(--radius-md)", cursor: "pointer",
-                background: active ? "var(--oc-blue-deep)" : "transparent", color: active ? "#fff" : "var(--text)",
-                border: d.isToday && !active ? "1.5px solid var(--oc-blue-deep)" : "1.5px solid transparent",
-              }}
-            >
-              <div className="num" style={{ fontSize: "1.05rem", lineHeight: 1.1 }}>{d.day}</div>
-              <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", color: active ? "#fff" : "var(--text-dim)" }}>{d.label}</div>
-              {d.hasEvent && <div style={{ width: 4, height: 4, borderRadius: "50%", background: active ? "#fff" : "var(--oc-blue-bright)", margin: "3px auto 0" }} />}
-            </div>
-          );
-        })}
+  if (!e) {
+    return (
+      <div className="card" style={{ marginBottom: 16, textAlign: "center", padding: "28px 20px" }}>
+        <CalendarDays size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
+        <div style={{ fontWeight: 800 }}>Aucune séance à venir</div>
+        <div className="subtle" style={{ marginTop: 2 }}>Le calendrier est vide pour le moment.</div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-function NextSessionHero({ event: e, reload }) {
-  const { token, activeClubId } = useAuth();
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
-
-  const respond = async (status) => {
-    try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
-    catch (_) { /* silencieux */ }
-  };
-
-  const presentCount = e.avail_counts?.present ?? 0;
-  const maybeCount = e.avail_counts?.maybe ?? 0;
-  const injuredCount = e.avail_counts?.injured ?? 0;
-  const absentCount = e.avail_counts?.absent ?? 0;
+  const Icon = t.icon;
+  const d = new Date(e.starts_at.replace(" ", "T"));
+  const dayNum = d.getDate();
+  const monthShort = MONTH_NAMES[d.getMonth()].slice(0, 4);
+  const isCoral = e.type === "match";
 
   return (
-    <div className="hero-banner" style={{ marginBottom: 16, textAlign: "left", padding: "20px 20px 18px" }}>
-      <div className="hero-content">
-        <div className="hero-eyebrow" style={{ display: "flex", alignItems: "center", gap: 6 }}><t.icon size={12} />Prochaine séance</div>
-        <div className="hero-title" style={{ fontSize: "1.5rem", marginTop: 6 }}>{e.title}</div>
-        <div style={{ color: "#9FC3DA", fontSize: "0.85rem", marginTop: 2, marginBottom: 16 }}>
-          {fmtTime(e.starts_at)}{e.location ? ` · ${e.location}` : ""}
+    <div className={`event-card-ds${isCoral ? " orange" : ""}`} style={{ marginBottom: 16 }}>
+      <div onClick={onOpen} style={{ cursor: "pointer" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+          <span className="kicker">
+          Prochaine séance
+          {(() => {
+            const days = Math.ceil((new Date(e.starts_at.replace(" ", "T")) - Date.now()) / 86400000);
+            if (days <= 0) return " · Aujourd'hui";
+            if (days === 1) return " · Demain";
+            return ` · Dans ${days} jours`;
+          })()}
+        </span>
+          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 14, background: "rgba(255,255,255,0.18)" }}>
+            <Icon size={20} color="#fff" />
+          </span>
         </div>
 
-        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+        <h3>{e.title}</h3>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", color: "rgba(255,255,255,0.9)", fontSize: "0.9rem", fontWeight: 600 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <CalendarDays size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
+          </span>
+          {e.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin size={15} /> {e.location}</span>}
+        </div>
+
+        {e.opponent && <div style={{ marginTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>vs {e.opponent}</div>}
+        {e.team_name && (
+          <span style={{ display: "inline-block", marginTop: 12, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.18)", fontSize: "0.72rem", fontWeight: 800 }}>
+            {e.team_name}
+          </span>
+        )}
+      </div>
+
+      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.2)" }}>
+        <div style={{ fontSize: "0.72rem", fontWeight: 850, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 8 }}>
+          Ma présence
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
           {Object.entries(AVAIL_LABELS).map(([v, l]) => {
             const active = e.my_availability === v;
             return (
               <button
-                key={v} onClick={() => respond(v)}
+                key={v}
+                onClick={() => onSetAvailability(e.id, v)}
                 style={{
-                  flex: 1, border: "none", borderRadius: "var(--radius-sm)", padding: "10px 4px", fontWeight: 700, fontSize: "0.74rem",
-                  background: active ? "#fff" : "rgba(255,255,255,0.14)", color: active ? "var(--oc-blue-deep)" : "#fff",
-                  cursor: "pointer",
+                  flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
+                  fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
+                  background: active ? "#fff" : "rgba(255,255,255,0.14)",
+                  color: active ? ({ present: "var(--oc-green-700)", maybe: "var(--status-maybe-ink)", absent: "var(--oc-red-700)", injured: "var(--oc-amber-700)" }[v] ?? "#172128") : "rgba(255,255,255,0.92)",
+                  transform: active ? "scale(1.02)" : "none",
+                  transition: ".18s var(--ease-spring)",
                 }}
               >{l}</button>
             );
           })}
         </div>
+      </div>
+    </div>
+  );
+}
 
-        <div style={{ color: "#9FC3DA", fontSize: "0.74rem" }}>
-          <strong style={{ color: "#fff" }}>{presentCount}</strong> présent{presentCount > 1 ? "s" : ""} · <strong style={{ color: "#fff" }}>{maybeCount}</strong> incertain{maybeCount > 1 ? "s" : ""} · <strong style={{ color: "#fff" }}>{injuredCount}</strong> blessé{injuredCount > 1 ? "s" : ""} · <strong style={{ color: "#fff" }}>{absentCount}</strong> absent{absentCount > 1 ? "s" : ""}
-        </div>
+function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
+  const year = month.getFullYear();
+  const m = month.getMonth();
+  const todayIso = new Date().toISOString().slice(0, 10);
+
+  // Lundi = premier jour. offset = nb de cases vides avant le 1er.
+  const first = new Date(year, m, 1);
+  const offset = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, m + 1, 0).getDate();
+
+  // Regroupe les événements du mois par jour (ISO)
+  const byDay = {};
+  for (const e of events ?? []) {
+    if (e.status === "cancelled") continue;
+    const iso = e.starts_at.slice(0, 10);
+    if (iso.slice(0, 7) === `${year}-${String(m + 1).padStart(2, "0")}`) {
+      (byDay[iso] = byDay[iso] || []).push(e);
+    }
+  }
+
+  const cells = [];
+  for (let i = 0; i < offset; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const iso = `${year}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    cells.push({ d, iso, events: byDay[iso] ?? [], isToday: iso === todayIso });
+  }
+
+  return (
+    <div className="card" style={{ marginBottom: 14, padding: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <button className="btn btn-ghost btn-sm" onClick={onPrev} aria-label="Mois précédent"><ChevronLeft size={18} /></button>
+        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.05rem" }}>{MONTH_NAMES[m]} {year}</div>
+        <button className="btn btn-ghost btn-sm" onClick={onNext} aria-label="Mois suivant"><ChevronRight size={18} /></button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+        {["L", "M", "M", "J", "V", "S", "D"].map((l, i) => (
+          <div key={i} style={{ textAlign: "center", fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-dim)", paddingBottom: 4 }}>{l}</div>
+        ))}
+        {cells.map((c, i) => {
+          if (!c) return <div key={`e${i}`} />;
+          const active = selectedDay === c.iso;
+          const types = [...new Set(c.events.map((e) => e.type))];
+          return (
+            <div
+              key={c.iso}
+              onClick={() => c.events.length ? onSelect(active ? null : c.iso) : null}
+              style={{
+                aspectRatio: "1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
+                borderRadius: 14, cursor: c.events.length ? "pointer" : "default",
+                background: active ? "var(--oc-sky-600)" : c.events.length ? "var(--oc-sky-50)" : "var(--oc-bluegray-50)",
+                color: active ? "#fff" : c.events.length ? "var(--oc-sky-700)" : "var(--text)",
+                fontWeight: 800,
+                outline: c.isToday && !active ? "2px solid var(--oc-sky-500)" : "none", outlineOffset: -2,
+                transition: "background .12s ease",
+              }}
+            >
+              <span className="num" style={{ fontSize: "0.9rem", lineHeight: 1 }}>{c.d}</span>
+              {types.length > 0 && (
+                <span style={{ display: "flex", gap: 2 }}>
+                  {types.slice(0, 3).map((t) => (
+                    <span key={t} style={{ width: 5, height: 5, borderRadius: "50%", background: active ? "#fff" : (EVENT_TYPES[t] ?? EVENT_TYPES.match).color }} />
+                  ))}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -412,7 +552,7 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
   const [menuOpen, setMenuOpen] = useState(false);
   const cancelled = e.status === "cancelled";
 
-  return (
+  return createPortal(
     <div className="event-modal-overlay" onClick={onClose}>
       <div className="event-modal" onClick={(ev) => ev.stopPropagation()}>
         <div className="event-modal-header">
@@ -449,7 +589,7 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
         {tab === "participants" && <ParticipantsTab event={e} manage={manage} />}
       </div>
     </div>
-  );
+  , document.body);
 }
 
 function fmtDateBadgeLabel(e) {
