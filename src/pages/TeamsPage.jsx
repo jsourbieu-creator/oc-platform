@@ -150,13 +150,13 @@ function Roster({ team, manage }) {
 
   useEffect(load, [load]);
 
-  const toggleFlag = async (row, flag) => {
+  const toggleGoalkeeper = async (row) => {
     setError("");
     try {
       await api("teams.php", "roster_set_flags", {
         club_id: activeClubId, team_id: team.id, team_member_id: row.id,
-        is_captain: flag === "captain" ? !Number(row.is_captain) : Number(row.is_captain),
-        is_goalkeeper: flag === "goalkeeper" ? !Number(row.is_goalkeeper) : Number(row.is_goalkeeper),
+        is_captain: 0,
+        is_goalkeeper: !Number(row.is_goalkeeper),
       }, token);
       load();
     } catch (e2) { setError(e2.message); }
@@ -173,15 +173,20 @@ function Roster({ team, manage }) {
             <Avatar name={`${r.first_name} ${r.last_name}`} userId={r.user_id} avatarUrl={r.avatar_url} size={30} />
             <span>
               {r.first_name} {r.last_name}
-              {Number(r.is_captain) === 1 && <span className="badge badge-info" style={{ marginLeft: 8 }}>Capitaine</span>}
-              {Number(r.is_goalkeeper) === 1 && <span className="badge badge-neutral" style={{ marginLeft: 6 }}>Gardien</span>}
+              {Number(r.is_goalkeeper) === 1 && <span className="badge badge-neutral" style={{ marginLeft: 8 }}>Gardien</span>}
             </span>
           </div>
           {manage && (
-            <div style={{ display: "flex", gap: 6 }}>
-              <button className="btn btn-ghost btn-sm" onClick={() => toggleFlag(r, "captain")}>C</button>
-              <button className="btn btn-ghost btn-sm" onClick={() => toggleFlag(r, "goalkeeper")}>G</button>
-            </div>
+            <button
+              className="btn btn-sm"
+              style={{
+                background: Number(r.is_goalkeeper) ? "color-mix(in srgb, var(--electric-blue) 18%, transparent)" : "var(--surface-soft)",
+                color: Number(r.is_goalkeeper) ? "var(--electric-blue)" : "var(--text-dim)",
+              }}
+              onClick={() => toggleGoalkeeper(r)}
+            >
+              Gardien
+            </button>
           )}
         </div>
       ))}
