@@ -334,9 +334,15 @@ function ProfilTab({ season, myRanking, settings, perception, myTrophies }) {
             </p>
 
             {myRanking.rank ? (
-              <p style={{ margin: 0, fontSize: "0.92rem" }}>
-                Tu es <strong style={{ color: "var(--gold-500)" }}>{myRanking.rank}{myRanking.rank === 1 ? "er" : "e"}</strong> au classement officiel — régularité : <strong>{myRanking.regularity}</strong>.
-              </p>
+              <div>
+                <p style={{ margin: 0, fontSize: "0.92rem" }}>
+                  Tu es <strong style={{ color: "var(--gold-500)" }}>{myRanking.rank}{myRanking.rank === 1 ? "er" : "e"}</strong> au classement officiel — régularité : <strong>{myRanking.regularity}</strong>.
+                </p>
+                <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 6, marginBottom: 0 }}>
+                  Le classement officiel trie tous les joueurs éligibles par score Ballon d'Or décroissant.
+                  La <strong>régularité</strong> ({myRanking.regularity}) mesure si tes notes de séance varient beaucoup ou peu d'une fois sur l'autre.
+                </p>
+              </div>
             ) : (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -350,6 +356,9 @@ function ProfilTab({ season, myRanking, settings, perception, myTrophies }) {
                   Actuellement, ta note est de <strong>{fmtScore(myRanking.ballon_dor_score)}</strong>.
                   Si tu fais <strong>{myRanking.sessions_until_eligible}</strong> entraînement{myRanking.sessions_until_eligible > 1 ? "s" : ""} supplémentaire{myRanking.sessions_until_eligible > 1 ? "s" : ""},
                   tu seras éligible au classement officiel et à la remise des trophées{seasonEndLabel ? `, avant la fin de la saison le ${seasonEndLabel}` : ""}.
+                </p>
+                <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 6, marginBottom: 0 }}>
+                  "Provisoire" veut dire que ton score est bien calculé et visible, mais pas encore assez de séances jouées pour être comparé équitablement aux autres — la barre ci-dessus montre ta progression vers le seuil.
                 </p>
               </div>
             )}
@@ -396,19 +405,32 @@ function ProfilTab({ season, myRanking, settings, perception, myTrophies }) {
           <p className="subtle" style={{ marginTop: 4 }}>
             Moyenne de tes auto-évaluations : <strong style={{ color: "var(--text)" }}>{fmtScore(perception.summary.avg_self)}</strong> — moyenne reçue du groupe : <strong style={{ color: "var(--text)" }}>{fmtScore(perception.summary.avg_received)}</strong>
           </p>
+          <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 8, marginBottom: 0 }}>
+            À chaque séance, en plus de noter tes coéquipiers tu te notes aussi toi-même — cette auto-évaluation
+            ne compte jamais dans ton score officiel, elle sert uniquement à comparer ce que tu penses de toi
+            à ce que le groupe pense réellement de toi. Un grand écart (dans un sens ou l'autre) veut juste dire
+            que ta perception diffère de celle des autres, ni bien ni mal.
+          </p>
         </div>
       )}
 
       <div className="card">
         <div className="label-title">Mes trophées</div>
+        <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
+          Les trophées sont décernés au meilleur de chaque catégorie sur la saison, recalculés à chaque nouveau vote.
+        </p>
         {myTrophies.length === 0 && <p className="subtle" style={{ margin: 0 }}>Aucun trophée pour l'instant sur cette saison — continue à jouer et voter !</p>}
         {myTrophies.map((t) => {
           const Icon = TROPHY_ICONS[t.code] ?? Award;
+          const def = TROPHY_DEFS.find((d) => d.code === t.code);
           return (
-            <div key={t.code} className="list-row">
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div className="icon-chip" style={{ background: "var(--oc-yellow-100)", color: "var(--gold-500)" }}><Icon size={18} /></div>
-                <strong>{t.label}</strong>
+            <div key={t.code} className="list-row" style={{ alignItems: "flex-start" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div className="icon-chip" style={{ background: "var(--oc-yellow-100)", color: "var(--gold-500)", flexShrink: 0 }}><Icon size={18} /></div>
+                <div>
+                  <strong>{t.label}</strong>
+                  {def && <div className="subtle" style={{ fontSize: "0.76rem", marginTop: 2 }}>{def.requirement}</div>}
+                </div>
               </div>
               <strong className="num">{typeof t.value === "number" ? fmtScore(t.value) : t.value}</strong>
             </div>
@@ -448,6 +470,9 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
 
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="label-title">Classement officiel</div>
+        <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
+          Trie les joueurs ayant atteint le seuil d'éligibilité (nombre de séances + taux de présence minimum), du meilleur score au moins bon.
+        </p>
         {rankings.official.length === 0 && <p className="subtle" style={{ margin: 0 }}>Personne ne remplit encore les conditions d'éligibilité.</p>}
         {rankings.official.map((p) => (
           <div key={p.club_member_id} className="list-row" style={{ flexWrap: "wrap" }}>
@@ -470,6 +495,9 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
       {rankings.provisional.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="label-title">Classement provisoire (encore inéligibles)</div>
+          <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
+            Ces joueurs ont déjà un score calculé, mais pas encore assez de séances jouées pour être comparés équitablement aux autres et entrer dans le classement officiel.
+          </p>
           {rankings.provisional.map((p) => (
             <div key={p.club_member_id} className="list-row" style={{ flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
@@ -485,24 +513,33 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
 
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="label-title">Records du groupe</div>
+        <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
+          Recalculés à chaque nouveau vote, sur toute la saison.
+        </p>
         <StatRow
           icon={<Rulers size={14} />} label="Joueur le plus régulier"
           value={teamStats?.most_regular?.name}
           empty="Il faut qu'au moins un joueur ait joué 5 séances notées."
+          description="Celui dont les notes de séance varient le moins d'une fois sur l'autre (écart-type le plus faible)."
         />
         <StatRow
           icon={<Fire size={14} />} label="Joueur le plus assidu"
           value={teamStats?.most_assiduous && `${teamStats.most_assiduous.name} (${teamStats.most_assiduous.value}%)`}
           empty="Aucune présence enregistrée pour le moment."
+          description="Le meilleur taux de présence (séances jouées ÷ séances attendues, hors blessures)."
         />
         <StatRow
           icon={<GraphUpArrow size={14} />} label="Meilleure progression"
           value={teamStats?.best_progression?.name}
           empty="Il faut au moins 4 séances notées pour un même joueur."
+          description="La plus grosse hausse entre la moyenne de la 1ère moitié de saison et celle de la 2e moitié."
         />
       </div>
 
-      <div className="label-title" style={{ marginBottom: 10 }}>Trophées de la saison</div>
+      <div className="label-title" style={{ marginBottom: 4 }}>Trophées de la saison</div>
+      <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
+        Décernés au meilleur de chaque catégorie, recalculés à chaque nouveau vote — grisés tant que personne ne remplit la condition.
+      </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 12 }}>
         {TROPHY_DEFS.map((def) => {
           const awarded = list.find((t) => t.code === def.code);
@@ -510,15 +547,16 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
           return (
             <div
               key={def.code} className="card"
-              style={{ opacity: awarded ? 1 : 0.5, background: awarded ? "var(--surface)" : "var(--surface-soft)", display: "flex", flexDirection: "column", gap: 8, minHeight: 130 }}
+              style={{ opacity: awarded ? 1 : 0.5, background: awarded ? "var(--surface)" : "var(--surface-soft)", display: "flex", flexDirection: "column", gap: 8, minHeight: 150 }}
             >
               <div className="icon-chip" style={{ background: awarded ? "var(--oc-yellow-100)" : "var(--surface-alt)", color: awarded ? "var(--gold-500)" : "var(--text-dim)" }}>
                 <Icon size={18} />
               </div>
               <strong style={{ fontSize: "0.88rem" }}>{def.label}</strong>
-              {awarded
-                ? <div style={{ marginTop: "auto" }}><div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{awarded.player}</div><div className="subtle num" style={{ fontSize: "0.78rem" }}>{typeof awarded.value === "number" ? fmtScore(awarded.value) : awarded.value}</div></div>
-                : <p className="subtle" style={{ margin: "auto 0 0", fontSize: "0.76rem" }}>{def.requirement}</p>}
+              <p className="subtle" style={{ margin: 0, fontSize: "0.74rem", lineHeight: 1.4 }}>{def.requirement}</p>
+              {awarded && (
+                <div style={{ marginTop: "auto" }}><div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{awarded.player}</div><div className="subtle num" style={{ fontSize: "0.78rem" }}>{typeof awarded.value === "number" ? fmtScore(awarded.value) : awarded.value}</div></div>
+              )}
             </div>
           );
         })}
@@ -528,13 +566,16 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
 }
 
 /** Ligne de stat toujours visible : valeur normale, ou grisée + explication si pas encore de donnée. */
-function StatRow({ icon, label, value, empty }) {
+function StatRow({ icon, label, value, empty, description }) {
   return (
-    <div className="list-row">
-      <span style={{ display: "flex", alignItems: "center", gap: 7 }}>{icon}{label}</span>
+    <div className="list-row" style={{ alignItems: "flex-start" }}>
+      <div>
+        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>{icon}{label}</span>
+        {description && <div className="subtle" style={{ fontSize: "0.76rem", marginTop: 2, maxWidth: 260 }}>{description}</div>}
+      </div>
       {value
-        ? <strong>{value}</strong>
-        : <span className="subtle" style={{ textAlign: "right", maxWidth: 220, opacity: 0.75 }}>{empty}</span>}
+        ? <strong style={{ flexShrink: 0 }}>{value}</strong>
+        : <span className="subtle" style={{ textAlign: "right", maxWidth: 180, opacity: 0.75, flexShrink: 0 }}>{empty}</span>}
     </div>
   );
 }
