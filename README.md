@@ -195,6 +195,30 @@ via phpMyAdmin.
   desktop, sans avoir à passer par le menu "Plus" ou la sidebar.
 - Migration : `0017_messages_attachments_edit_delete.sql`.
 
+## Itération majeure du 15/07 — Ballon d'Or devient un vrai hub (Votes fusionné avec Classements/Stats/Trophées)
+
+- **La page Votes devient "Ballon d'Or"**, avec 5 onglets : **Voter** (inchangé),
+  **Séances** (historique perso + rappel sur les séances à venir : "vote après
+  la séance"), **Classement** (position + jauge d'éligibilité + explication en
+  clair des coefficients avec les vrais chiffres réglés par le club +
+  classement officiel et provisoire complets), **Statistiques** (collectives
+  + individuelles, tuiles colorées), **Trophées** (galerie complète de la
+  saison).
+- **Sélecteur de saison** commun à ces 4 onglets (au lieu de forcer la saison
+  active) — permet par exemple de garder une saison de test isolée pour
+  essayer le système sans polluer la vraie saison.
+- **Discours explicatif pour le classement provisoire** : "Actuellement, ta
+  note est de X. Si tu fais Y entraînements supplémentaires, tu seras
+  éligible au classement officiel et à la remise des trophées, avant la fin
+  de la saison le [date]." — plus un bloc dépliable expliquant le seuil de
+  fiabilité, le coefficient de présence (avec les bornes réelles) et les
+  conditions d'éligibilité (séances minimum + taux de présence minimum).
+- Aucune nouvelle route API — tout réutilise `my_perception`,
+  `season_rankings`, `season_settings_get`, `season_team_stats`,
+  `season_trophies`, déjà en place. Les pages Statistiques/Classements/
+  Trophées séparées restent dans le menu pour l'instant (pas supprimées),
+  Votes/Ballon d'Or devient simplement le point d'entrée central voulu.
+
 ## Itération du 15/07 — page Votes enrichie (Séances / Classement)
 
 - **Onglets sur la page Votes** : "Voter" (inchangé), **"Séances"** (historique
