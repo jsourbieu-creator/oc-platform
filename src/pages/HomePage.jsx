@@ -13,35 +13,27 @@ import { DateBadge, AvatarStack, StatTile, CountChip, Avatar } from "@/component
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
 /**
- * Salutation qui change chaque jour, clin d'œil au vocabulaire du foot —
- * un peu de grandeur façon président de club, un peu de poésie Cantona,
- * un peu d'auto-dérision façon "Special One". Une phrase par jour (pas de
- * flicker à chaque rechargement), tirée d'un pool assez large pour ne pas
- * se répéter trop souvent dans la saison.
+ * Salutation qui change chaque jour — courte, familière, ton vestiaire entre
+ * potes plutôt que grandiloquent. Une phrase par jour (stable, pas de
+ * flicker au rechargement).
  */
 function greeting(firstName) {
   const n = firstName || "champion";
   const phrases = [
-    (n) => `Salut ${n}, prêt pour le beau jeu ?`,
-    (n) => `${n}, ici on ne vise que le sommet.`,
-    (n) => `On ne recule devant rien, ${n}.`,
-    (n) => `${n}, le meilleur groupe de la ligue t'attend.`,
-    (n) => `Joga Bonito, ${n}.`,
-    (n) => `${n}, les mouettes suivent le chalutier.`,
-    (n) => `On ne naît pas champion, ${n} — on le devient.`,
-    (n) => `${n}, l'Olympique n'a peur de personne.`,
-    (n) => `Chaque séance nous rapproche du sommet, ${n}.`,
-    (n) => `${n}, il n'y a pas de plan B.`,
-    (n) => `Spécial ? Non, juste sérieux, ${n}.`,
-    (n) => `${n}, la légende continue.`,
-    (n) => `Prêt à écrire l'histoire, ${n} ?`,
-    (n) => `${n}, ici c'est Castelblangeoise.`,
-    (n) => `On ne demande pas la permission de gagner, ${n}.`,
-    (n) => `${n}, le ballon est rond, la victoire aussi.`,
-    (n) => `Re ${n}. Le beau jeu n'attend pas.`,
-    (n) => `${n}, aujourd'hui, on transpire pour demain.`,
-    (n) => `L'ambition n'a pas de limite, ${n}.`,
-    (n) => `${n}, chaque contrôle compte.`,
+    (n) => `Bonjour ${n}`,
+    (n) => `Chaud pour un foot, ${n} ?`,
+    (n) => `Salut ${n}, prêt ?`,
+    (n) => `${n}, on chauffe ?`,
+    (n) => `Alors ${n}, en forme ?`,
+    (n) => `Hello ${n}`,
+    (n) => `${n}, la forme ?`,
+    (n) => `On y va, ${n} ?`,
+    (n) => `Re ${n}`,
+    (n) => `${n}, prêt à jouer ?`,
+    (n) => `Yo ${n}`,
+    (n) => `${n}, ça sent le but`,
+    (n) => `Debout ${n}, on joue`,
+    (n) => `${n}, direction le gymnase`,
   ];
   const dayIndex = Math.floor(Date.now() / 86400000);
   return phrases[dayIndex % phrases.length](n);
