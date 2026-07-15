@@ -46,6 +46,11 @@ export function ProfilePage() {
   const [firstName, setFirstName] = useState(user?.first_name ?? "");
   const [lastName, setLastName] = useState(user?.last_name ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
+  const [heightCm, setHeightCm] = useState(user?.height_cm ?? "");
+  const [weightKg, setWeightKg] = useState(user?.weight_kg ?? "");
+  const [strongFoot, setStrongFoot] = useState(user?.strong_foot ?? "");
+  const [favoritePlayer, setFavoritePlayer] = useState(user?.favorite_player ?? "");
+  const [favoriteTeam, setFavoriteTeam] = useState(user?.favorite_team ?? "");
   const [profileMsg, setProfileMsg] = useState(null); // {type, text}
   const [busyProfile, setBusyProfile] = useState(false);
 
@@ -59,7 +64,11 @@ export function ProfilePage() {
     e.preventDefault();
     setProfileMsg(null); setBusyProfile(true);
     try {
-      await api("auth.php", "update_profile", { first_name: firstName, last_name: lastName, phone }, token);
+      await api("auth.php", "update_profile", {
+        first_name: firstName, last_name: lastName, phone,
+        height_cm: heightCm, weight_kg: weightKg, strong_foot: strongFoot,
+        favorite_player: favoritePlayer, favorite_team: favoriteTeam,
+      }, token);
       await refresh();
       setProfileMsg({ type: "ok", text: "Profil mis à jour." });
     } catch (e2) { setProfileMsg({ type: "err", text: e2.message }); }
@@ -135,6 +144,26 @@ export function ProfilePage() {
           </div>
           <div className="field"><label>Téléphone (optionnel)</label><input type="text" placeholder="06…" value={phone ?? ""} onChange={(e) => setPhone(e.target.value)} /></div>
           <div className="field"><label>E-mail</label><input type="email" value={user?.email ?? ""} disabled style={{ opacity: 0.6 }} /></div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="field"><label>Taille (cm)</label><input type="number" min="100" max="230" placeholder="178" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} /></div>
+            <div className="field"><label>Poids (kg)</label><input type="number" min="30" max="200" placeholder="75" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} /></div>
+          </div>
+
+          <div className="field">
+            <label>Pied fort</label>
+            <div className="segmented" style={{ display: "flex", width: "100%" }}>
+              {[["left", "Gauche"], ["right", "Droit"], ["both", "Ambidextre"]].map(([v, l]) => (
+                <button key={v} type="button" className={strongFoot === v ? "active" : ""} style={{ flex: 1 }} onClick={() => setStrongFoot(v)}>{l}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="field"><label>Joueur préféré</label><input type="text" placeholder="Mbappé…" value={favoritePlayer} onChange={(e) => setFavoritePlayer(e.target.value)} /></div>
+            <div className="field"><label>Équipe préférée</label><input type="text" placeholder="PSG…" value={favoriteTeam} onChange={(e) => setFavoriteTeam(e.target.value)} /></div>
+          </div>
+
           <button className="btn btn-primary" disabled={busyProfile}>{busyProfile ? "Enregistrement…" : "Enregistrer"}</button>
         </form>
       </div>

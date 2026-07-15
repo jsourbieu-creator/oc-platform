@@ -99,7 +99,8 @@ function current_user(): array {
     }
     $token = $m[1];
     $stmt = db()->prepare('
-        SELECT u.id, u.email, u.first_name, u.last_name, u.avatar_url, t.expires_at
+        SELECT u.id, u.email, u.first_name, u.last_name, u.avatar_url, u.phone,
+               u.height_cm, u.weight_kg, u.strong_foot, u.favorite_player, u.favorite_team, t.expires_at
         FROM auth_tokens t JOIN users u ON u.id = t.user_id
         WHERE t.token = ?
     ');

@@ -89,6 +89,13 @@ switch ($action) {
                 'email' => $me['email'],
                 'first_name' => $me['first_name'],
                 'last_name' => $me['last_name'],
+                'avatar_url' => $me['avatar_url'],
+                'phone' => $me['phone'],
+                'height_cm' => $me['height_cm'] !== null ? (int) $me['height_cm'] : null,
+                'weight_kg' => $me['weight_kg'] !== null ? (int) $me['weight_kg'] : null,
+                'strong_foot' => $me['strong_foot'],
+                'favorite_player' => $me['favorite_player'],
+                'favorite_team' => $me['favorite_team'],
             ],
             'memberships' => $memberships,
         ]);
@@ -101,8 +108,25 @@ switch ($action) {
         $phone = trim($in['phone'] ?? '');
         if ($firstName === '' || $lastName === '') json_error('Prénom et nom requis.');
 
-        $stmt = db()->prepare('UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ?');
-        $stmt->execute([$firstName, $lastName, $phone ?: null, (int) $me['id']]);
+        $heightCm = $in['height_cm'] ?? null;
+        $heightCm = ($heightCm === '' || $heightCm === null) ? null : max(100, min(230, (int) $heightCm));
+        $weightKg = $in['weight_kg'] ?? null;
+        $weightKg = ($weightKg === '' || $weightKg === null) ? null : max(30, min(200, (int) $weightKg));
+        $strongFoot = $in['strong_foot'] ?? null;
+        if (!in_array($strongFoot, ['left', 'right', 'both'], true)) $strongFoot = null;
+        $favPlayer = trim($in['favorite_player'] ?? '');
+        $favTeam = trim($in['favorite_team'] ?? '');
+
+        $stmt = db()->prepare('
+            UPDATE users SET first_name = ?, last_name = ?, phone = ?,
+                height_cm = ?, weight_kg = ?, strong_foot = ?, favorite_player = ?, favorite_team = ?
+            WHERE id = ?
+        ');
+        $stmt->execute([
+            $firstName, $lastName, $phone ?: null,
+            $heightCm, $weightKg, $strongFoot, $favPlayer ?: null, $favTeam ?: null,
+            (int) $me['id'],
+        ]);
         log_action((int) $me['id'], 'update_profile');
         json_out(['ok' => true]);
         break;
