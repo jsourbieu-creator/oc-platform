@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle, Search, Check } from "lucide-react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
@@ -21,7 +22,7 @@ export function HomePage({ gotoConversation }) {
   const [members, setMembers] = useState(null);
   const [events, setEvents] = useState(null);
   const [showPast, setShowPast] = useState(false);
-  const [scope, setScope] = useState("month"); // week | month | year
+  const [scope, setScope] = useState("upcoming"); // upcoming | month
   const [gridMonth, setGridMonth] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState(null); // "YYYY-MM-DD" ou null
   const [openId, setOpenId] = useState(null);
@@ -112,7 +113,7 @@ export function HomePage({ gotoConversation }) {
   const viewingOtherMonth = scope === "month" && (gridMonth.getFullYear() !== now.getFullYear() || gridMonth.getMonth() !== now.getMonth());
   const inScope = (dateStr) => {
     const d = new Date(dateStr.replace(" ", "T"));
-    if (scope === "year") return d.getFullYear() === now.getFullYear();
+    if (scope === "upcoming") return true;
     if (scope === "month") return d.getFullYear() === gridMonth.getFullYear() && d.getMonth() === gridMonth.getMonth();
     const dow = (now.getDay() + 6) % 7;
     const monday = new Date(now); monday.setHours(0, 0, 0, 0); monday.setDate(now.getDate() - dow);
@@ -141,8 +142,6 @@ export function HomePage({ gotoConversation }) {
         <img src={blason} alt="Blason OC" style={{ width: 46, height: 46, flexShrink: 0 }} />
       </div>
 
-      <WeekStrip events={events} selectedDay={selectedDay} onSelect={setSelectedDay} />
-
       <NextSessionCard
         event={nextEvent}
         loading={nextEvent === undefined}
@@ -170,7 +169,7 @@ export function HomePage({ gotoConversation }) {
       </div>
 
       <div className="segmented" style={{ marginBottom: 14 }}>
-        {[["week", "Semaine"], ["month", "Mois"], ["year", "Année"]].map(([v, l]) => (
+        {[["upcoming", "À venir"], ["month", "Mois"]].map(([v, l]) => (
           <button key={v} className={scope === v ? "active" : ""} onClick={() => { setScope(v); setSelectedDay(null); }}>{l}</button>
         ))}
       </div>
@@ -384,8 +383,8 @@ function NextSessionCard({ event: e, loading, onOpen, onSetAvailability }) {
                 style={{
                   flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
                   fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
-                  background: active ? (AVAIL_FILL[v] ?? "#fff") : "rgba(255,255,255,0.14)",
-                  color: active ? (AVAIL_INK[v] ?? "#000") : "rgba(255,255,255,0.92)",
+                  background: active ? "#fff" : "rgba(255,255,255,0.14)",
+                  color: active ? ({ present: "var(--oc-green-700)", absent: "var(--oc-red-700)", injured: "var(--oc-amber-700)" }[v] ?? "#172128") : "rgba(255,255,255,0.92)",
                   transform: active ? "scale(1.02)" : "none",
                   transition: ".18s var(--ease-spring)",
                 }}
@@ -447,10 +446,11 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
               onClick={() => c.events.length ? onSelect(active ? null : c.iso) : null}
               style={{
                 aspectRatio: "1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
-                borderRadius: "var(--radius-md)", cursor: c.events.length ? "pointer" : "default",
-                background: active ? "var(--oc-blue-deep)" : c.isToday ? "var(--surface-alt)" : "transparent",
-                color: active ? "#fff" : "var(--text)",
-                border: c.isToday && !active ? "1.5px solid var(--oc-blue-mid)" : "1.5px solid transparent",
+                borderRadius: 14, cursor: c.events.length ? "pointer" : "default",
+                background: active ? "var(--oc-sky-600)" : c.events.length ? "var(--oc-sky-50)" : "var(--oc-bluegray-50)",
+                color: active ? "#fff" : c.events.length ? "var(--oc-sky-700)" : "var(--text)",
+                fontWeight: 800,
+                outline: c.isToday && !active ? "2px solid var(--oc-sky-500)" : "none", outlineOffset: -2,
                 transition: "background .12s ease",
               }}
             >
@@ -626,7 +626,7 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
   const [menuOpen, setMenuOpen] = useState(false);
   const cancelled = e.status === "cancelled";
 
-  return (
+  return createPortal(
     <div className="event-modal-overlay" onClick={onClose}>
       <div className="event-modal" onClick={(ev) => ev.stopPropagation()}>
         <div className="event-modal-header">
@@ -663,7 +663,7 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
         {tab === "participants" && <ParticipantsTab event={e} manage={manage} />}
       </div>
     </div>
-  );
+  , document.body);
 }
 
 function fmtDateBadgeLabel(e) {

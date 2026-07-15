@@ -6,7 +6,7 @@ const THEME_KEY = "oc_theme";
 function getInitial() {
   const stored = localStorage.getItem(THEME_KEY);
   if (stored) return stored;
-  return "dark"; // sombre par défaut : identité de l'app (clair reste dispo au toggle)
+  return "light"; // clair par défaut : la charte mega DS est claire/crème
 }
 
 export function ThemeToggle() {
