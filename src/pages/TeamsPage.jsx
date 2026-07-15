@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/ui";
 
 const SEASON_STATUS = { draft: "Brouillon", active: "Active", closed: "Clôturée" };
+const SEASON_STATUS_COLOR = { draft: "var(--oc-amber-700)", active: "var(--lime-600)", closed: "var(--text-dim)" };
 const canManage = (role) => role === "super_admin" || role === "admin";
 
 export function TeamsPage() {
@@ -89,20 +90,28 @@ function SeasonsBlock({ seasons, manage, reload }) {
       {seasons === null && <div className="spinner" />}
       {seasons?.length === 0 && <div className="subtle">Aucune saison. {manage ? "Crée la première pour pouvoir créer des équipes." : ""}</div>}
       {seasons?.map((s) => (
-        <div key={s.id} className="list-row">
+        <div key={s.id} className="list-row" style={{ flexWrap: "wrap", gap: 10 }}>
           <div>
             <strong>{s.name}</strong>
             <div className="subtle">{s.start_date} → {s.end_date}</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {manage ? (
-              <select value={s.status} onChange={(e) => setStatus(s.id, e.target.value)} style={{ width: "auto", padding: "6px 8px", fontSize: "0.8rem" }}>
-                {Object.entries(SEASON_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
-            ) : (
-              <span className={`badge ${s.status === "active" ? "badge-info" : "badge-neutral"}`}>{SEASON_STATUS[s.status]}</span>
-            )}
-          </div>
+          {manage ? (
+            <div className="segmented">
+              {Object.entries(SEASON_STATUS).map(([v, l]) => (
+                <button
+                  key={v}
+                  type="button"
+                  className={s.status === v ? "active" : ""}
+                  onClick={() => v !== s.status && setStatus(s.id, v)}
+                  style={s.status === v ? { color: SEASON_STATUS_COLOR[v], background: "var(--surface)" } : undefined}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span className={`badge ${s.status === "active" ? "badge-info" : "badge-neutral"}`}>{SEASON_STATUS[s.status]}</span>
+          )}
         </div>
       ))}
     </div>
