@@ -23,6 +23,7 @@ const STATUS_COLORS = {
   active: "var(--lime-600)", invited: "var(--oc-amber-700)",
   suspended: "var(--oc-orange-500)", archived: "var(--text-dim)",
 };
+const INVITE_ROLES = { player: "Joueur", coach: "Entraîneur", board_member: "Bureau", admin: "Administrateur" };
 const canManage = (role) => role === "super_admin" || role === "admin";
 
 export function MembersPage() {
@@ -153,21 +154,22 @@ function InvitationsBlock() {
       </p>
       {error && <div className="error-box">{error}</div>}
 
-      <form onSubmit={create} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end", marginBottom: lastCode || pending.length ? 14 : 0 }}>
-        <div className="field" style={{ marginBottom: 0, flex: "1 1 160px" }}>
+      <form onSubmit={create} style={{ marginBottom: lastCode || pending.length ? 14 : 0 }}>
+        <div className="field">
           <label>Rôle</label>
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="player">Joueur</option>
-            <option value="coach">Entraîneur</option>
-            <option value="board_member">Bureau</option>
-            {activeRole === "super_admin" && <option value="admin">Administrateur</option>}
-          </select>
+          <div className="segmented" style={{ display: "flex", width: "100%" }}>
+            {Object.entries(INVITE_ROLES).filter(([v]) => v !== "admin" || activeRole === "super_admin").map(([v, l]) => (
+              <button key={v} type="button" className={role === v ? "active" : ""} style={{ flex: 1 }} onClick={() => setRole(v)}>{l}</button>
+            ))}
+          </div>
         </div>
-        <div className="field" style={{ marginBottom: 0, flex: "2 1 200px" }}>
-          <label>E-mail (optionnel, pour mémoire)</label>
-          <input type="email" placeholder="prenom@exemple.fr" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div className="field" style={{ marginBottom: 0, flex: "1 1 200px" }}>
+            <label>E-mail (optionnel, pour mémoire)</label>
+            <input type="email" placeholder="prenom@exemple.fr" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <button className="btn btn-primary btn-sm" style={{ padding: "11px 18px", width: "auto" }} disabled={busy}>{busy ? "…" : "Générer un code"}</button>
         </div>
-        <button className="btn btn-primary btn-sm" style={{ padding: "11px 18px" }} disabled={busy}>{busy ? "…" : "Générer un code"}</button>
       </form>
 
       {lastCode && (
