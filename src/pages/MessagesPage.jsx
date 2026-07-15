@@ -328,14 +328,14 @@ function Thread({ conversation, myMemberId, back }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 180px)" }}>
+    <div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <button className="btn btn-ghost btn-sm" onClick={back}>← Retour</button>
-        <h1 style={{ fontSize: "1.3rem" }}>{convTitle(conversation, myMemberId)}</h1>
+        <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={back}>← Retour</button>
+        <h1 style={{ fontSize: "1.3rem", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{convTitle(conversation, myMemberId)}</h1>
       </div>
       {error && <div className="error-box">{error}</div>}
 
-      <div className="card" style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: "40vh" }}>
         {messages === null && <div className="spinner" />}
         {messages?.length === 0 && <div className="subtle">Aucun message — écris le premier !</div>}
         {messages?.map((m) => {
@@ -401,22 +401,23 @@ function Thread({ conversation, myMemberId, back }) {
         <div ref={bottomRef} />
       </div>
 
-      {attachFile && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", background: "var(--surface-alt)", borderRadius: "var(--radius-sm)", marginTop: 8, fontSize: "0.8rem" }}>
-          <FileEarmarkText size={15} />
-          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{attachFile.name}</span>
-          <span onClick={() => { setAttachFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} style={{ cursor: "pointer" }}><XLg size={13} /></span>
-        </div>
-      )}
-
-      <form onSubmit={send} style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
-        <input type="file" ref={fileInputRef} accept="image/*,video/mp4,video/quicktime,.pdf,.doc,.docx,.xls,.xlsx" style={{ display: "none" }} onChange={(e) => setAttachFile(e.target.files?.[0] ?? null)} />
-        <button type="button" className="btn btn-ghost btn-sm" style={{ width: 40, padding: 0, flexShrink: 0 }} onClick={() => fileInputRef.current?.click()} title="Joindre un fichier">
-          <Paperclip size={17} />
-        </button>
-        <input type="text" placeholder="Écrire un message…" value={text} onChange={(e) => setText(e.target.value)} style={{ flex: 1 }} />
-        <button className="btn btn-primary btn-sm" style={{ padding: "11px 18px" }} disabled={busy || (!text.trim() && !attachFile)}>Envoyer</button>
-      </form>
+      <div className="thread-composer">
+        {attachFile && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", background: "var(--surface-alt)", borderRadius: "var(--radius-sm)", marginBottom: 8, fontSize: "0.8rem" }}>
+            <FileEarmarkText size={15} />
+            <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{attachFile.name}</span>
+            <span onClick={() => { setAttachFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} style={{ cursor: "pointer" }}><XLg size={13} /></span>
+          </div>
+        )}
+        <form onSubmit={send} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input type="file" ref={fileInputRef} accept="image/*,video/mp4,video/quicktime,.pdf,.doc,.docx,.xls,.xlsx" style={{ display: "none" }} onChange={(e) => setAttachFile(e.target.files?.[0] ?? null)} />
+          <button type="button" className="btn btn-ghost btn-sm" style={{ width: 40, padding: 0, flexShrink: 0 }} onClick={() => fileInputRef.current?.click()} title="Joindre un fichier">
+            <Paperclip size={17} />
+          </button>
+          <input type="text" placeholder="Écrire un message…" value={text} onChange={(e) => setText(e.target.value)} style={{ flex: 1, minWidth: 0 }} />
+          <button className="btn btn-primary btn-sm" style={{ padding: "11px 18px", width: "auto", flexShrink: 0 }} disabled={busy || (!text.trim() && !attachFile)}>Envoyer</button>
+        </form>
+      </div>
     </div>
   );
 }

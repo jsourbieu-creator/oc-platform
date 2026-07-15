@@ -261,6 +261,12 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 .dashboard-content{ flex:1; padding:20px; padding-bottom:calc(104px + env(safe-area-inset-bottom)); max-width:900px; width:100%; margin:0 auto; }
 @media (min-width:1024px){ .dashboard-content{ padding-bottom:20px; } }
 
+.thread-composer{
+  position:sticky; bottom:calc(88px + env(safe-area-inset-bottom)); z-index:15;
+  background:var(--bg); padding-top:10px; margin-top:10px;
+}
+@media (min-width:1024px){ .thread-composer{ position:static; } }
+
 .brand-badge{ width:36px; height:36px; flex-shrink:0; filter:drop-shadow(0 2px 4px rgba(25,100,150,0.35)); }
 
 .sidebar{ display:none; }

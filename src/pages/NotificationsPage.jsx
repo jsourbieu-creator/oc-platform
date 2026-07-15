@@ -33,6 +33,16 @@ export function NotificationsPage({ goto }) {
 
   useEffect(load, [load]);
 
+  // Ouvrir la page = les avoir vues : on les marque lues automatiquement,
+  // sinon le badge de la cloche ne redescendait jamais (personne ne clique
+  // sur "Tout marquer lu" explicitement en pratique).
+  useEffect(() => {
+    if (!activeClubId || !notifications) return;
+    if (!notifications.some((n) => !n.read_at)) return;
+    api("notifications.php", "mark_all_read", { club_id: activeClubId }, token).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeClubId, notifications]);
+
   const markAllRead = async () => {
     setError("");
     try {
