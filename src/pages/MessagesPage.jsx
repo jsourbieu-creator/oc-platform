@@ -329,13 +329,16 @@ function Thread({ conversation, myMemberId, back }) {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={back}>← Retour</button>
-        <h1 style={{ fontSize: "1.3rem", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{convTitle(conversation, myMemberId)}</h1>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12 }}>
+        <button className="btn btn-ghost btn-sm" style={{ width: "auto", flexShrink: 0, whiteSpace: "nowrap" }} onClick={back}>← Retour</button>
+        <h1 style={{
+          fontSize: "1.15rem", minWidth: 0, flex: 1, lineHeight: 1.25,
+          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+        }}>{convTitle(conversation, myMemberId)}</h1>
       </div>
       {error && <div className="error-box">{error}</div>}
 
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: "40vh" }}>
+      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 120 }}>
         {messages === null && <div className="spinner" />}
         {messages?.length === 0 && <div className="subtle">Aucun message — écris le premier !</div>}
         {messages?.map((m) => {
