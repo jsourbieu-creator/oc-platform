@@ -40,24 +40,21 @@ export function HomePage({ gotoConversation }) {
 
   // Mon score Ballon d'Or : dérivé du classement de la saison active
   useEffect(() => {
-    if (!activeClubId || !token || !user) { return; }
+    if (!activeClubId || !token || !user || seasons === null) return;
     let alive = true;
-    api("seasons.php", "list", { club_id: activeClubId }, token)
-      .then((d) => {
-        const active = (d.seasons ?? []).find((s) => s.status === "active");
-        if (!active) { if (alive) setMyScore(null); return; }
-        return api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: active.id }, token)
-          .then((r) => {
-            if (!alive) return;
-            const full = `${user.first_name} ${user.last_name}`.trim().toLowerCase();
-            const all = [...(r.official ?? []), ...(r.provisional ?? [])];
-            const mine = all.find((p) => (p.name ?? "").trim().toLowerCase() === full);
-            setMyScore(mine ?? null);
-          });
+    const active = seasons.find((s) => s.status === "active");
+    if (!active) { setMyScore(null); return; }
+    api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: active.id }, token)
+      .then((r) => {
+        if (!alive) return;
+        const full = `${user.first_name} ${user.last_name}`.trim().toLowerCase();
+        const all = [...(r.official ?? []), ...(r.provisional ?? [])];
+        const mine = all.find((p) => (p.name ?? "").trim().toLowerCase() === full);
+        setMyScore(mine ?? null);
       })
       .catch(() => { if (alive) setMyScore(null); });
     return () => { alive = false; };
-  }, [activeClubId, token, user]);
+  }, [activeClubId, token, user, seasons]);
 
   useEffect(() => {
     if (!activeClubId) return;
@@ -145,6 +142,9 @@ export function HomePage({ gotoConversation }) {
       <NextSessionCard
         event={nextEvent}
         loading={nextEvent === undefined}
+        hasSeason={seasons !== null && seasons.length > 0}
+        manage={manage}
+        onCreate={() => setForm({ ...EMPTY_FORM })}
         onOpen={() => { if (nextEvent) { setScope("month"); setGridMonth(new Date(nextEvent.starts_at.replace(" ", "T"))); setSelectedDay(nextEvent.starts_at.slice(0, 10)); } }}
         onSetAvailability={async (eventId, status) => {
           setError("");
@@ -155,15 +155,15 @@ export function HomePage({ gotoConversation }) {
 
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
         <div className="kpi">
-          <b style={{ color: "var(--oc-yellow-700)" }}>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
+          <b style={{ color: "var(--oc-sky-700)" }}>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
           <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
         </div>
         <div className="kpi">
-          <b style={{ color: "var(--oc-blue-700)" }}>{teams?.length ?? "…"}</b>
-          <span>Équipes</span>
+          <b style={{ color: "var(--oc-sky-700)" }}>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
+          <span>Ma présence</span>
         </div>
         <div className="kpi">
-          <b style={{ color: "var(--oc-coral-700)" }}>{events === null ? "…" : (events.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled").length)}</b>
+          <b style={{ color: "var(--oc-sky-700)" }}>{events === null ? "…" : (events.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled").length)}</b>
           <span>À venir</span>
         </div>
       </div>
@@ -284,15 +284,31 @@ export function HomePage({ gotoConversation }) {
 
 const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
-function NextSessionCard({ event: e, loading, onOpen, onSetAvailability }) {
+function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpen, onSetAvailability }) {
   if (loading) return <div className="card" style={{ marginBottom: 16, height: 150 }}><div className="spinner" /></div>;
 
   if (!e) {
+    if (!hasSeason) {
+      return (
+        <div className="card" style={{ marginBottom: 16, textAlign: "center", padding: "28px 20px" }}>
+          <CalendarDays size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
+          <div style={{ fontWeight: 800 }}>Bienvenue sur la plateforme !</div>
+          <div className="subtle" style={{ marginTop: 2, marginBottom: manage ? 14 : 0 }}>
+            {manage
+              ? "Commence par créer une saison dans Paramètres → Équipes, puis ajoute ta première séance ici."
+              : "Le club n'a pas encore ouvert de saison — reviens un peu plus tard."}
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="card" style={{ marginBottom: 16, textAlign: "center", padding: "28px 20px" }}>
         <CalendarDays size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
         <div style={{ fontWeight: 800 }}>Aucune séance à venir</div>
-        <div className="subtle" style={{ marginTop: 2 }}>Le calendrier est vide pour le moment.</div>
+        <div className="subtle" style={{ marginTop: 2, marginBottom: manage ? 14 : 0 }}>
+          {manage ? "Ajoute un entraînement ou un match pour lancer la saison." : "Le calendrier est vide pour le moment."}
+        </div>
+        {manage && <button className="btn btn-primary btn-sm" style={{ width: "auto" }} onClick={onCreate}>+ Ajouter une séance</button>}
       </div>
     );
   }

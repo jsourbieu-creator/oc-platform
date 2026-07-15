@@ -13,7 +13,30 @@ switch ($action) {
 
         $stmt = db()->prepare('SELECT * FROM teams WHERE club_id = ? ORDER BY name');
         $stmt->execute([$clubId]);
-        json_out(['teams' => $stmt->fetchAll()]);
+        $teams = $stmt->fetchAll();
+
+        // Le club ne gère qu'une seule équipe : on la crée automatiquement
+        // dès qu'une saison existe, pour ne jamais exposer de formulaire
+        // de création à l'utilisateur.
+        if (!$teams) {
+            $stmt = db()->prepare("SELECT id, name FROM seasons WHERE club_id = ? ORDER BY (status = 'active') DESC, start_date DESC LIMIT 1");
+            $stmt->execute([$clubId]);
+            $season = $stmt->fetch();
+            if ($season) {
+                $stmt = db()->prepare('SELECT name FROM clubs WHERE id = ?');
+                $stmt->execute([$clubId]);
+                $clubName = $stmt->fetchColumn() ?: 'Équipe';
+
+                $stmt = db()->prepare('INSERT INTO teams (club_id, season_id, name) VALUES (?,?,?)');
+                $stmt->execute([$clubId, $season['id'], $clubName]);
+
+                $stmt = db()->prepare('SELECT * FROM teams WHERE club_id = ? ORDER BY name');
+                $stmt->execute([$clubId]);
+                $teams = $stmt->fetchAll();
+            }
+        }
+
+        json_out(['teams' => $teams]);
         break;
 
     case 'create':

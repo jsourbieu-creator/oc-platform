@@ -109,91 +109,31 @@ function SeasonsBlock({ seasons, manage, reload }) {
   );
 }
 
-function TeamsBlock({ teams, seasons, members, manage, reload }) {
-  const { token, activeClubId } = useAuth();
-  const [showForm, setShowForm] = useState(false);
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [seasonId, setSeasonId] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [openTeam, setOpenTeam] = useState(null);
-
+function TeamsBlock({ teams, seasons, members, manage }) {
   const activeSeason = seasons?.find((s) => s.status === "active");
-
-  const create = async (e) => {
-    e.preventDefault();
-    setError(""); setBusy(true);
-    try {
-      await api("teams.php", "create", { club_id: activeClubId, season_id: Number(seasonId || activeSeason?.id), name, category }, token);
-      setName(""); setCategory(""); setShowForm(false);
-      reload();
-    } catch (e2) { setError(e2.message); } finally { setBusy(false); }
-  };
-
-  const remove = async (teamId) => {
-    if (!confirm("Supprimer cette équipe et son effectif ?")) return;
-    setError("");
-    try {
-      await api("teams.php", "delete", { club_id: activeClubId, team_id: teamId }, token);
-      if (openTeam === teamId) setOpenTeam(null);
-      reload();
-    } catch (e2) { setError(e2.message); }
-  };
+  const team = teams?.[0];
 
   return (
     <div className="card">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-        <div className="label-title" style={{ marginBottom: 0 }}>Équipes</div>
-        {manage && seasons?.length > 0 && (
-          <button className="btn btn-secondary btn-sm" onClick={() => setShowForm((v) => !v)}>
-            {showForm ? "Annuler" : "+ Nouvelle équipe"}
-          </button>
-        )}
-      </div>
-      {error && <div className="error-box">{error}</div>}
-
-      {showForm && (
-        <form onSubmit={create} style={{ marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
-          <div className="field"><label>Nom</label><input type="text" required placeholder="Seniors A" value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div className="field"><label>Catégorie</label><input type="text" placeholder="Seniors, U15…" value={category} onChange={(e) => setCategory(e.target.value)} /></div>
-            <div className="field">
-              <label>Saison</label>
-              <select value={seasonId || activeSeason?.id || ""} onChange={(e) => setSeasonId(e.target.value)} required>
-                <option value="" disabled>Choisir…</option>
-                {seasons?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-          </div>
-          <button className="btn btn-primary" disabled={busy}>{busy ? "Création…" : "Créer l'équipe"}</button>
-        </form>
-      )}
+      <div className="label-title">Équipe</div>
 
       {teams === null && <div className="spinner" />}
-      {teams?.length === 0 && <div className="subtle">Aucune équipe encore créée.</div>}
-      {teams?.map((t) => (
-        <div key={t.id}>
-          <div className="list-row" style={{ cursor: "pointer" }} onClick={() => setOpenTeam(openTeam === t.id ? null : t.id)}>
-            <div>
-              <strong>{t.name}</strong>
-              {t.category && <div className="subtle">{t.category}</div>}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span className="subtle">{seasons?.find((s) => s.id === t.season_id)?.name}</span>
-              <span className="subtle">{openTeam === t.id ? "▲" : "▼"}</span>
-            </div>
-          </div>
-          {openTeam === t.id && (
-            <Roster team={t} members={members} manage={manage} onDelete={() => remove(t.id)} />
-          )}
+      {teams !== null && !team && (
+        <p className="subtle" style={{ margin: 0 }}>
+          L'effectif apparaîtra ici dès qu'une saison sera créée.
+        </p>
+      )}
+      {team && (
+        <div>
+          <div className="subtle" style={{ marginBottom: 10 }}>{activeSeason?.name ?? seasons?.find((s) => s.id === team.season_id)?.name}</div>
+          <Roster team={team} members={members} manage={manage} />
         </div>
-      ))}
+      )}
     </div>
   );
 }
 
-function Roster({ team, members, manage, onDelete }) {
+function Roster({ team, members, manage }) {
   const { token, activeClubId } = useAuth();
   const [roster, setRoster] = useState(null);
   const [addId, setAddId] = useState("");
@@ -270,7 +210,6 @@ function Roster({ team, members, manage, onDelete }) {
             {addable.map((m) => <option key={m.id} value={m.id}>{m.first_name} {m.last_name}</option>)}
           </select>
           <button className="btn btn-secondary btn-sm" onClick={add} disabled={!addId}>Ajouter</button>
-          <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger-600)" }} onClick={onDelete}>Supprimer l'équipe</button>
         </div>
       )}
     </div>
