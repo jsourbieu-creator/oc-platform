@@ -157,7 +157,7 @@ export function HomePage({ gotoConversation }) {
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
         <div className="kpi">
           <b style={{ color: "var(--oc-yellow-700)" }}>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
-          <span>{myScore ? "Score Ballon d'Or" : "Pas classé"}</span>
+          <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
         </div>
         <div className="kpi">
           <b style={{ color: "var(--oc-blue-700)" }}>{teams?.length ?? "…"}</b>
