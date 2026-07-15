@@ -36,9 +36,9 @@ const TROPHY_DEFS = [
  * le vrai nom n'apparaît qu'à la cérémonie de fin de saison. */
 function TrophyWinnerReveal() {
   return (
-    <div className="invisible-ink" style={{ marginTop: 6 }} aria-hidden="true">
-      <span className="invisible-ink-bar" style={{ width: "70%" }} />
-      <span className="invisible-ink-bar" style={{ width: "40%" }} />
+    <div className="invisible-ink" aria-hidden="true">
+      <span className="invisible-ink-bar" style={{ width: "58%" }} />
+      <span className="invisible-ink-bar" style={{ width: "32%" }} />
     </div>
   );
 }

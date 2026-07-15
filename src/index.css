@@ -244,18 +244,17 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 
 .spinner{ width:26px; height:26px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--oc-blue-600); animation:spin .8s linear infinite; margin:20px auto; }
 @keyframes spin{ to{ transform:rotate(360deg); } }
-@keyframes ink-shimmer{ 0%{ background-position:200% 0; } 100%{ background-position:-200% 0; } }
+@keyframes ink-shimmer{ 0%{ background-position:160% 0; } 100%{ background-position:-160% 0; } }
 
-.invisible-ink{ display:flex; flex-direction:column; gap:6px; pointer-events:none; user-select:none; }
+.invisible-ink{ display:flex; flex-direction:column; gap:5px; pointer-events:none; user-select:none; margin-top:2px; }
 .invisible-ink-bar{
-  display:block; height:12px; border-radius:6px;
-  background:linear-gradient(90deg,
-    var(--surface-alt) 0%, var(--oc-sky-400) 20%, var(--oc-amber-500) 35%,
-    var(--oc-orange-500) 50%, var(--lime-500) 65%, var(--oc-sky-400) 80%, var(--surface-alt) 100%);
-  background-size:300% 100%;
-  filter:blur(3px) saturate(1.4);
-  animation:ink-shimmer 3.2s linear infinite;
-  opacity:.85;
+  display:block; height:11px; border-radius:4px;
+  background:linear-gradient(100deg,
+    var(--surface-alt) 0%, var(--surface-alt) 42%,
+    color-mix(in srgb, var(--electric-blue) 55%, var(--surface-alt)) 50%,
+    var(--surface-alt) 58%, var(--surface-alt) 100%);
+  background-size:250% 100%;
+  animation:ink-shimmer 3.6s ease-in-out infinite;
 }
 
 /* Layout dashboard */
