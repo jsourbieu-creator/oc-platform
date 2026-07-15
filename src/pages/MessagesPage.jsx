@@ -347,10 +347,11 @@ function Thread({ conversation, myMemberId, back }) {
           const deleted = !!m.deleted_at;
           const editing = editingId === m.id;
           return (
-            <div key={m.id} style={{ display: "flex", flexDirection: mine ? "row-reverse" : "row", alignItems: "flex-end", gap: 8, alignSelf: mine ? "flex-end" : "flex-start", maxWidth: "85%" }}>
-              <Avatar name={authorName} userId={m.user_id} avatarUrl={m.avatar_url} size={28} />
-              <div style={{ display: "flex", flexDirection: "column", alignItems: mine ? "flex-end" : "flex-start", minWidth: 0, position: "relative" }}>
-                {!mine && <div className="subtle" style={{ fontSize: "0.72rem", marginBottom: 2 }}>{authorName}</div>}
+            <div key={m.id} style={{ display: "flex", flexDirection: "column", alignItems: mine ? "flex-end" : "flex-start", alignSelf: mine ? "flex-end" : "flex-start", maxWidth: "85%" }}>
+              {!mine && <div className="subtle" style={{ fontSize: "0.72rem", marginBottom: 2, marginLeft: 36 }}>{authorName}</div>}
+
+              <div style={{ display: "flex", flexDirection: mine ? "row-reverse" : "row", alignItems: "flex-end", gap: 8, minWidth: 0 }}>
+                {!mine && <Avatar name={authorName} userId={m.user_id} avatarUrl={m.avatar_url} size={28} />}
 
                 {editing ? (
                   <div style={{ display: "flex", gap: 6, width: 220 }}>
@@ -359,7 +360,7 @@ function Thread({ conversation, myMemberId, back }) {
                     <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={() => setEditingId(null)}>✕</button>
                   </div>
                 ) : (
-                  <div style={{ position: "relative" }}>
+                  <div style={{ position: "relative", minWidth: 0 }}>
                     <div style={{
                       background: deleted ? "transparent" : (mine ? "var(--oc-gradient)" : "var(--surface-alt)"),
                       backgroundSize: mine ? "200% 100%" : undefined,
@@ -383,20 +384,21 @@ function Thread({ conversation, myMemberId, back }) {
                     {mine && !deleted && (
                       <span
                         onClick={() => setMenuFor(menuFor === m.id ? null : m.id)}
-                        style={{ position: "absolute", top: 2, left: -22, cursor: "pointer", color: "var(--text-dim)", padding: 4 }}
+                        style={{ position: "absolute", top: "50%", right: "100%", transform: "translateY(-50%)", marginRight: 4, cursor: "pointer", color: "var(--text-dim)", padding: 4, flexShrink: 0 }}
                       ><ThreeDotsVertical size={14} /></span>
                     )}
                     {menuFor === m.id && (
-                      <div style={{ position: "absolute", top: 24, left: -100, background: "var(--surface)", boxShadow: "var(--shadow-md)", borderRadius: "var(--radius-sm)", overflow: "hidden", zIndex: 5, minWidth: 110 }}>
+                      <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 4, background: "var(--surface)", boxShadow: "var(--shadow-md)", borderRadius: "var(--radius-sm)", overflow: "hidden", zIndex: 5, minWidth: 110 }}>
                         <div onClick={() => startEdit(m)} style={{ padding: "8px 12px", fontSize: "0.82rem", cursor: "pointer" }}>Modifier</div>
                         <div onClick={() => deleteMessage(m.id)} style={{ padding: "8px 12px", fontSize: "0.82rem", cursor: "pointer", color: "var(--oc-red-700)" }}>Supprimer</div>
                       </div>
                     )}
                   </div>
                 )}
-                <div className="subtle" style={{ fontSize: "0.68rem", marginTop: 2 }}>
-                  {!deleted && fmtDateTime(m.created_at)}{!deleted && m.edited_at ? " · modifié" : ""}
-                </div>
+              </div>
+
+              <div className="subtle" style={{ fontSize: "0.68rem", marginTop: 3, marginLeft: mine ? 0 : 36, marginRight: mine ? 0 : 0 }}>
+                {!deleted && fmtDateTime(m.created_at)}{!deleted && m.edited_at ? " · modifié" : ""}
               </div>
             </div>
           );
