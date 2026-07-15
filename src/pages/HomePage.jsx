@@ -128,11 +128,10 @@ export function HomePage({ gotoConversation }) {
 
   return (
     <div>
-      <div style={{ marginBottom: 18 }}>
-        <div className="eyebrow" style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
+      <div style={{ marginBottom: 14 }}>
+        <div className="eyebrow" style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
           {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
         </div>
-        <h1 className="page-title" style={{ marginTop: 2 }}>Salut {user?.first_name}</h1>
       </div>
 
       <NextSessionCard
@@ -465,11 +464,6 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   const confirmedPeople = e.confirmed_names ?? [];
   const [convBusy, setConvBusy] = useState(false);
 
-  const quickRespond = async (status) => {
-    try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
-    catch (_) { /* affiché en détail si besoin */ }
-  };
-
   const openConversation = async (ev) => {
     ev.stopPropagation();
     setConvBusy(true);
@@ -486,7 +480,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><t.icon size={15} />{e.title}</strong>
+            <strong>{e.title}</strong>
             {cancelled && <span className="badge badge-neutral">Annulé</span>}
             {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
           </div>
@@ -508,23 +502,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         <AvatarStack people={confirmedPeople} />
       </div>
 
-      {!cancelled && !isPast(e.starts_at) && (
-        <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
-          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
-            const active = e.my_availability === v;
-            return (
-              <button
-                key={v} className="btn btn-sm" style={{
-                  flex: "1 1 80px", background: active ? AVAIL_FILL[v] : `color-mix(in srgb, ${AVAIL_FILL[v]} 20%, transparent)`, color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
-                }}
-                onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
-              >{l}</button>
-            );
-          })}
-        </div>
-      )}
-
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
         <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={openConversation} disabled={convBusy}>
           <ChatCircle size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
         </button>
@@ -535,7 +513,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
       )}
 
       <div style={{ textAlign: "center", marginTop: 6 }}>
-        <span className="subtle" style={{ cursor: "pointer" }} onClick={toggle}>Voir tous les détails</span>
+        <span className="subtle" style={{ cursor: "pointer" }} onClick={toggle}>Voir qui est là & les détails</span>
       </div>
 
       {open && (
@@ -558,9 +536,16 @@ function MenuItem({ children, onClick, color }) {
 
 /** Modal plein écran façon TeamPulse : en-tête + onglets Informations/Participants */
 function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStatus, onDelete }) {
-  const [tab, setTab] = useState("infos");
+  const { token, activeClubId } = useAuth();
+  const [tab, setTab] = useState("participants");
   const [menuOpen, setMenuOpen] = useState(false);
   const cancelled = e.status === "cancelled";
+  const canRespond = !cancelled && !isPast(e.starts_at);
+
+  const setMyAvailability = async (status) => {
+    try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
+    catch (_) { /* affiché en détail si besoin */ }
+  };
 
   return createPortal(
     <div className="event-modal-overlay" onClick={onClose}>
@@ -590,9 +575,28 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
           ) : <div style={{ width: 34 }} />}
         </div>
 
+        {canRespond && (
+          <div style={{ marginBottom: 18 }}>
+            <div className="label-title" style={{ marginBottom: 8 }}>Ma présence</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+                const active = e.my_availability === v;
+                return (
+                  <button
+                    key={v} className="btn btn-sm" style={{
+                      flex: "1 1 80px", background: active ? AVAIL_FILL[v] : `color-mix(in srgb, ${AVAIL_FILL[v]} 18%, transparent)`, color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                    }}
+                    onClick={() => setMyAvailability(v)}
+                  >{l}</button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="tab-switch">
-          <div className={`tab-switch-item ${tab === "infos" ? "active" : ""}`} onClick={() => setTab("infos")}>Informations</div>
-          <div className={`tab-switch-item ${tab === "participants" ? "active" : ""}`} onClick={() => setTab("participants")}>Participants</div>
+          <div className={`tab-switch-item ${tab === "participants" ? "active" : ""}`} onClick={() => setTab("participants")}>Qui est là</div>
+          <div className={`tab-switch-item ${tab === "infos" ? "active" : ""}`} onClick={() => setTab("infos")}>Détails</div>
         </div>
 
         {tab === "infos" && <InfosTab event={e} reload={reload} manage={manage} members={members} />}

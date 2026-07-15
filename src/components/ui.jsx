@@ -21,16 +21,20 @@ export function Avatar({ name, userId, avatarUrl, size = 26, ring = true }) {
   );
 }
 
-/** Date compacte façon TeamPulse : barre colorée + jour/mois en texte simple */
-export function DateBadge({ date, color = "var(--oc-blue-deep)" }) {
+/** Date compacte : bloc coloré plein (jour/mois), identité forte par type d'événement */
+export function DateBadge({ date, color = "var(--electric-blue)" }) {
   const { day, month } = fmtDateBadge(date);
   return (
-    <div style={{ display: "flex", gap: 10, flexShrink: 0, alignSelf: "stretch" }}>
-      <div style={{ width: 4, borderRadius: 2, background: color }} />
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center", minWidth: 38 }}>
-        <div className="num" style={{ fontSize: "1.4rem", lineHeight: 1.05, color: "var(--text)" }}>{day}</div>
-        <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-dim)" }}>{month}</div>
-      </div>
+    <div
+      className="num"
+      style={{
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        width: 54, height: 54, borderRadius: "var(--radius-md)", background: color, color: "#fff",
+        flexShrink: 0,
+      }}
+    >
+      <div style={{ fontSize: "1.3rem", lineHeight: 1, fontWeight: 700 }}>{day}</div>
+      <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", opacity: 0.85, marginTop: 2 }}>{month}</div>
     </div>
   );
 }
