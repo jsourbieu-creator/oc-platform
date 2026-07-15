@@ -285,6 +285,10 @@ switch ($action) {
         if (!in_array($status, ['present', 'absent', 'injured'], true)) json_error('Réponse invalide.');
         $comment = trim($in['comment'] ?? '');
 
+        $stmt = db()->prepare('SELECT status FROM event_availabilities WHERE event_id = ? AND club_member_id = ?');
+        $stmt->execute([$eventId, $targetMemberId]);
+        $previousStatus = $stmt->fetchColumn(); // false si jamais répondu
+
         $stmt = db()->prepare('
             INSERT INTO event_availabilities (event_id, club_member_id, status, comment)
             VALUES (?,?,?,?)
@@ -302,6 +306,36 @@ switch ($action) {
             $stmt->execute([$eventId, $targetMemberId]);
             $stmt = db()->prepare('DELETE FROM vote_submissions WHERE event_id = ? AND club_member_id = ?');
             $stmt->execute([$eventId, $targetMemberId]);
+        }
+
+        // Notifie les admins/coachs de la réponse — alerte spécifique si c'est un
+        // changement de dernière minute (moins de 2h avant le début de la séance).
+        if ($previousStatus !== $status) {
+            $stmt = db()->prepare("
+                SELECT id FROM club_members
+                WHERE club_id = ? AND status = 'active' AND role IN ('super_admin', 'admin', 'coach') AND id != ?
+            ");
+            $stmt->execute([$clubId, $targetMemberId]);
+            $adminIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
+            if ($adminIds) {
+                $stmt = db()->prepare('SELECT u.first_name, u.last_name FROM club_members cm JOIN users u ON u.id = cm.user_id WHERE cm.id = ?');
+                $stmt->execute([$targetMemberId]);
+                $person = $stmt->fetch();
+                $name = $person ? trim("{$person['first_name']} {$person['last_name']}") : 'Un membre';
+
+                $labels = ['present' => 'présent', 'absent' => 'absent', 'injured' => 'blessé'];
+                $label = $labels[$status] ?? $status;
+
+                $secondsUntilStart = strtotime($event['starts_at']) - time();
+                $isLastMinuteChange = $previousStatus !== false && $secondsUntilStart > 0 && $secondsUntilStart <= 2 * 3600;
+
+                $text = $isLastMinuteChange
+                    ? "⚠️ $name change sa présence en $label pour « {$event['title']} » à moins de 2h du début !"
+                    : "$name a répondu $label pour « {$event['title']} ».";
+
+                notify_members($adminIds, 'availability_change', $text, 'home');
+            }
         }
 
         json_out(['ok' => true]);

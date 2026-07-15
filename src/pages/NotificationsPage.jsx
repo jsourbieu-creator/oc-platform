@@ -11,6 +11,7 @@ const TYPE_ICONS = {
   join_request: PersonPlus,
   join_approved: PersonCheck,
   rate_request: Star,
+  availability_change: PersonCheck,
 };
 
 function fmtDateTime(s) {
