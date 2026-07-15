@@ -286,6 +286,19 @@ switch ($action) {
             ON DUPLICATE KEY UPDATE status = VALUES(status), comment = VALUES(comment)
         ');
         $stmt->execute([$eventId, $targetMemberId, $status, $comment ?: null]);
+
+        // Si la présence est corrigée à absent/blessé, les votes déjà enregistrés pour
+        // cette séance et ce membre (donnés ou reçus) n'ont plus lieu d'être : ils
+        // fausseraient les statistiques (moyenne de groupe, classement...).
+        if ($status !== 'present') {
+            $stmt = db()->prepare('DELETE FROM evaluations WHERE event_id = ? AND (rater_member_id = ? OR ratee_member_id = ?)');
+            $stmt->execute([$eventId, $targetMemberId, $targetMemberId]);
+            $stmt = db()->prepare('DELETE FROM self_evaluations WHERE event_id = ? AND club_member_id = ?');
+            $stmt->execute([$eventId, $targetMemberId]);
+            $stmt = db()->prepare('DELETE FROM vote_submissions WHERE event_id = ? AND club_member_id = ?');
+            $stmt->execute([$eventId, $targetMemberId]);
+        }
+
         json_out(['ok' => true]);
         break;
 
