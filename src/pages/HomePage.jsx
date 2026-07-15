@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { Calendar3, CaretLeft, CaretRight, GeoAlt, Star, Shield, ArrowCounterclockwise, X, ClipboardCheck, Clock, Flag, People, ThreeDots, ChatDots, Search, Check, Trophy, Activity } from "react-bootstrap-icons";
+import { Calendar3, CaretLeft, CaretRight, GeoAlt, Star, Shield, ArrowCounterclockwise, X, ClipboardCheck, Clock, Flag, People, ThreeDots, ChatDots, Search, Check, Trophy, Activity, PlusLg } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -213,10 +213,10 @@ export function HomePage({ gotoConversation }) {
               width: 42, height: 42, borderRadius: "50%", border: "none", cursor: "pointer",
               background: form ? "var(--oc-red-50)" : "var(--hero-sky)", color: form ? "var(--oc-red-700)" : "var(--hero-ink)",
               display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              boxShadow: form ? "none" : "0 8px 18px rgba(143,211,238,.35)", fontSize: "1.3rem", fontWeight: 700,
+              boxShadow: "var(--shadow-xs)",
               transition: ".2s var(--ease-spring)",
             }}
-          >{form ? <X size={18} /> : "+"}</button>
+          >{form ? <X size={18} /> : <PlusLg size={18} />}</button>
         )}
       </div>
 
