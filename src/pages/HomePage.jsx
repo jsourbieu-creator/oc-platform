@@ -12,6 +12,17 @@ import { DateBadge, AvatarStack, StatTile, CountChip, Avatar } from "@/component
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
+/** Salutation qui varie selon l'heure, clin d'œil au vocabulaire du foot */
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 7) return "Prolongations";
+  if (h < 12) return "Échauffement";
+  if (h < 14) return "Mi-temps";
+  if (h < 18) return "Reprise";
+  if (h < 23) return "Coup d'envoi";
+  return "Prolongations";
+}
+
 export function HomePage({ gotoConversation }) {
   const { user, token, activeClubId, memberships, activeRole } = useAuth();
   const manage = canManageEvents(activeRole);
@@ -128,10 +139,11 @@ export function HomePage({ gotoConversation }) {
 
   return (
     <div>
-      <div style={{ marginBottom: 14 }}>
+      <div style={{ marginBottom: 18 }}>
         <div className="eyebrow" style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
           {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
         </div>
+        <h1 className="page-title" style={{ marginTop: 2 }}>{greeting()}, {user?.first_name}</h1>
       </div>
 
       <NextSessionCard
@@ -349,29 +361,21 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
         )}
       </div>
 
-      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.2)" }}>
-        <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 8 }}>
-          Ma présence
+      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }} onClick={onOpen} role="button">
+        <div>
+          <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 6 }}>
+            Qui est là
+          </div>
+          {(e.present_names?.length ?? 0) > 0 ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <AvatarStack people={e.present_names} />
+              <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>{e.avail_counts?.present ?? 0} présent{(e.avail_counts?.present ?? 0) > 1 ? "s" : ""}</span>
+            </div>
+          ) : (
+            <span style={{ fontSize: "0.85rem", opacity: 0.8 }}>Personne n'a encore répondu</span>
+          )}
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
-            const active = e.my_availability === v;
-            return (
-              <button
-                key={v}
-                onClick={() => onSetAvailability(e.id, v)}
-                style={{
-                  flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
-                  fontSize: "0.8rem", fontWeight: 800, fontFamily: "inherit",
-                  background: active ? "#fff" : "rgba(255,255,255,0.14)",
-                  color: active ? ({ present: "var(--oc-green-700)", maybe: "var(--status-maybe-ink)", absent: "var(--oc-red-700)", injured: "var(--oc-amber-700)" }[v] ?? "#172128") : "rgba(255,255,255,0.92)",
-                  transform: active ? "scale(1.02)" : "none",
-                  transition: ".18s var(--ease-spring)",
-                }}
-              >{l}</button>
-            );
-          })}
-        </div>
+        <span style={{ fontSize: "0.78rem", fontWeight: 700, textDecoration: "underline", flexShrink: 0, cursor: "pointer" }}>Répondre</span>
       </div>
     </div>
   );
@@ -464,6 +468,11 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   const confirmedPeople = e.confirmed_names ?? [];
   const [convBusy, setConvBusy] = useState(false);
 
+  const quickRespond = async (status) => {
+    try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
+    catch (_) { /* affiché en détail si besoin */ }
+  };
+
   const openConversation = async (ev) => {
     ev.stopPropagation();
     setConvBusy(true);
@@ -502,6 +511,22 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         <AvatarStack people={confirmedPeople} />
       </div>
 
+      {!cancelled && !isPast(e.starts_at) && (
+        <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+            const active = e.my_availability === v;
+            return (
+              <button
+                key={v} className="btn btn-sm" style={{
+                  flex: "1 1 80px", background: active ? AVAIL_FILL[v] : `color-mix(in srgb, ${AVAIL_FILL[v]} 20%, transparent)`, color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                }}
+                onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
+              >{l}</button>
+            );
+          })}
+        </div>
+      )}
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
         <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={openConversation} disabled={convBusy}>
           <ChatCircle size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
@@ -513,7 +538,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
       )}
 
       <div style={{ textAlign: "center", marginTop: 6 }}>
-        <span className="subtle" style={{ cursor: "pointer" }} onClick={toggle}>Voir qui est là & les détails</span>
+        <span className="subtle" style={{ cursor: "pointer" }} onClick={toggle}>Voir tous les détails</span>
       </div>
 
       {open && (

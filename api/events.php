@@ -76,6 +76,19 @@ switch ($action) {
                 $confirmedNames[$r['event_id']][] = ['name' => trim("{$r['first_name']} {$r['last_name']}"), 'user_id' => $r['user_id'], 'avatar_url' => $r['avatar_url']];
             }
 
+            $stmt = db()->prepare("
+                SELECT ea.event_id, u.id AS user_id, u.first_name, u.last_name, u.avatar_url
+                FROM event_availabilities ea
+                JOIN club_members cm ON cm.id = ea.club_member_id
+                JOIN users u ON u.id = cm.user_id
+                WHERE ea.event_id IN ($ph) AND ea.status = 'present'
+            ");
+            $stmt->execute($ids);
+            $presentNames = [];
+            foreach ($stmt->fetchAll() as $r) {
+                $presentNames[$r['event_id']][] = ['name' => trim("{$r['first_name']} {$r['last_name']}"), 'user_id' => $r['user_id'], 'avatar_url' => $r['avatar_url']];
+            }
+
             foreach ($events as &$e) {
                 $e['avail_counts'] = $availCounts[$e['id']] ?? new stdClass();
                 $e['conv_counts'] = $convCounts[$e['id']] ?? new stdClass();
@@ -83,6 +96,7 @@ switch ($action) {
                 $e['my_comment'] = $myComment[$e['id']] ?? '';
                 $e['my_convocation'] = $myConv[$e['id']] ?? null;
                 $e['confirmed_names'] = $confirmedNames[$e['id']] ?? [];
+                $e['present_names'] = $presentNames[$e['id']] ?? [];
             }
             unset($e);
         }
