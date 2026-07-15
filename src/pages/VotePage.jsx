@@ -20,15 +20,15 @@ const TROPHY_ICONS = {
 /** Liste canonique de tous les trophées possibles — affichés en tuile même
  * quand ils n'ont pas encore été décernés (grisée + condition manquante). */
 const TROPHY_DEFS = [
-  { code: "ballon_dor", label: "Ballon d'Or", icon: Trophy, requirement: "Le meilleur score, une fois classé officiellement." },
-  { code: "most_regular", label: "Joueur le plus régulier", icon: Rulers, requirement: "Il faut au moins 5 séances jouées et notées par un même joueur." },
-  { code: "most_assiduous", label: "Joueur le plus assidu", icon: Fire, requirement: "Au moins une présence enregistrée cette saison." },
-  { code: "best_progression", label: "Meilleure progression", icon: GraphUpArrow, requirement: "Il faut au moins 4 séances notées pour un même joueur." },
-  { code: "closest_perception", label: "Ressenti le plus proche du groupe", icon: Bullseye, requirement: "Il faut avoir fait au moins une auto-évaluation." },
-  { code: "best_raw_average", label: "Meilleure moyenne brute", icon: Star, requirement: "La moyenne des notes reçues, avant ajustement présence/régularité." },
-  { code: "most_severe_self", label: "Le plus sévère avec lui-même", icon: EmojiFrown, requirement: "Trophée humoristique désactivé pour cette saison.", humorous: true },
-  { code: "most_overrated_self", label: "Celui qui se voit un peu trop beau", icon: EmojiSmile, requirement: "Trophée humoristique désactivé pour cette saison.", humorous: true },
-  { code: "most_irregular", label: "Montagnes russes", icon: GraphDown, requirement: "Trophée humoristique désactivé pour cette saison.", humorous: true },
+  { code: "ballon_dor", label: "Ballon d'Or", icon: Trophy, requirement: "Le joueur avec le meilleur score sur toute la saison, une fois classé officiellement (voir Comment le score est calculé)." },
+  { code: "most_regular", label: "Joueur le plus régulier", icon: Rulers, requirement: "\"Régulier\" = ses notes de séance ne montent ni ne descendent beaucoup d'une fois sur l'autre — ni pic, ni trou d'air, du sérieux à chaque fois. Condition : au moins 5 séances jouées et notées." },
+  { code: "most_assiduous", label: "Joueur le plus assidu", icon: Fire, requirement: "\"Assidu\" = celui qui vient le plus souvent aux séances où il est attendu (le meilleur taux de présence). Condition : au moins une présence enregistrée." },
+  { code: "best_progression", label: "Meilleure progression", icon: GraphUpArrow, requirement: "Celui qui s'est le plus amélioré : ses notes de la 2e moitié de saison sont bien meilleures que celles de la 1ère moitié. Condition : au moins 4 séances notées." },
+  { code: "closest_perception", label: "Ressenti le plus proche du groupe", icon: Bullseye, requirement: "Celui dont l'auto-évaluation colle le mieux à la note que le groupe lui donne réellement — il se connaît bien. Condition : au moins une auto-évaluation." },
+  { code: "best_raw_average", label: "Meilleure moyenne brute", icon: Star, requirement: "La moyenne des notes reçues telle quelle, sans les ajustements de présence/régularité qui s'appliquent au score officiel — un peu le \"talent pur\"." },
+  { code: "most_severe_self", label: "Le plus sévère avec lui-même", icon: EmojiFrown, requirement: "Celui qui se note beaucoup plus mal que ce que le groupe pense de lui — trophée humoristique désactivé pour cette saison.", humorous: true },
+  { code: "most_overrated_self", label: "Celui qui se voit un peu trop beau", icon: EmojiSmile, requirement: "Celui qui se note beaucoup mieux que ce que le groupe pense de lui — trophée humoristique désactivé pour cette saison.", humorous: true },
+  { code: "most_irregular", label: "Montagnes russes", icon: GraphDown, requirement: "L'opposé du plus régulier : des séances excellentes, d'autres ratées, un vrai grand huit — trophée humoristique désactivé pour cette saison.", humorous: true },
 ];
 
 /** Une séance est terminée à ends_at si connu, sinon 2h après starts_at — même règle que côté API. */
@@ -522,13 +522,13 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
           icon={<Rulers size={14} />} label="Joueur le plus régulier"
           value={teamStats?.most_regular?.name}
           empty="Il faut qu'au moins un joueur ait joué 5 séances notées."
-          description="Celui dont les notes de séance varient le moins d'une fois sur l'autre (écart-type le plus faible)."
+          description={'"Régulier" = ses notes ne montent ni ne descendent beaucoup d\'une fois sur l\'autre. Mesuré par l\'écart-type le plus faible.'}
         />
         <StatRow
           icon={<Fire size={14} />} label="Joueur le plus assidu"
           value={teamStats?.most_assiduous && `${teamStats.most_assiduous.name} (${teamStats.most_assiduous.value}%)`}
           empty="Aucune présence enregistrée pour le moment."
-          description="Le meilleur taux de présence (séances jouées ÷ séances attendues, hors blessures)."
+          description={'"Assidu" = vient le plus souvent aux séances où il est attendu. Taux de présence = séances jouées ÷ séances attendues (hors blessures).'}
         />
         <StatRow
           icon={<GraphUpArrow size={14} />} label="Meilleure progression"
