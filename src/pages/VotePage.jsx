@@ -415,27 +415,29 @@ function ProfilTab({ season, myRanking, settings, perception, myTrophies }) {
       )}
 
       <div className="card">
-        <div className="label-title">Mes trophées</div>
+        <div className="label-title" style={{ marginBottom: 4 }}>Mes trophées</div>
         <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
-          Les trophées sont décernés au meilleur de chaque catégorie sur la saison, recalculés à chaque nouveau vote.
+          Les trophées sont décernés au meilleur de chaque catégorie sur la saison, recalculés à chaque nouveau vote — grisés ici tant que tu ne le décroches pas toi-même. Remplir la condition ne suffit pas forcément : un seul joueur gagne chaque trophée, le meilleur de tous sur ce critère.
         </p>
-        {myTrophies.length === 0 && <p className="subtle" style={{ margin: 0 }}>Aucun trophée pour l'instant sur cette saison — continue à jouer et voter !</p>}
-        {myTrophies.map((t) => {
-          const Icon = TROPHY_ICONS[t.code] ?? Award;
-          const def = TROPHY_DEFS.find((d) => d.code === t.code);
-          return (
-            <div key={t.code} className="list-row" style={{ alignItems: "flex-start" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                <div className="icon-chip" style={{ background: "var(--oc-yellow-100)", color: "var(--gold-500)", flexShrink: 0 }}><Icon size={18} /></div>
-                <div>
-                  <strong>{t.label}</strong>
-                  {def && <div className="subtle" style={{ fontSize: "0.76rem", marginTop: 2 }}>{def.requirement}</div>}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12 }}>
+          {TROPHY_DEFS.map((def) => {
+            const won = myTrophies.find((t) => t.code === def.code);
+            const Icon = def.icon;
+            return (
+              <div
+                key={def.code} className="card"
+                style={{ opacity: won ? 1 : 0.5, background: won ? "var(--surface)" : "var(--surface-soft)", display: "flex", flexDirection: "column", gap: 8, minHeight: 140, boxShadow: "none" }}
+              >
+                <div className="icon-chip" style={{ background: won ? "var(--oc-yellow-100)" : "var(--surface-alt)", color: won ? "var(--gold-500)" : "var(--text-dim)" }}>
+                  <Icon size={18} />
                 </div>
+                <strong style={{ fontSize: "0.86rem" }}>{def.label}</strong>
+                <p className="subtle" style={{ margin: 0, fontSize: "0.74rem", lineHeight: 1.4 }}>{def.requirement}</p>
+                {won && <div className="num" style={{ marginTop: "auto", fontWeight: 700, color: "var(--gold-500)" }}>{typeof won.value === "number" ? fmtScore(won.value) : won.value}</div>}
               </div>
-              <strong className="num">{typeof t.value === "number" ? fmtScore(t.value) : t.value}</strong>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
