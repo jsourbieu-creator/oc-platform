@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { Calendar, CaretLeft, CaretRight, MapPin, Star, Shield, ArrowCounterClockwise, X, ClipboardText, Clock, SoccerBall, UsersThree, DotsThree, ChatCircle, MagnifyingGlass, Check } from "@phosphor-icons/react";
+import { Calendar, CaretLeft, CaretRight, MapPin, Star, Shield, ArrowCounterClockwise, X, ClipboardText, Clock, SoccerBall, UsersThree, DotsThree, ChatCircle, MagnifyingGlass, Check, Trophy, Pulse } from "@phosphor-icons/react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -151,14 +151,17 @@ export function HomePage({ gotoConversation }) {
 
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
         <div className="kpi solid-amber">
+          <Trophy size={18} weight="fill" style={{ opacity: 0.55, marginBottom: 8 }} />
           <b>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
           <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
         </div>
         <div className="kpi solid-lime">
+          <Pulse size={18} weight="fill" style={{ opacity: 0.55, marginBottom: 8 }} />
           <b>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
           <span>Ma présence</span>
         </div>
         <div className="kpi solid-sky">
+          <Calendar size={18} weight="fill" style={{ opacity: 0.55, marginBottom: 8 }} />
           <b>{events === null ? "…" : (events.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled").length)}</b>
           <span>À venir</span>
         </div>
@@ -310,7 +313,6 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
   }
 
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
-  const Icon = t.icon;
   const d = new Date(e.starts_at.replace(" ", "T"));
   const dayNum = d.getDate();
   const monthShort = MONTH_NAMES[d.getMonth()].slice(0, 4);
@@ -319,7 +321,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
   return (
     <div className={`event-card-ds${isCoral ? " orange" : ""}`} style={{ marginBottom: 16 }}>
       <div onClick={onOpen} style={{ cursor: "pointer" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+        <div style={{ marginBottom: 6 }}>
           <span className="kicker">
           Prochaine séance
           {(() => {
@@ -329,9 +331,6 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
             return ` · Dans ${days} jours`;
           })()}
         </span>
-          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 14, background: "rgba(255,255,255,0.18)" }}>
-            <Icon size={20} color="#fff" />
-          </span>
         </div>
 
         <h3>{e.title}</h3>
