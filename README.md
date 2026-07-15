@@ -156,6 +156,23 @@ via phpMyAdmin.
   convocations, taux de participation aux votes, joueur le plus
   régulier/assidu, meilleure progression — à l'échelle de la saison.
 
+## Charte de couleurs validée (15/07, après proposition visuelle)
+
+- **Hero « prochaine séance »** : bloc pastel bleu ciel clair
+  (`--hero-sky`/`--hero-sky-soft`) avec texte en encre marine
+  (`--hero-ink`), plus deux formes internes floutées (un halo clair en haut
+  à droite, une ombre discrète en bas à gauche) pour donner du volume sans
+  jamais utiliser de bordure. Le match bascule sur un dégradé corail
+  (`--kpi-coral`) avec la même logique encre foncée.
+- **Tuiles KPI** : Ballon d'Or en corail (`--kpi-coral` / `--kpi-coral-ink`),
+  Ma présence en lime, À venir en bleu électrique — toutes en aplat plein,
+  jamais de blanc sur fond saturé, toujours la encre assortie à la teinte.
+- **Statuts de présence** repris à l'identique du hero pour la cohérence :
+  présent = lime, absent = rouge-corail, blessé = violet — chacun avec sa
+  propre encre foncée pour le texte.
+- Cette palette a été proposée visuellement (nuancier interactif) avant
+  implémentation et validée telle quelle.
+
 ## Itération design du 15/07 — retrait du statut Incertain, zéro bordure, hero actionnable
 
 - **Statut "Incertain" retiré** : décision produit — un 4ᵉ statut obligeait à

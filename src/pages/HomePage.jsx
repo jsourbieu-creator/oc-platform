@@ -177,7 +177,7 @@ export function HomePage({ gotoConversation }) {
       />
 
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
-        <div className="kpi solid-amber">
+        <div className="kpi solid-coral">
           <Trophy size={18} weight="fill" style={{ opacity: 0.55, marginBottom: 8 }} />
           <b>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
           <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
@@ -362,7 +362,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
 
         <h3>{e.title}</h3>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", color: "rgba(255,255,255,0.9)", fontSize: "0.9rem", fontWeight: 600 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", color: "var(--hero-ink)", opacity: 0.82, fontSize: "0.9rem", fontWeight: 600 }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             <Calendar size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
           </span>
@@ -371,7 +371,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
 
         {e.opponent && <div style={{ marginTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>vs {e.opponent}</div>}
         {e.team_name && (
-          <span style={{ display: "inline-block", marginTop: 12, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.18)", fontSize: "0.72rem", fontWeight: 800 }}>
+          <span style={{ display: "inline-block", marginTop: 12, padding: "5px 11px", borderRadius: 999, background: "rgba(11,58,82,0.12)", fontSize: "0.72rem", fontWeight: 800 }}>
             {e.team_name}
           </span>
         )}
@@ -380,14 +380,14 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
       <div
         style={{
           marginTop: 18, margin: "18px -22px -22px", padding: "16px 22px",
-          background: "rgba(6,20,28,0.24)", position: "relative", zIndex: 1,
+          background: "rgba(11,58,82,0.07)", position: "relative", zIndex: 1,
         }}
       >
         <div
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", marginBottom: (e.present_names?.length ?? 0) > 0 || onOpen ? 14 : 0 }}
           onClick={onOpen} role="button"
         >
-          <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)" }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--hero-ink)", opacity: 0.65 }}>
             Qui est là
           </div>
           {(e.present_names?.length ?? 0) > 0 ? (
@@ -396,11 +396,11 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
               <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>{e.avail_counts?.present ?? 0} présent{(e.avail_counts?.present ?? 0) > 1 ? "s" : ""}</span>
             </div>
           ) : (
-            <span style={{ fontSize: "0.82rem", opacity: 0.75 }}>Personne n'a encore répondu</span>
+            <span style={{ fontSize: "0.82rem", opacity: 0.65 }}>Personne n'a encore répondu</span>
           )}
         </div>
 
-        <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 8 }}>
+        <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--hero-ink)", opacity: 0.65, marginBottom: 8 }}>
           Ma présence
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -413,8 +413,8 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
                 style={{
                   flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
                   fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
-                  background: active ? "#fff" : "rgba(255,255,255,0.14)",
-                  color: active ? ({ present: "var(--status-present-ink)", absent: "var(--status-absent-ink)", injured: "var(--status-injured-ink)" }[v]) : "rgba(255,255,255,0.92)",
+                  background: active ? "#fff" : "rgba(11,58,82,0.10)",
+                  color: active ? ({ present: "var(--status-present-ink)", absent: "var(--status-absent-ink)", injured: "var(--status-injured-ink)" }[v]) : "var(--hero-ink)",
                   transform: active ? "scale(1.02)" : "none",
                   transition: ".18s var(--ease-spring)",
                 }}

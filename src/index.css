@@ -15,11 +15,16 @@
   /* Couleurs de statut unifiées entre les puces de comptage et les boutons
      présent/absent/blessé — vives, mêmes teintes partout, bien distinctes
      de l'orange (KPI, hero) pour ne jamais se confondre. */
-  --status-present:#C9F24E; --status-present-ink:#33430D;
-  --status-absent:#FF5F6D; --status-absent-ink:#5C0F17;
-  --status-injured:#9B8CF2; --status-injured-ink:#241A5C;
-  --lime-500:#D4F27E; --lime-600:#5F8A1E; --lime-100:rgba(212,242,126,0.25); --lime-ink:#3A4A12;
+  --status-present:#D9EA55; --status-present-ink:#33420C;
+  --status-absent:#FF5C72; --status-absent-ink:#4A0714;
+  --status-injured:#A78BFA; --status-injured-ink:#241852;
+  --lime-500:#D9EA55; --lime-600:#5F8A1E; --lime-100:rgba(217,234,85,0.25); --lime-ink:#33420C;
   --electric-blue:#12B4F2;
+
+  /* Hero « prochaine séance » — bloc pastel clair + encre marine assortie,
+     même logique que les tuiles KPI (jamais de blanc sur du saturé). */
+  --hero-sky:#8FD3EE; --hero-sky-soft:#A9DEF2; --hero-ink:#0B3A52;
+  --kpi-coral:#F2795A; --kpi-coral-ink:#4A1707;
 
   --radius-xs:8px; --radius-sm:13px; --radius-md:18px; --radius-lg:26px; --radius-xl:32px; --radius-2xl:40px; --radius-full:999px;
   --shadow-xs:0 2px 8px rgba(18,36,46,.06); --shadow-sm:0 8px 22px rgba(18,36,46,.08);
@@ -102,12 +107,17 @@
   --oc-bluegray-50:#1B242E; --oc-bluegray-100:#232E39; --oc-bluegray-200:#2C3945;
   --oc-bluegray-300:#3C4B58; --oc-bluegray-500:#8CA0AF; --oc-bluegray-700:#C7D3DC; --oc-bluegray-900:#F3F7FA;
 
-  /* Statuts (présent/incertain/absent/blessé) — aplats vifs cohérents avec le mockup */
-  --status-present:#C6F24E; --status-present-ink:#26330A;
-  --status-absent:#FF6E78; --status-absent-ink:#40060C;
-  --status-injured:#B4A6FF; --status-injured-ink:#1A1240;
-  --lime-500:#C6F24E; --lime-600:#8FCE1E; --lime-100:rgba(198,242,78,.2); --lime-ink:#2E3A0C;
+  /* Statuts (présent/absent/blessé) — aplats vifs cohérents avec la charte */
+  --status-present:#D9EA55; --status-present-ink:#33420C;
+  --status-absent:#FF5C72; --status-absent-ink:#4A0714;
+  --status-injured:#A78BFA; --status-injured-ink:#241852;
+  --lime-500:#D9EA55; --lime-600:#8FCE1E; --lime-100:rgba(217,234,85,.2); --lime-ink:#33420C;
   --electric-blue:#2FD3F0;
+
+  /* Hero « prochaine séance » — bloc pastel clair + encre marine, même logique
+     que les tuiles KPI (jamais de blanc sur du saturé). */
+  --hero-sky:#8FD3EE; --hero-sky-soft:#A9DEF2; --hero-ink:#0B3A52;
+  --kpi-coral:#F2795A; --kpi-coral-ink:#4A1707;
 }
 
 *{ box-sizing:border-box; }
@@ -437,30 +447,30 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 .kpi b{ display:block; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:26px; letter-spacing:-0.01em; }
 .kpi span{ font-size:9px; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; margin-top:4px; }
 .kpi.solid-lime{ background:var(--lime-500); box-shadow:none; }
-.kpi.solid-coral{ background:var(--oc-orange-500); box-shadow:none; }
+.kpi.solid-coral{ background:var(--kpi-coral); box-shadow:none; }
 .kpi.solid-sky{ background:var(--electric-blue); box-shadow:none; }
 .kpi.solid-amber{ background:var(--oc-amber-500); box-shadow:none; }
 .kpi.solid-lime, .kpi.solid-lime b{ color:var(--lime-ink); }
-.kpi.solid-coral, .kpi.solid-coral b{ color:#3C1204; }
+.kpi.solid-coral, .kpi.solid-coral b{ color:var(--kpi-coral-ink); }
 .kpi.solid-sky, .kpi.solid-sky b{ color:#052430; }
 .kpi.solid-amber, .kpi.solid-amber b{ color:#402C05; }
 .kpi.solid-lime span, .kpi.solid-coral span, .kpi.solid-sky span, .kpi.solid-amber span{ color:inherit; opacity:.68; }
 
 .event-card-ds{
-  background:linear-gradient(150deg, var(--oc-sky-700) 0%, var(--oc-sky-600) 55%, var(--oc-sky-500) 100%);
-  color:#fff; border-radius:var(--radius-xl); padding:22px; box-shadow:var(--shadow-md);
+  background:linear-gradient(150deg, var(--hero-sky-soft) 0%, var(--hero-sky) 100%);
+  color:var(--hero-ink); border-radius:var(--radius-xl); padding:22px; box-shadow:var(--shadow-md);
   position:relative; overflow:hidden;
 }
 .event-card-ds::after{
-  content:""; position:absolute; width:260px; height:260px; pointer-events:none;
-  background:radial-gradient(circle, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 70%);
-  border-radius:50%; right:-90px; top:-90px;
+  content:""; position:absolute; width:230px; height:230px; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 70%);
+  border-radius:50%; right:-70px; top:-80px;
 }
 .event-card-ds::before{
-  content:""; position:absolute; width:180px; height:180px; pointer-events:none;
-  background:radial-gradient(circle, rgba(0,0,0,.10) 0%, rgba(0,0,0,0) 72%);
-  border-radius:50%; left:-60px; bottom:-80px;
+  content:""; position:absolute; width:170px; height:170px; pointer-events:none;
+  background:radial-gradient(circle, rgba(11,58,82,.10) 0%, rgba(11,58,82,0) 72%);
+  border-radius:50%; left:-50px; bottom:-70px;
 }
-.event-card-ds.orange{ background:linear-gradient(150deg, var(--oc-orange-700) 0%, #E85A2E 55%, var(--oc-orange-500) 100%); }
-.event-card-ds .kicker{ font-size:10px; font-weight:900; letter-spacing:.11em; text-transform:uppercase; opacity:.82; position:relative; z-index:1; }
+.event-card-ds.orange{ background:linear-gradient(150deg, #FFB49B 0%, var(--kpi-coral) 100%); color:var(--kpi-coral-ink); }
+.event-card-ds .kicker{ font-size:10px; font-weight:900; letter-spacing:.11em; text-transform:uppercase; opacity:.68; position:relative; z-index:1; }
 .event-card-ds h3{ font-size:24px; margin:9px 0; letter-spacing:-.035em; position:relative; z-index:1; }
