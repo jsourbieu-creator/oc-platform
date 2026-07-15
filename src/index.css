@@ -244,17 +244,17 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 
 .spinner{ width:26px; height:26px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--oc-blue-600); animation:spin .8s linear infinite; margin:20px auto; }
 @keyframes spin{ to{ transform:rotate(360deg); } }
-@keyframes ink-shimmer{ 0%{ background-position:160% 0; } 100%{ background-position:-160% 0; } }
+@keyframes ink-twinkle{ 0%, 100%{ opacity:.2; transform:scale(.5); } 50%{ opacity:1; transform:scale(1.2); } }
 
-.invisible-ink{ display:flex; flex-direction:column; gap:5px; pointer-events:none; user-select:none; margin-top:2px; }
-.invisible-ink-bar{
-  display:block; height:11px; border-radius:4px;
-  background:linear-gradient(100deg,
-    var(--surface-alt) 0%, var(--surface-alt) 42%,
-    color-mix(in srgb, var(--electric-blue) 55%, var(--surface-alt)) 50%,
-    var(--surface-alt) 58%, var(--surface-alt) 100%);
-  background-size:250% 100%;
-  animation:ink-shimmer 3.6s ease-in-out infinite;
+.invisible-ink{
+  position:relative; height:38px; border-radius:12px; margin-top:6px;
+  background:linear-gradient(135deg, var(--electric-blue), var(--oc-sky-700));
+  overflow:hidden; pointer-events:none; user-select:none;
+}
+.invisible-ink-dot{
+  position:absolute; border-radius:50%; background:#fff;
+  box-shadow:0 0 4px rgba(255,255,255,.9);
+  animation-name:ink-twinkle; animation-timing-function:ease-in-out; animation-iteration-count:infinite;
 }
 
 /* Layout dashboard */

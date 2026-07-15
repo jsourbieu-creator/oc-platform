@@ -31,14 +31,36 @@ const TROPHY_DEFS = [
   { code: "most_irregular", label: "Montagnes russes", icon: GraphDown, requirement: "L'opposé du plus régulier : des séances excellentes, d'autres ratées, un vrai grand huit — trophée humoristique désactivé pour cette saison.", humorous: true },
 ];
 
-/** Effet "encre invisible" façon iMessage : le nom du vainqueur reste flouté
- * en permanence, avec un léger effet chatoyant — personne ne peut le révéler,
- * le vrai nom n'apparaît qu'à la cérémonie de fin de saison. */
+/** Positions/délais des particules — fixes (pas de Math.random à chaque render), pour un scintillement organique. */
+const INK_DOTS = [
+  { top: "20%", left: "8%", size: 4, delay: "0s", dur: "1.6s" },
+  { top: "60%", left: "14%", size: 3, delay: ".3s", dur: "1.9s" },
+  { top: "35%", left: "22%", size: 5, delay: ".8s", dur: "1.7s" },
+  { top: "75%", left: "28%", size: 3, delay: "1.1s", dur: "2s" },
+  { top: "15%", left: "36%", size: 4, delay: ".5s", dur: "1.8s" },
+  { top: "50%", left: "42%", size: 3, delay: "1.4s", dur: "1.6s" },
+  { top: "25%", left: "50%", size: 5, delay: ".2s", dur: "2.1s" },
+  { top: "70%", left: "55%", size: 4, delay: "1.7s", dur: "1.9s" },
+  { top: "40%", left: "62%", size: 3, delay: ".9s", dur: "1.7s" },
+  { top: "18%", left: "70%", size: 4, delay: "1.3s", dur: "2s" },
+  { top: "62%", left: "75%", size: 3, delay: ".1s", dur: "1.8s" },
+  { top: "30%", left: "82%", size: 5, delay: ".6s", dur: "1.6s" },
+  { top: "78%", left: "88%", size: 3, delay: "1.6s", dur: "1.9s" },
+  { top: "48%", left: "92%", size: 4, delay: ".4s", dur: "2.1s" },
+];
+
+/** Effet "encre invisible" façon iMessage : petites particules qui scintillent
+ * sur une bulle colorée, personne ne peut la révéler — le vrai nom du
+ * vainqueur n'apparaît qu'à la cérémonie de fin de saison en vrai. */
 function TrophyWinnerReveal() {
   return (
     <div className="invisible-ink" aria-hidden="true">
-      <span className="invisible-ink-bar" style={{ width: "58%" }} />
-      <span className="invisible-ink-bar" style={{ width: "32%" }} />
+      {INK_DOTS.map((d, i) => (
+        <span
+          key={i} className="invisible-ink-dot"
+          style={{ top: d.top, left: d.left, width: d.size, height: d.size, animationDelay: d.delay, animationDuration: d.dur }}
+        />
+      ))}
     </div>
   );
 }
