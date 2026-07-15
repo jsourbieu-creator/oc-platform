@@ -495,7 +495,6 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 12 }}>
         {TROPHY_DEFS.map((def) => {
           const awarded = list.find((t) => t.code === def.code);
-          if (def.humorous && !awarded) return null; // masqué si désactivé et rien à montrer
           const Icon = def.icon;
           return (
             <div
