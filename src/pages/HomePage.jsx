@@ -134,7 +134,7 @@ export function HomePage({ gotoConversation }) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 10 }}>
         <div style={{ minWidth: 0 }}>
-          <div className="eyebrow" style={{ fontSize: "0.7rem", fontWeight: 850, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
+          <div className="eyebrow" style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
             {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
           </div>
           <h1 className="page-title" style={{ marginTop: 2 }}>Salut {user?.first_name}</h1>
@@ -340,7 +340,7 @@ function NextSessionCard({ event: e, loading, onOpen, onSetAvailability }) {
       </div>
 
       <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.2)" }}>
-        <div style={{ fontSize: "0.72rem", fontWeight: 850, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 8 }}>
+        <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 8 }}>
           Ma présence
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -352,7 +352,7 @@ function NextSessionCard({ event: e, loading, onOpen, onSetAvailability }) {
                 onClick={() => onSetAvailability(e.id, v)}
                 style={{
                   flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
-                  fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
+                  fontSize: "0.8rem", fontWeight: 800, fontFamily: "inherit",
                   background: active ? "#fff" : "rgba(255,255,255,0.14)",
                   color: active ? ({ present: "var(--oc-green-700)", maybe: "var(--status-maybe-ink)", absent: "var(--oc-red-700)", injured: "var(--oc-amber-700)" }[v] ?? "#172128") : "rgba(255,255,255,0.92)",
                   transform: active ? "scale(1.02)" : "none",

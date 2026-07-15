@@ -94,7 +94,7 @@ export function StatistiquesPage() {
           <div className="card">
             {stats.most_regular && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Target size={14} />Joueur le plus régulier</span><strong>{stats.most_regular.name}</strong></div>}
             {stats.most_assiduous && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Flame size={14} />Joueur le plus assidu</span><strong>{stats.most_assiduous.name} ({stats.most_assiduous.value}%)</strong></div>}
-            {stats.best_progression && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><TrendingUp size={14} />Meilleure progression</span><strong>{stats.best_progression.name} ({stats.best_progression.value > 0 ? "+" : ""}{fmtScore(stats.best_progression.value)})</strong></div>}
+            {stats.best_progression && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><TrendingUp size={14} />Meilleure progression</span><strong>{stats.best_progression.name} (<span className="num">{stats.best_progression.value > 0 ? "+" : ""}{fmtScore(stats.best_progression.value)}</span>)</strong></div>}
           </div>
         </>
       )}

@@ -220,9 +220,9 @@ export function ClassementsPage() {
       {perception?.summary && (
         <div className="card">
           <div className="label-title">Mon ressenti face au groupe</div>
-          <div className="list-row"><span>Ma moyenne d'auto-évaluation</span><strong>{fmtScore(perception.summary.avg_self)}/10</strong></div>
-          <div className="list-row"><span>Moyenne attribuée par mes coéquipiers</span><strong>{fmtScore(perception.summary.avg_received)}/10</strong></div>
-          <div className="list-row"><span>Écart moyen</span><strong>{perception.summary.avg_gap > 0 ? "+" : ""}{fmtScore(perception.summary.avg_gap)}</strong></div>
+          <div className="list-row"><span>Ma moyenne d'auto-évaluation</span><strong className="num">{fmtScore(perception.summary.avg_self)}/10</strong></div>
+          <div className="list-row"><span>Moyenne attribuée par mes coéquipiers</span><strong className="num">{fmtScore(perception.summary.avg_received)}/10</strong></div>
+          <div className="list-row"><span>Écart moyen</span><strong className="num">{perception.summary.avg_gap > 0 ? "+" : ""}{fmtScore(perception.summary.avg_gap)}</strong></div>
           <p className="subtle" style={{ marginTop: 10, marginBottom: 0 }}>{perception.summary.perception_level}</p>
           <PerceptionChart sessions={perception.sessions} />
         </div>

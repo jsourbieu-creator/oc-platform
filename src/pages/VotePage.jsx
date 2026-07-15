@@ -85,12 +85,12 @@ export function VotePage() {
           {status.my_scores?.map((s) => (
             <div key={s.ratee_member_id} className="list-row">
               <span>Joueur #{s.ratee_member_id}</span>
-              <strong>{fmtScore(s.score)}/10</strong>
+              <strong className="num">{fmtScore(s.score)}/10</strong>
             </div>
           ))}
           <div className="list-row">
             <span>Mon auto-évaluation</span>
-            <strong>{fmtScore(status.my_self_score)}/10</strong>
+            <strong className="num">{fmtScore(status.my_self_score)}/10</strong>
           </div>
           <p className="subtle" style={{ marginTop: 10 }}>Ton vote est définitif et ne peut plus être modifié.</p>
         </div>
@@ -127,12 +127,12 @@ export function VotePage() {
           {status.ratees.map((r) => (
             <div key={r.club_member_id} className="list-row">
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={24} />{r.name}</span>
-              <strong>{fmtScore(scores[r.club_member_id])}/10</strong>
+              <strong className="num">{fmtScore(scores[r.club_member_id])}/10</strong>
             </div>
           ))}
           <div className="list-row">
             <span>Toi (auto-évaluation)</span>
-            <strong>{fmtScore(selfScore)}/10</strong>
+            <strong className="num">{fmtScore(selfScore)}/10</strong>
           </div>
           <p className="subtle" style={{ margin: "12px 0" }}>Une fois validé, tu ne pourras plus modifier ce vote.</p>
           <div style={{ display: "flex", gap: 8 }}>

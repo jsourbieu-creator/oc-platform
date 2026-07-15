@@ -96,7 +96,7 @@ export function TropheesPage() {
                   <div className="subtle">{t.player}</div>
                 </div>
               </div>
-              <strong style={{ color: "var(--oc-blue-600)" }}>{typeof t.value === "number" ? fmtScore(t.value) : t.value}</strong>
+              <strong className="num" style={{ color: "var(--oc-blue-600)" }}>{typeof t.value === "number" ? fmtScore(t.value) : t.value}</strong>
             </div>
           ))}
         </div>
