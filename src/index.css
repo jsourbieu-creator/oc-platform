@@ -9,6 +9,7 @@
   /* Couleurs de statut unifiées entre les puces de comptage et les boutons
      présent/absent/blessé — mêmes teintes partout, extraites de l'appli réelle. */
   --status-present:#D4F27E; --status-present-ink:#3A4A12;
+  --status-maybe:#F0B429; --status-maybe-ink:#5C3D0A;
   --status-absent:#EF9064; --status-absent-ink:#7A3417;
   --status-injured:#E5DFCE; --status-injured-ink:#5C5340;
   --lime-500:#D4F27E; --lime-600:#5F8A1E; --lime-100:rgba(212,242,126,0.25); --lime-ink:#3A4A12;

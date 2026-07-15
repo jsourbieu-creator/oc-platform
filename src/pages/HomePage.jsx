@@ -263,6 +263,7 @@ function NextSessionHero({ event: e, reload }) {
   };
 
   const presentCount = e.avail_counts?.present ?? 0;
+  const maybeCount = e.avail_counts?.maybe ?? 0;
   const injuredCount = e.avail_counts?.injured ?? 0;
   const absentCount = e.avail_counts?.absent ?? 0;
 
@@ -275,14 +276,14 @@ function NextSessionHero({ event: e, reload }) {
           {fmtTime(e.starts_at)}{e.location ? ` · ${e.location}` : ""}
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
           {Object.entries(AVAIL_LABELS).map(([v, l]) => {
             const active = e.my_availability === v;
             return (
               <button
                 key={v} onClick={() => respond(v)}
                 style={{
-                  flex: 1, border: "none", borderRadius: "var(--radius-sm)", padding: "10px 6px", fontWeight: 700, fontSize: "0.82rem",
+                  flex: 1, border: "none", borderRadius: "var(--radius-sm)", padding: "10px 4px", fontWeight: 700, fontSize: "0.74rem",
                   background: active ? "#fff" : "rgba(255,255,255,0.14)", color: active ? "var(--oc-blue-deep)" : "#fff",
                   cursor: "pointer",
                 }}
@@ -291,8 +292,8 @@ function NextSessionHero({ event: e, reload }) {
           })}
         </div>
 
-        <div style={{ color: "#9FC3DA", fontSize: "0.78rem" }}>
-          <strong style={{ color: "#fff" }}>{presentCount}</strong> présent{presentCount > 1 ? "s" : ""} · <strong style={{ color: "#fff" }}>{injuredCount}</strong> blessé{injuredCount > 1 ? "s" : ""} · <strong style={{ color: "#fff" }}>{absentCount}</strong> absent{absentCount > 1 ? "s" : ""}
+        <div style={{ color: "#9FC3DA", fontSize: "0.74rem" }}>
+          <strong style={{ color: "#fff" }}>{presentCount}</strong> présent{presentCount > 1 ? "s" : ""} · <strong style={{ color: "#fff" }}>{maybeCount}</strong> incertain{maybeCount > 1 ? "s" : ""} · <strong style={{ color: "#fff" }}>{injuredCount}</strong> blessé{injuredCount > 1 ? "s" : ""} · <strong style={{ color: "#fff" }}>{absentCount}</strong> absent{absentCount > 1 ? "s" : ""}
         </div>
       </div>
     </div>
@@ -304,9 +305,10 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   const cancelled = e.status === "cancelled";
   const presentCount = e.avail_counts?.present ?? 0;
+  const maybeCount = e.avail_counts?.maybe ?? 0;
   const absentCount = (e.avail_counts?.absent ?? 0) + (e.avail_counts?.injured ?? 0);
   const totalMembers = members?.length ?? 0;
-  const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount);
+  const noResponseCount = Math.max(0, totalMembers - presentCount - maybeCount - absentCount);
   const confirmedCount = e.conv_counts?.confirmed ?? 0;
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
   const confirmedPeople = e.confirmed_names ?? [];
@@ -348,6 +350,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: 6 }}>
           <CountChip value={presentCount} tint="green" />
+          <CountChip value={maybeCount} tint="amber" />
           <CountChip value={absentCount} tint="orange" />
           <CountChip value={noResponseCount} tint="gray" />
         </div>
@@ -508,6 +511,7 @@ function ParticipantsTab({ event: e, manage }) {
 
   const SECTIONS = [
     { key: "present", label: "Présents" },
+    { key: "maybe", label: "Incertains" },
     { key: "injured", label: "Blessés" },
     { key: "absent", label: "Absents" },
     { key: null, label: "En attente" },
@@ -559,6 +563,7 @@ function ParticipantsTab({ event: e, manage }) {
                 ) : (
                   <div className="participant-status-icon" style={{ background: sec.key ? AVAIL_COLORS[sec.key] : "var(--neutral-400)" }}>
                     {sec.key === "present" && <Check size={14} />}
+                    {sec.key === "maybe" && <span style={{ fontSize: 12, fontWeight: 800 }}>?</span>}
                     {sec.key === "absent" && <X size={14} />}
                     {sec.key === "injured" && <span style={{ fontSize: 12 }}>!</span>}
                     {!sec.key && <Clock size={14} />}

@@ -39,6 +39,7 @@ export function DateBadge({ date, color = "var(--oc-blue-deep)" }) {
 export function CountChip({ value, tint }) {
   const styles = {
     green: { bg: "var(--status-present)", fg: "var(--status-present-ink)" },
+    amber: { bg: "var(--status-maybe)", fg: "var(--status-maybe-ink)" },
     orange: { bg: "var(--status-absent)", fg: "var(--status-absent-ink)" },
     gray: { bg: "var(--status-injured)", fg: "var(--status-injured-ink)" },
   }[tint];
