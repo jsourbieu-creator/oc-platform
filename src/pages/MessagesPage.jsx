@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { AvatarStack, Avatar } from "@/components/ui";
+import { Avatar } from "@/components/ui";
 
 function fmtDateTime(s) {
   if (!s) return "";
@@ -86,8 +86,6 @@ export function MessagesPage({ pendingConversation, onConsumePending } = {}) {
       {conversations?.length > 0 && (
         <div>
           {conversations.map((c, i) => {
-            const others = (c.participants ?? []).filter((p) => p.club_member_id !== myMemberId)
-              .map((p) => ({ name: `${p.first_name} ${p.last_name}`, user_id: p.user_id, avatar_url: p.avatar_url }));
             const unread = Number(c.unread) > 0;
             return (
               <div
@@ -98,9 +96,6 @@ export function MessagesPage({ pendingConversation, onConsumePending } = {}) {
                   borderBottom: i < conversations.length - 1 ? "1px solid var(--line)" : "none",
                 }}
               >
-                {others.length <= 1
-                  ? <Avatar name={others[0]?.name ?? convTitle(c, myMemberId)} userId={others[0]?.user_id} avatarUrl={others[0]?.avatar_url} size={38} />
-                  : <AvatarStack people={others} max={3} />}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
                     <strong style={{ fontSize: "0.98rem", fontWeight: unread ? 800 : 700 }}>{convTitle(c, myMemberId)}</strong>
