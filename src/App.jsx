@@ -66,7 +66,7 @@ function Root() {
       {dashView === "profil" && <ProfilePage />}
       {dashView === "parametres" && <SettingsPage goto={setDashView} />}
       {dashView === "administration" && <AdminPage />}
-      {dashView === "votes" && <VotePage />}
+      {dashView === "votes" && <VotePage goto={setDashView} />}
       {dashView === "classements" && <ClassementsPage />}
       {dashView === "trophees" && <TropheesPage />}
       {dashView === "statistiques" && <StatistiquesPage />}

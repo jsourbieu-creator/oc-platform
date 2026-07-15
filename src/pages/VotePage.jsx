@@ -2,7 +2,9 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { EVENT_TYPES, fmtDate, fmtTime } from "@/lib/events";
+import { fmtScore } from "@/lib/ballondor";
 import { Avatar, ScoreSlider, ScoreBar } from "@/components/ui";
+import { Trophy, ArrowRight } from "react-bootstrap-icons";
 
 /** Une séance est terminée à ends_at si connu, sinon 2h après starts_at — même règle que côté API. */
 function hasEnded(e) {
@@ -10,8 +12,9 @@ function hasEnded(e) {
   return end < new Date();
 }
 
-export function VotePage() {
-  const { token, activeClubId } = useAuth();
+export function VotePage({ goto }) {
+  const { user, token, activeClubId } = useAuth();
+  const [tab, setTab] = useState("voter"); // voter | sessions | classement
   const [events, setEvents] = useState(null);
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [status, setStatus] = useState(null);
@@ -35,6 +38,31 @@ export function VotePage() {
     }).catch((e) => setError(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClubId, token]);
+
+  // Données des onglets Séances / Classement — chargées une fois, indépendamment de l'onglet Voter
+  const [activeSeason, setActiveSeason] = useState(undefined); // undefined=chargement, null=aucune
+  const [perception, setPerception] = useState(null);
+  const [rankings, setRankings] = useState(null);
+  const [myMemberId, setMyMemberId] = useState(null);
+
+  useEffect(() => {
+    if (!activeClubId) return;
+    api("seasons.php", "list", { club_id: activeClubId }, token).then((d) => {
+      const s = d.seasons.find((x) => x.status === "active") ?? null;
+      setActiveSeason(s);
+      if (!s) return;
+      api("members.php", "list", { club_id: activeClubId }, token).then((m) => {
+        setMyMemberId(m.members.find((x) => x.user_id === user?.id)?.id ?? null);
+      }).catch(() => {});
+      api("evaluations.php", "my_perception", { club_id: activeClubId, season_id: s.id }, token)
+        .then(setPerception).catch(() => setPerception(null));
+      api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: s.id }, token)
+        .then(setRankings).catch(() => setRankings(null));
+    }).catch(() => setActiveSeason(null));
+  }, [activeClubId, token, user?.id]);
+
+  const myRanking = myMemberId && rankings ? [...rankings.official, ...rankings.provisional].find((p) => p.club_member_id === myMemberId) : null;
+  const myOfficialRank = myMemberId ? rankings?.official.find((p) => p.club_member_id === myMemberId)?.rank : null;
 
   const loadStatus = useCallback(() => {
     if (!activeClubId || !selectedEventId) return;
@@ -72,6 +100,21 @@ export function VotePage() {
       <h1 className="page-title" style={{ marginBottom: 18 }}>Votes</h1>
       {error && <div className="error-box">{error}</div>}
 
+      <div className="segmented" style={{ marginBottom: 16 }}>
+        {[["voter", "Voter"], ["sessions", "Séances"], ["classement", "Classement"]].map(([v, l]) => (
+          <button key={v} className={tab === v ? "active" : ""} onClick={() => setTab(v)}>{l}</button>
+        ))}
+      </div>
+
+      {tab === "sessions" && (
+        <SessionsTab activeSeason={activeSeason} perception={perception} />
+      )}
+
+      {tab === "classement" && (
+        <ClassementTab activeSeason={activeSeason} rankings={rankings} myRanking={myRanking} myOfficialRank={myOfficialRank} goto={goto} />
+      )}
+
+      {tab === "voter" && (<>
       {events?.length === 0 && (
         <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune séance terminée pour le moment — reviens après le prochain entraînement !</p></div>
       )}
@@ -166,6 +209,111 @@ export function VotePage() {
           </div>
         </div>
       )}
+      </>)}
+    </div>
+  );
+}
+
+function SessionsTab({ activeSeason, perception }) {
+  if (activeSeason === undefined || (activeSeason && perception === null)) return <div className="spinner" />;
+  if (!activeSeason) {
+    return <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune saison active pour le moment.</p></div>;
+  }
+  const sessions = perception?.sessions ?? [];
+  if (sessions.length === 0) {
+    return <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune séance notée pour l'instant sur "{activeSeason.name}".</p></div>;
+  }
+  return (
+    <div>
+      {perception?.summary && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="label-title">Ton ressenti sur la saison</div>
+          <p style={{ margin: 0, fontSize: "0.92rem" }}>{perception.summary.perception_level}</p>
+          <p className="subtle" style={{ marginTop: 4 }}>
+            Moyenne de tes auto-évaluations : <strong style={{ color: "var(--text)" }}>{fmtScore(perception.summary.avg_self)}</strong> — moyenne reçue du groupe : <strong style={{ color: "var(--text)" }}>{fmtScore(perception.summary.avg_received)}</strong>
+          </p>
+        </div>
+      )}
+      <div className="card">
+        <div className="label-title">Séance par séance</div>
+        {[...sessions].reverse().map((s) => {
+          const gapTone = Math.abs(s.gap) <= 0.25 ? "var(--lime-600)" : (s.gap > 0 ? "var(--oc-amber-500)" : "var(--oc-orange-500)");
+          const gapLabel = Math.abs(s.gap) <= 0.25 ? "proche du groupe" : (s.gap > 0 ? `surestimation +${s.gap.toFixed(1)}` : `sous-estimation ${s.gap.toFixed(1)}`);
+          return (
+            <div key={s.event_id} className="list-row" style={{ flexWrap: "wrap" }}>
+              <div style={{ minWidth: 0 }}>
+                <strong>{s.title}</strong>
+                <div className="subtle">{fmtDate(s.starts_at)}</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div className="num" style={{ fontWeight: 700 }}>{fmtScore(s.self_score)}</div>
+                  <div className="subtle" style={{ fontSize: "0.66rem" }}>toi</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div className="num" style={{ fontWeight: 700 }}>{fmtScore(s.received_avg)}</div>
+                  <div className="subtle" style={{ fontSize: "0.66rem" }}>groupe</div>
+                </div>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: gapTone, whiteSpace: "nowrap" }}>{gapLabel}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ClassementTab({ activeSeason, rankings, myRanking, myOfficialRank, goto }) {
+  if (activeSeason === undefined || (activeSeason && rankings === null)) return <div className="spinner" />;
+  if (!activeSeason) {
+    return <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune saison active pour le moment.</p></div>;
+  }
+  const podium = rankings?.official.slice(0, 3) ?? [];
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="label-title">Ta position — {activeSeason.name}</div>
+        {myRanking ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div>
+              <div className="num" style={{ fontSize: "2rem", fontWeight: 700, lineHeight: 1 }}>{fmtScore(myRanking.ballon_dor_score)}</div>
+              <div className="subtle">score Ballon d'Or</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              {myOfficialRank ? (
+                <p style={{ margin: 0, fontSize: "0.92rem" }}><strong>{myOfficialRank}{myOfficialRank === 1 ? "er" : "e"}</strong> au classement officiel</p>
+              ) : (
+                <p style={{ margin: 0, fontSize: "0.92rem" }}>Classement provisoire — encore <strong>{myRanking.sessions_until_eligible}</strong> séance{myRanking.sessions_until_eligible > 1 ? "s" : ""} avant d'être classé officiellement.</p>
+              )}
+              <p className="subtle" style={{ marginTop: 4 }}>{myRanking.sessions_played} séances jouées · {myRanking.attendance_rate}% de présence · {myRanking.regularity}</p>
+            </div>
+          </div>
+        ) : (
+          <p className="subtle" style={{ margin: 0 }}>Tu n'as pas encore de score sur cette saison — vote après une séance pour apparaître ici.</p>
+        )}
+      </div>
+
+      {podium.length > 0 && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="label-title">Top 3 du club</div>
+          {podium.map((p) => (
+            <div key={p.club_member_id} className="list-row">
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ width: 24, textAlign: "center", fontWeight: 800, color: "var(--gold-500)" }}>{p.rank}</span>
+                <Avatar name={p.name} userId={p.user_id} avatarUrl={p.avatar_url} size={26} />
+                <strong>{p.name}</strong>
+              </div>
+              <strong className="num">{fmtScore(p.ballon_dor_score)}</strong>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button className="btn btn-secondary" onClick={() => goto?.("classements")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        <Trophy size={15} /> Voir le classement complet <ArrowRight size={14} />
+      </button>
     </div>
   );
 }

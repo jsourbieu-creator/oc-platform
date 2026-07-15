@@ -195,6 +195,18 @@ via phpMyAdmin.
   desktop, sans avoir à passer par le menu "Plus" ou la sidebar.
 - Migration : `0017_messages_attachments_edit_delete.sql`.
 
+## Itération du 15/07 — page Votes enrichie (Séances / Classement)
+
+- **Onglets sur la page Votes** : "Voter" (inchangé), **"Séances"** (historique
+  personnel séance par séance — auto-évaluation vs moyenne reçue du groupe,
+  avec l'écart coloré et le ressenti global de la saison, réutilise
+  `my_perception`), **"Classement"** (ta position actuelle — score, rang
+  officiel ou nombre de séances avant de l'être, top 3 du club, bouton vers
+  le classement complet — réutilise `season_rankings`, aucune nouvelle
+  route API nécessaire).
+- Objectif : savoir où on en est (séances jouées, écart de perception,
+  position au classement) sans quitter la page Votes.
+
 ## Itération design du 15/07 (suite 5) — liste de conversations façon Messenger/WhatsApp
 
 - **Liste des messages repensée** : fini le bloc en carte fermée — avatar
