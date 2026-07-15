@@ -33,25 +33,35 @@ const TROPHY_DEFS = [
 
 /** Positions/délais des particules — fixes (pas de Math.random à chaque render), pour un scintillement organique. */
 const INK_DOTS = [
-  { top: "20%", left: "8%", size: 4, delay: "0s", dur: "1.6s" },
-  { top: "60%", left: "14%", size: 3, delay: ".3s", dur: "1.9s" },
-  { top: "35%", left: "22%", size: 5, delay: ".8s", dur: "1.7s" },
-  { top: "75%", left: "28%", size: 3, delay: "1.1s", dur: "2s" },
-  { top: "15%", left: "36%", size: 4, delay: ".5s", dur: "1.8s" },
-  { top: "50%", left: "42%", size: 3, delay: "1.4s", dur: "1.6s" },
-  { top: "25%", left: "50%", size: 5, delay: ".2s", dur: "2.1s" },
-  { top: "70%", left: "55%", size: 4, delay: "1.7s", dur: "1.9s" },
-  { top: "40%", left: "62%", size: 3, delay: ".9s", dur: "1.7s" },
-  { top: "18%", left: "70%", size: 4, delay: "1.3s", dur: "2s" },
-  { top: "62%", left: "75%", size: 3, delay: ".1s", dur: "1.8s" },
-  { top: "30%", left: "82%", size: 5, delay: ".6s", dur: "1.6s" },
-  { top: "78%", left: "88%", size: 3, delay: "1.6s", dur: "1.9s" },
-  { top: "48%", left: "92%", size: 4, delay: ".4s", dur: "2.1s" },
+  { top: "15%", left: "4%", size: 3, delay: "0s", dur: "1.5s" },
+  { top: "70%", left: "6%", size: 2, delay: ".4s", dur: "1.8s" },
+  { top: "40%", left: "12%", size: 3, delay: ".9s", dur: "1.6s" },
+  { top: "10%", left: "18%", size: 2, delay: "1.2s", dur: "2s" },
+  { top: "80%", left: "20%", size: 3, delay: ".2s", dur: "1.7s" },
+  { top: "55%", left: "26%", size: 2, delay: "1.5s", dur: "1.9s" },
+  { top: "25%", left: "32%", size: 3, delay: ".6s", dur: "1.6s" },
+  { top: "65%", left: "36%", size: 2, delay: "1s", dur: "2.1s" },
+  { top: "12%", left: "42%", size: 3, delay: ".3s", dur: "1.8s" },
+  { top: "48%", left: "46%", size: 2, delay: "1.4s", dur: "1.6s" },
+  { top: "78%", left: "50%", size: 3, delay: ".7s", dur: "1.9s" },
+  { top: "22%", left: "54%", size: 2, delay: "1.7s", dur: "1.7s" },
+  { top: "60%", left: "58%", size: 3, delay: ".1s", dur: "2s" },
+  { top: "35%", left: "63%", size: 2, delay: ".9s", dur: "1.6s" },
+  { top: "15%", left: "68%", size: 3, delay: "1.3s", dur: "1.8s" },
+  { top: "72%", left: "70%", size: 2, delay: ".5s", dur: "2.1s" },
+  { top: "45%", left: "74%", size: 3, delay: "1.6s", dur: "1.7s" },
+  { top: "20%", left: "79%", size: 2, delay: ".2s", dur: "1.9s" },
+  { top: "62%", left: "83%", size: 3, delay: "1.1s", dur: "1.6s" },
+  { top: "8%", left: "87%", size: 2, delay: ".8s", dur: "2s" },
+  { top: "50%", left: "90%", size: 3, delay: "1.4s", dur: "1.8s" },
+  { top: "80%", left: "93%", size: 2, delay: ".4s", dur: "1.7s" },
+  { top: "30%", left: "96%", size: 3, delay: "1s", dur: "1.9s" },
+  { top: "58%", left: "1%", size: 2, delay: "1.6s", dur: "1.6s" },
 ];
 
-/** Effet "encre invisible" façon iMessage : petites particules qui scintillent
- * sur une bulle colorée, personne ne peut la révéler — le vrai nom du
- * vainqueur n'apparaît qu'à la cérémonie de fin de saison en vrai. */
+/** Effet "encre invisible" façon iMessage : plein de petites particules qui
+ * scintillent, sans fond coloré — personne ne peut la révéler, le vrai nom
+ * du vainqueur n'apparaît qu'à la cérémonie de fin de saison en vrai. */
 function TrophyWinnerReveal() {
   return (
     <div className="invisible-ink" aria-hidden="true">

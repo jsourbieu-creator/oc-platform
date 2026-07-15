@@ -247,13 +247,11 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 @keyframes ink-twinkle{ 0%, 100%{ opacity:.2; transform:scale(.5); } 50%{ opacity:1; transform:scale(1.2); } }
 
 .invisible-ink{
-  position:relative; height:38px; border-radius:12px; margin-top:6px;
-  background:linear-gradient(135deg, var(--electric-blue), var(--oc-sky-700));
-  overflow:hidden; pointer-events:none; user-select:none;
+  position:relative; height:16px; width:120px; margin-top:5px;
+  pointer-events:none; user-select:none;
 }
 .invisible-ink-dot{
-  position:absolute; border-radius:50%; background:#fff;
-  box-shadow:0 0 4px rgba(255,255,255,.9);
+  position:absolute; border-radius:50%; background:var(--text-dim);
   animation-name:ink-twinkle; animation-timing-function:ease-in-out; animation-iteration-count:infinite;
 }
 
