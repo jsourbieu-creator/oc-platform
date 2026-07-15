@@ -116,7 +116,7 @@ export function initials(firstName, lastName) {
   return `${(firstName?.[0] ?? "").toUpperCase()}${(lastName?.[0] ?? "").toUpperCase()}` || "?";
 }
 
-const AVATAR_PALETTE = ["#196496", "#12B4F2", "#3D9ECD", "#5F8A1E", "#4A5A68", "#FF7A1A"];
+const AVATAR_PALETTE = ["#2E93C4", "#E8603D", "#8B7CF6", "#1FA88A", "#D9A62E", "#D4587B"];
 
 /** Couleur déterministe (même nom → même couleur) pour un avatar */
 export function avatarColor(name) {

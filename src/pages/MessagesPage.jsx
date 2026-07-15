@@ -99,7 +99,7 @@ export function MessagesPage({ pendingConversation, onConsumePending } = {}) {
                 }}
               >
                 {others.length <= 1
-                  ? <Avatar name={others[0]?.name ?? convTitle(c, myMemberId)} userId={others[0]?.user_id} avatarUrl={others[0]?.avatar_url} size={50} />
+                  ? <Avatar name={others[0]?.name ?? convTitle(c, myMemberId)} userId={others[0]?.user_id} avatarUrl={others[0]?.avatar_url} size={38} />
                   : <AvatarStack people={others} max={3} />}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
