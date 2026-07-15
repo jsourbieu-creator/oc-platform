@@ -168,7 +168,7 @@ export function HomePage({ gotoConversation }) {
         hasSeason={seasons !== null && seasons.length > 0}
         manage={manage}
         onCreate={() => setForm({ ...EMPTY_FORM })}
-        onOpen={() => { if (nextEvent) { setScope("month"); setGridMonth(new Date(nextEvent.starts_at.replace(" ", "T"))); setSelectedDay(nextEvent.starts_at.slice(0, 10)); } }}
+        onOpen={() => { if (nextEvent) { setScope("upcoming"); setSelectedDay(null); setOpenId(nextEvent.id); } }}
         onSetAvailability={async (eventId, status) => {
           setError("");
           try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: eventId, status }, token); load(); }
@@ -386,7 +386,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
               <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>{e.avail_counts?.present ?? 0} présent{(e.avail_counts?.present ?? 0) > 1 ? "s" : ""}</span>
             </div>
           ) : (
-            <span style={{ fontSize: "0.82rem", opacity: 0.65 }}>Personne n'a encore répondu</span>
+            <span style={{ fontSize: "0.82rem", opacity: 0.65 }}>Sois le premier à répondre</span>
           )}
         </div>
 
@@ -403,8 +403,8 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
                 style={{
                   flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
                   fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
-                  background: active ? "#fff" : "rgba(11,58,82,0.10)",
-                  color: active ? ({ present: "var(--status-present-ink)", absent: "var(--status-absent-ink)", injured: "var(--status-injured-ink)" }[v]) : "var(--hero-ink)",
+                  background: active ? AVAIL_FILL[v] : "rgba(11,58,82,0.10)",
+                  color: active ? AVAIL_INK[v] : "var(--hero-ink)",
                   transform: active ? "scale(1.02)" : "none",
                   transition: ".18s var(--ease-spring)",
                 }}

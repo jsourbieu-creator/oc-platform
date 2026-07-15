@@ -173,6 +173,26 @@ via phpMyAdmin.
 - Cette palette a été proposée visuellement (nuancier interactif) avant
   implémentation et validée telle quelle.
 
+## Itération design du 15/07 (suite 2) — cohérence charte, hero cliquable, navbar avec labels
+
+- **Boutons de présence du hero** : le bouton actif utilise maintenant la
+  vraie couleur du statut en fond (`AVAIL_FILL`) au lieu d'un blanc
+  générique — même logique que partout ailleurs (badges, pastilles,
+  tuiles KPI).
+- **Hero cliquable vers le détail complet** : taper la zone titre/date du
+  hero rouvre la liste en vue "À venir" et ouvre directement la fiche
+  complète de la prochaine séance (mêmes onglets Infos/Participants que
+  depuis la liste), au lieu de simplement pointer une case du calendrier.
+- **Message d'état vide reformulé** : "Personne n'a encore répondu" devient
+  "Sois le premier à répondre".
+- **Navbar mobile** : les labels texte sont revenus sous les icônes (en
+  Bricolage Grotesque) — l'icône seule ne suffisait pas à la clarté. Le
+  pointeur rond bleu ciel de l'onglet actif est conservé.
+- **Sidebar desktop** : l'onglet actif passe du dégradé bleu profond au
+  même bleu ciel clair que le hero, texte en encre marine assortie, et
+  toute la sidebar passe en Bricolage Grotesque pour matcher la
+  typographie du reste de l'app.
+
 ## Itération design du 15/07 (suite) — navbar icônes seules, hero en un seul bloc
 
 - **Navbar mobile** : icônes seules (Phosphor), plus de label texte visible ;
