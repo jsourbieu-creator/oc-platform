@@ -46,7 +46,7 @@ export function SettingsPage({ goto }) {
               }}
             >
               <span style={{ display: "flex", alignItems: "center", gap: 10, fontSize: "0.9rem", fontWeight: 600 }}>
-                <item.icon size={17} strokeWidth={2} />{item.label}
+                <item.icon size={17} weight="bold" />{item.label}
               </span>
               {!available && <span className="badge badge-neutral">Phase {item.phase}</span>}
             </div>

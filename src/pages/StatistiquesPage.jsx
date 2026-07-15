@@ -1,4 +1,4 @@
-import { Activity, Star, Users, Target, Flame, TrendingUp } from "lucide-react";
+import { Pulse, Star, Users, Target, Fire, TrendUp } from "@phosphor-icons/react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -53,7 +53,7 @@ export function StatistiquesPage() {
       {stats && (
         <>
           <div className="stat-tiles">
-            <StatTile icon={<Activity size={20} />} value={stats.total_sessions} label="Séances jouées" tint="coral" solid />
+            <StatTile icon={<Pulse size={20} />} value={stats.total_sessions} label="Séances jouées" tint="coral" solid />
             <StatTile icon={<Star size={20} />} value={stats.group_average !== null ? fmtScore(stats.group_average) : "—"} label="Moyenne du groupe" tint="gold" />
             <StatTile icon={<Users size={20} />} value={stats.nb_ranked_players} label="Joueurs classés" tint="lime" />
           </div>
@@ -93,8 +93,8 @@ export function StatistiquesPage() {
 
           <div className="card">
             {stats.most_regular && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Target size={14} />Joueur le plus régulier</span><strong>{stats.most_regular.name}</strong></div>}
-            {stats.most_assiduous && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Flame size={14} />Joueur le plus assidu</span><strong>{stats.most_assiduous.name} ({stats.most_assiduous.value}%)</strong></div>}
-            {stats.best_progression && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><TrendingUp size={14} />Meilleure progression</span><strong>{stats.best_progression.name} (<span className="num">{stats.best_progression.value > 0 ? "+" : ""}{fmtScore(stats.best_progression.value)}</span>)</strong></div>}
+            {stats.most_assiduous && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Fire size={14} />Joueur le plus assidu</span><strong>{stats.most_assiduous.name} ({stats.most_assiduous.value}%)</strong></div>}
+            {stats.best_progression && <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><TrendUp size={14} />Meilleure progression</span><strong>{stats.best_progression.name} (<span className="num">{stats.best_progression.value > 0 ? "+" : ""}{fmtScore(stats.best_progression.value)}</span>)</strong></div>}
           </div>
         </>
       )}

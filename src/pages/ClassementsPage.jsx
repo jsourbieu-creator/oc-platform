@@ -1,4 +1,4 @@
-import { Trophy, Star, Users } from "lucide-react";
+import { Trophy, Star, Users } from "@phosphor-icons/react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";

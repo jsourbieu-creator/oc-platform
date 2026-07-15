@@ -1,4 +1,4 @@
-import { Trophy, Ruler, Flame, TrendingUp, Target, Frown, Laugh, Medal } from "lucide-react";
+import { Trophy, Ruler, Fire, TrendUp, Target, SmileySad, Smiley, Medal } from "@phosphor-icons/react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,11 +8,11 @@ import { Avatar } from "@/components/ui";
 const TROPHY_ICONS = {
   ballon_dor: Trophy,
   most_regular: Ruler,
-  most_assiduous: Flame,
-  best_progression: TrendingUp,
+  most_assiduous: Fire,
+  best_progression: TrendUp,
   closest_perception: Target,
-  most_severe_self: Frown,
-  most_overrated_self: Laugh,
+  most_severe_self: SmileySad,
+  most_overrated_self: Smiley,
 };
 
 export function TropheesPage() {

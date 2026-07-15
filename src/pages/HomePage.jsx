@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle, Search, Check } from "lucide-react";
+import { Calendar, CaretLeft, CaretRight, MapPin, Star, Shield, ArrowCounterClockwise, X, ClipboardText, Clock, SoccerBall, UsersThree, DotsThree, ChatCircle, MagnifyingGlass, Check } from "@phosphor-icons/react";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,7 +9,6 @@ import {
 } from "@/lib/events";
 import { REAL_STATUS_LABELS, fmtScore } from "@/lib/ballondor";
 import { DateBadge, AvatarStack, StatTile, CountChip, Avatar } from "@/components/ui";
-import blason from "@/assets/blason.svg";
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
@@ -129,14 +128,11 @@ export function HomePage({ gotoConversation }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 10 }}>
-        <div style={{ minWidth: 0 }}>
-          <div className="eyebrow" style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
-            {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
-          </div>
-          <h1 className="page-title" style={{ marginTop: 2 }}>Salut {user?.first_name}</h1>
+      <div style={{ marginBottom: 18 }}>
+        <div className="eyebrow" style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
+          {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
         </div>
-        <img src={blason} alt="Blason OC" style={{ width: 46, height: 46, flexShrink: 0 }} />
+        <h1 className="page-title" style={{ marginTop: 2 }}>Salut {user?.first_name}</h1>
       </div>
 
       <NextSessionCard
@@ -183,7 +179,7 @@ export function HomePage({ gotoConversation }) {
             background: showPast ? "var(--oc-sky-100)" : "var(--surface)", color: showPast ? "var(--oc-sky-700)" : "var(--muted)",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}
-        ><RotateCcw size={17} /></button>
+        ><ArrowCounterClockwise size={17} /></button>
         {manage && (
           <button
             title={form ? "Annuler" : "Ajouter une séance"}
@@ -291,7 +287,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
     if (!hasSeason) {
       return (
         <div className="card" style={{ marginBottom: 16, textAlign: "center", padding: "28px 20px" }}>
-          <CalendarDays size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
+          <Calendar size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
           <div style={{ fontWeight: 800 }}>Bienvenue sur la plateforme !</div>
           <div className="subtle" style={{ marginTop: 2, marginBottom: manage ? 14 : 0 }}>
             {manage
@@ -303,7 +299,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
     }
     return (
       <div className="card" style={{ marginBottom: 16, textAlign: "center", padding: "28px 20px" }}>
-        <CalendarDays size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
+        <Calendar size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
         <div style={{ fontWeight: 800 }}>Aucune séance à venir</div>
         <div className="subtle" style={{ marginTop: 2, marginBottom: manage ? 14 : 0 }}>
           {manage ? "Ajoute un entraînement ou un match pour lancer la saison." : "Le calendrier est vide pour le moment."}
@@ -342,7 +338,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
 
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", color: "rgba(255,255,255,0.9)", fontSize: "0.9rem", fontWeight: 600 }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <CalendarDays size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
+            <Calendar size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
           </span>
           {e.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin size={15} /> {e.location}</span>}
         </div>
@@ -413,9 +409,9 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
   return (
     <div className="card" style={{ marginBottom: 14, padding: 14 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <button className="btn btn-ghost btn-sm" onClick={onPrev} aria-label="Mois précédent"><ChevronLeft size={18} /></button>
+        <button className="btn btn-ghost btn-sm" onClick={onPrev} aria-label="Mois précédent"><CaretLeft size={18} /></button>
         <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 700, fontSize: "1.05rem" }}>{MONTH_NAMES[m]} {year}</div>
-        <button className="btn btn-ghost btn-sm" onClick={onNext} aria-label="Mois suivant"><ChevronRight size={18} /></button>
+        <button className="btn btn-ghost btn-sm" onClick={onNext} aria-label="Mois suivant"><CaretRight size={18} /></button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
@@ -500,7 +496,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
             {e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
           </div>
         </div>
-        <Ellipsis size={17} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
+        <DotsThree size={17} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
@@ -531,12 +527,12 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
         <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={openConversation} disabled={convBusy}>
-          <MessageCircle size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
+          <ChatCircle size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
         </button>
       </div>
 
       {e.type === "match" && convokedTotal > 0 && (
-        <div className="subtle" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}><ClipboardList size={13} />{confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""} à la convocation</div>
+        <div className="subtle" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}><ClipboardText size={13} />{confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""} à la convocation</div>
       )}
 
       <div style={{ textAlign: "center", marginTop: 6 }}>
@@ -578,7 +574,7 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
           </div>
           {manage ? (
             <div style={{ position: "relative", flexShrink: 0 }}>
-              <button className="event-modal-close" onClick={() => setMenuOpen((v) => !v)}><Ellipsis size={17} /></button>
+              <button className="event-modal-close" onClick={() => setMenuOpen((v) => !v)}><DotsThree size={17} /></button>
               {menuOpen && (
                 <div style={{
                   position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "none",
@@ -676,7 +672,7 @@ function ParticipantsTab({ event: e, manage }) {
     <div>
       {error && <div className="error-box">{error}</div>}
       <div style={{ position: "relative", marginBottom: 16 }}>
-        <Search size={16} style={{ position: "absolute", left: 12, top: 12, color: "var(--text-dim)" }} />
+        <MagnifyingGlass size={16} style={{ position: "absolute", left: 12, top: 12, color: "var(--text-dim)" }} />
         <input type="text" placeholder="Rechercher…" value={search} onChange={(e2) => setSearch(e2.target.value)} style={{ paddingLeft: 36 }} />
       </div>
 
@@ -809,7 +805,7 @@ function ConvocationManager({ event: e, reload, members }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <button className="btn btn-secondary btn-sm" onClick={openManager}>
-        <Goal size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les convocations" : "Gérer les convocations (match)"}
+        <SoccerBall size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les convocations" : "Gérer les convocations (match)"}
       </button>
       {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
       {open && (
@@ -905,7 +901,7 @@ function PresenceValidator({ event: e, members }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <button className="btn btn-secondary btn-sm" onClick={toggleOpen}>
-        <UsersRound size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les présences réelles" : "Présences réelles & votes"}
+        <UsersThree size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les présences réelles" : "Présences réelles & votes"}
       </button>
       {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
       {notice && <div className="info-box" style={{ marginTop: 8 }}>{notice}</div>}

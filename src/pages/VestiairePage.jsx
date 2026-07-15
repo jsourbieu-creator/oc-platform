@@ -1,4 +1,4 @@
-import { Pin, MessageCircle, Flame } from "lucide-react";
+import { PushPin, ChatCircle, Fire } from "@phosphor-icons/react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -140,7 +140,7 @@ function PostCard({ post: p, myMemberId, activeRole, onEdit, onDelete, onPin, on
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            {Number(p.pinned) === 1 && <span title="Épinglé" style={{ display: "inline-flex", color: "var(--oc-blue-deep)" }}><Pin size={15} /></span>}
+            {Number(p.pinned) === 1 && <span title="Épinglé" style={{ display: "inline-flex", color: "var(--oc-blue-deep)" }}><PushPin size={15} /></span>}
             <strong style={{ fontSize: "1.05rem" }}>{p.title}</strong>
           </div>
           <div className="subtle">
@@ -171,7 +171,7 @@ function PostCard({ post: p, myMemberId, activeRole, onEdit, onDelete, onPin, on
       </div>
 
       <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => setShowComments((v) => !v)}>
-        <MessageCircle size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{p.comment_count} commentaire{p.comment_count > 1 ? "s" : ""}
+        <ChatCircle size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{p.comment_count} commentaire{p.comment_count > 1 ? "s" : ""}
       </button>
 
       {showComments && <Comments postId={p.id} myMemberId={myMemberId} moderate={moderate} />}

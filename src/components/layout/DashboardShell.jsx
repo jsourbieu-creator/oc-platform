@@ -1,10 +1,9 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Bell } from "lucide-react";
+import { Bell } from "@phosphor-icons/react";
 import blason from "@/assets/blason.svg";
 
 const ROLE_LABELS = {
@@ -60,7 +59,6 @@ export function DashboardShell({ view, goto, children }) {
                 <span style={{ position: "absolute", top: -6, right: -8, background: "var(--danger-500)", color: "#fff", borderRadius: "999px", fontSize: "0.6rem", fontWeight: 800, padding: "1px 5px", lineHeight: 1.4 }}>{unread > 9 ? "9+" : unread}</span>
               )}
             </span>
-            <ThemeToggle />
           </div>
         </header>
         <main className="dashboard-content"><div key={view} className="view-enter">{children}</div></main>

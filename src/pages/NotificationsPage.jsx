@@ -1,13 +1,13 @@
-import { Newspaper, MessageCircle, ClipboardList, TriangleAlert, UserPlus, UserCheck, Star, Bell } from "lucide-react";
+import { Newspaper, ChatCircle, ClipboardText, Warning, UserPlus, UserCheck, Star, Bell } from "@phosphor-icons/react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 const TYPE_ICONS = {
   new_post: Newspaper,
-  new_comment: MessageCircle,
-  convocation: ClipboardList,
-  event_cancelled: TriangleAlert,
+  new_comment: ChatCircle,
+  convocation: ClipboardText,
+  event_cancelled: Warning,
   join_request: UserPlus,
   join_approved: UserCheck,
   rate_request: Star,
