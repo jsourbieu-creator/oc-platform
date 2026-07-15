@@ -138,7 +138,7 @@ export function VotePage() {
             />
           ))}
 
-          <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+          <div style={{ marginTop: 18 }}>
             <div className="label-title">Et toi, t'en penses quoi de ta séance ?</div>
             <ScoreSlider
               label="Mon auto-évaluation"

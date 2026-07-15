@@ -758,7 +758,7 @@ function VoteTab({ event: e }) {
               onChange={(v) => setScores((s) => ({ ...s, [r.club_member_id]: v }))}
             />
           ))}
-          <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+          <div style={{ marginTop: 18 }}>
             <div className="label-title">Et toi, t'en penses quoi de ta séance ?</div>
             <ScoreSlider label="Mon auto-évaluation" value={selfScore || null} touched={!!selfScore} onChange={setSelfScore} />
           </div>
