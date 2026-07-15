@@ -94,6 +94,21 @@ switch ($action) {
         $teamId = (int) ($in['team_id'] ?? ($_GET['team_id'] ?? 0));
         team_in_club_or_404($teamId, $clubId);
 
+        // Auto-synchro : tout membre actif du club fait partie de l'effectif,
+        // sans ajout manuel. On retire aussi ceux qui ne sont plus actifs.
+        $stmt = db()->prepare("
+            INSERT IGNORE INTO team_members (team_id, club_member_id)
+            SELECT ?, id FROM club_members WHERE club_id = ? AND status = 'active'
+        ");
+        $stmt->execute([$teamId, $clubId]);
+
+        $stmt = db()->prepare("
+            DELETE tm FROM team_members tm
+            JOIN club_members cm ON cm.id = tm.club_member_id
+            WHERE tm.team_id = ? AND cm.status != 'active'
+        ");
+        $stmt->execute([$teamId]);
+
         $stmt = db()->prepare('
             SELECT tm.id, tm.club_member_id, tm.is_captain, tm.is_goalkeeper,
                    u.id AS user_id, u.first_name, u.last_name, u.avatar_url, cm.role

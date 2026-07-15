@@ -13,17 +13,13 @@ export function TeamsPage() {
 
   const [seasons, setSeasons] = useState(null);
   const [teams, setTeams] = useState(null);
-  const [members, setMembers] = useState([]);
   const [error, setError] = useState("");
 
   const load = useCallback(() => {
     if (!activeClubId) return;
     api("seasons.php", "list", { club_id: activeClubId }, token).then((d) => setSeasons(d.seasons)).catch((e) => setError(e.message));
     api("teams.php", "list", { club_id: activeClubId }, token).then((d) => setTeams(d.teams)).catch((e) => setError(e.message));
-    if (manage) {
-      api("members.php", "list", { club_id: activeClubId }, token).then((d) => setMembers(d.members.filter((m) => m.status === "active"))).catch(() => {});
-    }
-  }, [activeClubId, token, manage]);
+  }, [activeClubId, token]);
 
   useEffect(load, [load]);
 
@@ -32,7 +28,7 @@ export function TeamsPage() {
       <h1 className="page-title" style={{ marginBottom: 18 }}>Équipes & saisons</h1>
       {error && <div className="error-box">{error}</div>}
       <SeasonsBlock seasons={seasons} manage={manage} reload={load} />
-      <TeamsBlock teams={teams} seasons={seasons} members={members} manage={manage} reload={load} />
+      <TeamsBlock teams={teams} seasons={seasons} manage={manage} reload={load} />
     </div>
   );
 }
@@ -118,7 +114,7 @@ function SeasonsBlock({ seasons, manage, reload }) {
   );
 }
 
-function TeamsBlock({ teams, seasons, members, manage }) {
+function TeamsBlock({ teams, seasons, manage }) {
   const activeSeason = seasons?.find((s) => s.status === "active");
   const team = teams?.[0];
 
@@ -135,17 +131,16 @@ function TeamsBlock({ teams, seasons, members, manage }) {
       {team && (
         <div>
           <div className="subtle" style={{ marginBottom: 10 }}>{activeSeason?.name ?? seasons?.find((s) => s.id === team.season_id)?.name}</div>
-          <Roster team={team} members={members} manage={manage} />
+          <Roster team={team} manage={manage} />
         </div>
       )}
     </div>
   );
 }
 
-function Roster({ team, members, manage }) {
+function Roster({ team, manage }) {
   const { token, activeClubId } = useAuth();
   const [roster, setRoster] = useState(null);
-  const [addId, setAddId] = useState("");
   const [error, setError] = useState("");
 
   const load = useCallback(() => {
@@ -154,23 +149,6 @@ function Roster({ team, members, manage }) {
   }, [activeClubId, team.id, token]);
 
   useEffect(load, [load]);
-
-  const add = async () => {
-    if (!addId) return;
-    setError("");
-    try {
-      await api("teams.php", "roster_add", { club_id: activeClubId, team_id: team.id, club_member_id: Number(addId) }, token);
-      setAddId(""); load();
-    } catch (e2) { setError(e2.message); }
-  };
-
-  const remove = async (rowId) => {
-    setError("");
-    try {
-      await api("teams.php", "roster_remove", { club_id: activeClubId, team_id: team.id, team_member_id: rowId }, token);
-      load();
-    } catch (e2) { setError(e2.message); }
-  };
 
   const toggleFlag = async (row, flag) => {
     setError("");
@@ -184,14 +162,11 @@ function Roster({ team, members, manage }) {
     } catch (e2) { setError(e2.message); }
   };
 
-  const inRoster = new Set(roster?.map((r) => r.club_member_id));
-  const addable = members.filter((m) => !inRoster.has(m.id));
-
   return (
     <div style={{ padding: "6px 0 14px 14px", borderLeft: "3px solid var(--border)", marginLeft: 4, marginBottom: 8 }}>
       {error && <div className="error-box">{error}</div>}
       {roster === null && <div className="spinner" />}
-      {roster?.length === 0 && <div className="subtle" style={{ marginBottom: 8 }}>Effectif vide.</div>}
+      {roster?.length === 0 && <div className="subtle" style={{ marginBottom: 8 }}>Aucun membre actif pour le moment.</div>}
       {roster?.map((r) => (
         <div key={r.id} className="list-row" style={{ padding: "7px 0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -206,21 +181,13 @@ function Roster({ team, members, manage }) {
             <div style={{ display: "flex", gap: 6 }}>
               <button className="btn btn-ghost btn-sm" onClick={() => toggleFlag(r, "captain")}>C</button>
               <button className="btn btn-ghost btn-sm" onClick={() => toggleFlag(r, "goalkeeper")}>G</button>
-              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger-600)" }} onClick={() => remove(r.id)}>Retirer</button>
             </div>
           )}
         </div>
       ))}
-
-      {manage && (
-        <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
-          <select value={addId} onChange={(e) => setAddId(e.target.value)} style={{ flex: 1 }}>
-            <option value="">Ajouter un membre…</option>
-            {addable.map((m) => <option key={m.id} value={m.id}>{m.first_name} {m.last_name}</option>)}
-          </select>
-          <button className="btn btn-secondary btn-sm" onClick={add} disabled={!addId}>Ajouter</button>
-        </div>
-      )}
+      <p className="subtle" style={{ marginTop: 10, marginBottom: 0 }}>
+        Tous les membres actifs du club font automatiquement partie de l'effectif.
+      </p>
     </div>
   );
 }
