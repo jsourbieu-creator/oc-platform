@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/ui";
-import { Paperclip, FileEarmarkText, Download, ThreeDotsVertical, XLg } from "react-bootstrap-icons";
+import { Paperclip, FileEarmarkText, Download, ThreeDotsVertical, XLg, ArrowLeft } from "react-bootstrap-icons";
 
 function fmtSize(bytes) {
   if (!bytes) return "";
@@ -25,6 +25,14 @@ function convTitle(c, myMemberId) {
   if (c.title) return c.title;
   const others = (c.participants ?? []).filter((p) => p.club_member_id !== myMemberId);
   return others.map((p) => `${p.first_name} ${p.last_name}`).join(", ") || "Conversation";
+}
+
+/** Sépare un titre "Nom de la séance — 13/10" en titre principal + sous-titre,
+ * pour un en-tête plus lisible qu'une seule ligne tronquée. */
+function splitTitle(title) {
+  const idx = title.indexOf(" — ");
+  if (idx === -1) return { main: title, sub: null };
+  return { main: title.slice(0, idx), sub: title.slice(idx + 3) };
 }
 
 export function MessagesPage({ pendingConversation, onConsumePending } = {}) {
@@ -327,14 +335,25 @@ function Thread({ conversation, myMemberId, back }) {
     } catch (e2) { setError(e2.message); }
   };
 
+  const { main, sub } = splitTitle(convTitle(conversation, myMemberId));
+
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12 }}>
-        <button className="btn btn-ghost btn-sm" style={{ width: "auto", flexShrink: 0, whiteSpace: "nowrap" }} onClick={back}>← Retour</button>
-        <h1 style={{
-          fontSize: "1.15rem", minWidth: 0, flex: 1, lineHeight: 1.25,
-          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
-        }}>{convTitle(conversation, myMemberId)}</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <button
+          onClick={back}
+          style={{
+            width: 40, height: 40, borderRadius: "50%", border: "none", flexShrink: 0, cursor: "pointer",
+            background: "var(--surface-soft)", color: "var(--electric-blue)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 800, fontSize: "1.08rem", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{main}</div>
+          {sub && <div className="subtle" style={{ fontSize: "0.78rem", marginTop: 1 }}>{sub}</div>}
+        </div>
       </div>
       {error && <div className="error-box">{error}</div>}
 
