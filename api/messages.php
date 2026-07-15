@@ -131,7 +131,7 @@ switch ($action) {
         $afterId = (int) ($in['after_id'] ?? 0);
         $stmt = db()->prepare('
             SELECT m.id, m.author_member_id, m.content, m.created_at,
-                   u.first_name, u.last_name
+                   u.id AS user_id, u.first_name, u.last_name, u.avatar_url
             FROM messages m
             LEFT JOIN club_members cm ON cm.id = m.author_member_id
             LEFT JOIN users u ON u.id = cm.user_id

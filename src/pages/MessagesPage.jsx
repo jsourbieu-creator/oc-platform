@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { AvatarStack } from "@/components/ui";
+import { AvatarStack, Avatar } from "@/components/ui";
 
 function fmtDateTime(s) {
   if (!s) return "";
@@ -222,19 +222,23 @@ function Thread({ conversation, myMemberId, back }) {
         {messages?.length === 0 && <div className="subtle">Aucun message — écris le premier !</div>}
         {messages?.map((m) => {
           const mine = m.author_member_id === myMemberId;
+          const authorName = m.first_name ? `${m.first_name} ${m.last_name}` : "Ancien membre";
           return (
-            <div key={m.id} style={{ alignSelf: mine ? "flex-end" : "flex-start", maxWidth: "80%" }}>
-              {!mine && <div className="subtle" style={{ fontSize: "0.72rem", marginBottom: 2 }}>{m.first_name ? `${m.first_name} ${m.last_name}` : "Ancien membre"}</div>}
-              <div style={{
-                background: mine ? "var(--oc-gradient)" : "var(--surface-alt)",
-                backgroundSize: mine ? "200% 100%" : undefined,
-                color: mine ? "#fff" : "var(--text)",
-                padding: "9px 13px",
-                borderRadius: mine ? "var(--radius-lg) var(--radius-lg) 4px var(--radius-lg)" : "var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px",
-                boxShadow: "var(--shadow-sm)",
-                fontSize: "0.92rem", whiteSpace: "pre-wrap", wordBreak: "break-word",
-              }}>{m.content}</div>
-              <div className="subtle" style={{ fontSize: "0.68rem", textAlign: mine ? "right" : "left", marginTop: 2 }}>{fmtDateTime(m.created_at)}</div>
+            <div key={m.id} style={{ display: "flex", flexDirection: mine ? "row-reverse" : "row", alignItems: "flex-end", gap: 8, alignSelf: mine ? "flex-end" : "flex-start", maxWidth: "85%" }}>
+              <Avatar name={authorName} userId={m.user_id} avatarUrl={m.avatar_url} size={28} />
+              <div style={{ display: "flex", flexDirection: "column", alignItems: mine ? "flex-end" : "flex-start", minWidth: 0 }}>
+                {!mine && <div className="subtle" style={{ fontSize: "0.72rem", marginBottom: 2 }}>{authorName}</div>}
+                <div style={{
+                  background: mine ? "var(--oc-gradient)" : "var(--surface-alt)",
+                  backgroundSize: mine ? "200% 100%" : undefined,
+                  color: mine ? "#fff" : "var(--text)",
+                  padding: "9px 13px",
+                  borderRadius: mine ? "var(--radius-lg) var(--radius-lg) 4px var(--radius-lg)" : "var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px",
+                  boxShadow: "var(--shadow-sm)",
+                  fontSize: "0.92rem", whiteSpace: "pre-wrap", wordBreak: "break-word",
+                }}>{m.content}</div>
+                <div className="subtle" style={{ fontSize: "0.68rem", marginTop: 2 }}>{fmtDateTime(m.created_at)}</div>
+              </div>
             </div>
           );
         })}
