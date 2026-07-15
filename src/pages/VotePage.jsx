@@ -7,7 +7,7 @@ import { Avatar, ScoreSlider, ScoreBar, StatTile, SeasonPicker } from "@/compone
 import {
   Trophy, People, Star, Activity, ClipboardCheck, GraphUpArrow, Bullseye,
   Fire, Rulers, EmojiFrown, EmojiSmile, Award, InfoCircle, ChevronLeft,
-  GraphDown, Stars,
+  GraphDown,
 } from "react-bootstrap-icons";
 
 const PODIUM_COLORS = ["var(--gold-500)", "var(--silver-400)", "var(--bronze-500)"];
@@ -31,29 +31,15 @@ const TROPHY_DEFS = [
   { code: "most_irregular", label: "Montagnes russes", icon: GraphDown, requirement: "L'opposé du plus régulier : des séances excellentes, d'autres ratées, un vrai grand huit — trophée humoristique désactivé pour cette saison.", humorous: true },
 ];
 
-/** Nom du vainqueur flouté par défaut — tape pour révéler. Garde le suspense
- * avant la cérémonie de fin de saison où les trophées sont annoncés en vrai. */
-function TrophyWinnerReveal({ player, value }) {
-  const [revealed, setRevealed] = useState(false);
-  if (revealed) {
-    return (
-      <div style={{ marginTop: 4, animation: "trophy-reveal .35s ease" }}>
-        <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{player}</div>
-        <div className="subtle num" style={{ fontSize: "0.78rem" }}>{value}</div>
-      </div>
-    );
-  }
+/** Effet "encre invisible" façon iMessage : le nom du vainqueur reste flouté
+ * en permanence, avec un léger effet chatoyant — personne ne peut le révéler,
+ * le vrai nom n'apparaît qu'à la cérémonie de fin de saison. */
+function TrophyWinnerReveal() {
   return (
-    <button
-      type="button"
-      onClick={() => setRevealed(true)}
-      style={{
-        marginTop: 4, border: "none", background: "none", cursor: "pointer", textAlign: "left", padding: 0,
-        display: "flex", alignItems: "center", gap: 6, color: "var(--oc-sky-700)", fontSize: "0.76rem", fontWeight: 700,
-      }}
-    >
-      <Stars size={13} /> Secret jusqu'à la cérémonie — tape pour tricher 👀
-    </button>
+    <div className="invisible-ink" style={{ marginTop: 6 }} aria-hidden="true">
+      <span className="invisible-ink-bar" style={{ width: "70%" }} />
+      <span className="invisible-ink-bar" style={{ width: "40%" }} />
+    </div>
   );
 }
 
@@ -573,7 +559,7 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
               </div>
               <strong style={{ fontSize: "0.88rem" }}>{def.label}</strong>
               <p className="subtle" style={{ margin: 0, fontSize: "0.74rem", lineHeight: 1.4 }}>{def.requirement}</p>
-              {awarded && <TrophyWinnerReveal player={awarded.player} value={fmtTrophyValue(awarded)} />}
+              {awarded && <TrophyWinnerReveal />}
             </div>
           );
         })}

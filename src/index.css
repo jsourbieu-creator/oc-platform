@@ -244,7 +244,19 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 
 .spinner{ width:26px; height:26px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--oc-blue-600); animation:spin .8s linear infinite; margin:20px auto; }
 @keyframes spin{ to{ transform:rotate(360deg); } }
-@keyframes trophy-reveal{ from{ opacity:0; filter:blur(6px); transform:scale(.96); } to{ opacity:1; filter:blur(0); transform:none; } }
+@keyframes ink-shimmer{ 0%{ background-position:200% 0; } 100%{ background-position:-200% 0; } }
+
+.invisible-ink{ display:flex; flex-direction:column; gap:6px; pointer-events:none; user-select:none; }
+.invisible-ink-bar{
+  display:block; height:12px; border-radius:6px;
+  background:linear-gradient(90deg,
+    var(--surface-alt) 0%, var(--oc-sky-400) 20%, var(--oc-amber-500) 35%,
+    var(--oc-orange-500) 50%, var(--lime-500) 65%, var(--oc-sky-400) 80%, var(--surface-alt) 100%);
+  background-size:300% 100%;
+  filter:blur(3px) saturate(1.4);
+  animation:ink-shimmer 3.2s linear infinite;
+  opacity:.85;
+}
 
 /* Layout dashboard */
 .dashboard-shell{ display:flex; min-height:100vh; background:var(--bg); }
