@@ -5,6 +5,12 @@ import { EVENT_TYPES, fmtDate, fmtTime } from "@/lib/events";
 import { SCORE_OPTIONS, fmtScore } from "@/lib/ballondor";
 import { Avatar } from "@/components/ui";
 
+/** Une séance est terminée à ends_at si connu, sinon 2h après starts_at — même règle que côté API. */
+function hasEnded(e) {
+  const end = e.ends_at ? new Date(e.ends_at.replace(" ", "T")) : new Date(new Date(e.starts_at.replace(" ", "T")).getTime() + 2 * 3600 * 1000);
+  return end < new Date();
+}
+
 export function VotePage() {
   const { token, activeClubId } = useAuth();
   const [events, setEvents] = useState(null);
@@ -19,10 +25,14 @@ export function VotePage() {
   useEffect(() => {
     if (!activeClubId) return;
     api("events.php", "list", { club_id: activeClubId }, token).then((d) => {
-      const sorted = [...d.events].filter((e) => e.status !== "cancelled")
+      const sorted = [...d.events].filter((e) => e.status !== "cancelled" && hasEnded(e))
         .sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at));
       setEvents(sorted);
-      if (sorted.length && !selectedEventId) setSelectedEventId(sorted[0].id);
+      if (sorted.length && !selectedEventId) {
+        // Par défaut : la plus récente séance où je suis éligible et n'ai pas encore voté.
+        const pending = sorted.find((e) => e.my_availability === "present");
+        setSelectedEventId((pending ?? sorted[0]).id);
+      }
     }).catch((e) => setError(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClubId, token]);
@@ -71,12 +81,12 @@ export function VotePage() {
 
       {status === null && <div className="spinner" />}
 
-      {status && !status.eligible && (
-        <div className="card"><p className="subtle" style={{ margin: 0 }}>Tu n'étais pas présent à cette séance (ou la présence n'a pas encore été validée) — rien à voter.</p></div>
+      {status && !status.eligible && status.ended && (
+        <div className="card"><p className="subtle" style={{ margin: 0 }}>Tu n'étais pas présent à cette séance — rien à voter.</p></div>
       )}
 
-      {status && status.eligible && status.session_status !== "open" && !status.submitted && (
-        <div className="card"><p className="subtle" style={{ margin: 0 }}>Les votes ne sont pas ouverts pour cette séance pour le moment.</p></div>
+      {status && !status.eligible && !status.ended && (
+        <div className="card"><p className="subtle" style={{ margin: 0 }}>Cette séance n'est pas encore terminée — le vote s'ouvrira automatiquement à la fin.</p></div>
       )}
 
       {status && status.eligible && status.submitted && (
@@ -96,7 +106,7 @@ export function VotePage() {
         </div>
       )}
 
-      {status && status.eligible && status.session_status === "open" && !status.submitted && step === "vote" && (
+      {status && status.eligible && !status.submitted && step === "vote" && (
         <div className="card">
           <div className="label-title">Note tes coéquipiers présents (1 à 10)</div>
           {status.ratees.map((r) => (
@@ -121,7 +131,7 @@ export function VotePage() {
         </div>
       )}
 
-      {status && status.eligible && status.session_status === "open" && !status.submitted && step === "confirm" && (
+      {status && status.eligible && !status.submitted && step === "confirm" && (
         <div className="card">
           <div className="label-title">Récapitulatif — vérifie avant de valider</div>
           {status.ratees.map((r) => (

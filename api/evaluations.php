@@ -41,6 +41,13 @@ function season_in_club_or_404(int $seasonId, int $clubId): array {
     return $s;
 }
 
+/** Une séance est "terminée" à ends_at si connu, sinon 2h après starts_at
+ * (durée par défaut d'un entraînement/match) — c'est ce qui ouvre le vote. */
+function event_has_ended(array $event): bool {
+    $end = !empty($event['ends_at']) ? $event['ends_at'] : date('Y-m-d H:i:s', strtotime($event['starts_at']) + 2 * 3600);
+    return strtotime($end) < time();
+}
+
 /** Note valide : 1 à 10, par demi-point. */
 function valid_score($v): bool {
     if (!is_numeric($v)) return false;
@@ -99,7 +106,7 @@ function compute_season_player_stats(int $clubId, array $season): array {
     if (!$eventIds) return ['players' => [], 'group_average' => null];
     $ph = implode(',', array_fill(0, count($eventIds), '?'));
 
-    $stmt = db()->prepare("SELECT event_id, club_member_id, real_status FROM event_attendances WHERE event_id IN ($ph)");
+    $stmt = db()->prepare("SELECT event_id, club_member_id, status FROM event_availabilities WHERE event_id IN ($ph)");
     $stmt->execute($eventIds);
     $attendances = $stmt->fetchAll();
 
@@ -118,9 +125,9 @@ function compute_season_player_stats(int $clubId, array $season): array {
     $eligibleCount = []; $presentCount = [];
     foreach ($attendances as $a) {
         $mid = (int) $a['club_member_id'];
-        if ($a['real_status'] === 'injured') continue;
+        if ($a['status'] === 'injured') continue;
         $eligibleCount[$mid] = ($eligibleCount[$mid] ?? 0) + 1;
-        if ($a['real_status'] === 'present') $presentCount[$mid] = ($presentCount[$mid] ?? 0) + 1;
+        if ($a['status'] === 'present') $presentCount[$mid] = ($presentCount[$mid] ?? 0) + 1;
     }
 
     $rawAverages = [];
@@ -208,141 +215,20 @@ switch ($action) {
     // PRÉSENCE RÉELLE (post-séance, validée par coach/admin)
     // ═══════════════════════════════════════════════════════════════
 
-    // Liste des candidats à valider : union des dispos + convocations
-    // déjà enregistrées pour la séance, avec leur statut réel actuel.
-    case 'attendance_candidates':
-        $me = current_user();
-        $clubId = (int) ($in['club_id'] ?? ($_GET['club_id'] ?? 0));
-        require_permission((int) $me['id'], $clubId, 'confirm_attendance');
-
-        $eventId = (int) ($in['event_id'] ?? ($_GET['event_id'] ?? 0));
-        event_in_club_or_404_eval($eventId, $clubId);
-
-        $stmt = db()->prepare('
-            SELECT club_member_id FROM event_availabilities WHERE event_id = ?
-            UNION
-            SELECT club_member_id FROM convocations WHERE event_id = ?
-            UNION
-            SELECT club_member_id FROM event_attendances WHERE event_id = ?
-        ');
-        $stmt->execute([$eventId, $eventId, $eventId]);
-        $ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
-
-        $names = member_name_map($ids);
-
-        $stmt = db()->prepare('SELECT club_member_id, real_status FROM event_attendances WHERE event_id = ?');
-        $stmt->execute([$eventId]);
-        $current = array_column($stmt->fetchAll(), 'real_status', 'club_member_id');
-
-        $candidates = [];
-        foreach ($ids as $mid) {
-            $candidates[] = [
-                'club_member_id' => $mid,
-                'name' => $names[$mid] ?? '?',
-                'real_status' => $current[$mid] ?? null,
-            ];
-        }
-        usort($candidates, fn($a, $b) => strcmp($a['name'], $b['name']));
-        json_out(['candidates' => $candidates]);
-        break;
-
-    // Enregistre/écrase le statut réel d'une liste de membres pour la séance.
-    case 'attendance_set':
-        $me = current_user();
-        $clubId = (int) ($in['club_id'] ?? 0);
-        require_permission((int) $me['id'], $clubId, 'confirm_attendance');
-
-        $eventId = (int) ($in['event_id'] ?? 0);
-        event_in_club_or_404_eval($eventId, $clubId);
-
-        $rows = (array) ($in['attendances'] ?? []);
-        if (!$rows) json_error('Aucune présence à enregistrer.');
-
-        $stmt = db()->prepare('
-            INSERT INTO event_attendances (event_id, club_member_id, real_status, validated_by)
-            VALUES (?,?,?,?)
-            ON DUPLICATE KEY UPDATE real_status = VALUES(real_status), validated_by = VALUES(validated_by)
-        ');
-        foreach ($rows as $r) {
-            $mid = (int) ($r['club_member_id'] ?? 0);
-            $status = $r['real_status'] ?? '';
-            if (!$mid || !in_array($status, ['present', 'absent', 'injured'], true)) {
-                json_error('Statut réel invalide.');
-            }
-            $stmt->execute([$eventId, $mid, $status, (int) $me['id']]);
-        }
-        log_action((int) $me['id'], 'attendance_set', "événement #$eventId : " . count($rows) . ' statut(s)');
-        json_out(['ok' => true]);
-        break;
-
-    // ═══════════════════════════════════════════════════════════════
-    // SESSIONS DE VOTE
-    // ═══════════════════════════════════════════════════════════════
-
-    case 'vote_session_open':
-        $me = current_user();
-        $clubId = (int) ($in['club_id'] ?? 0);
-        require_permission((int) $me['id'], $clubId, 'manage_votes');
-
-        $eventId = (int) ($in['event_id'] ?? 0);
-        event_in_club_or_404_eval($eventId, $clubId);
-
-        $stmt = db()->prepare("SELECT COUNT(*) FROM event_attendances WHERE event_id = ? AND real_status = 'present'");
-        $stmt->execute([$eventId]);
-        if ((int) $stmt->fetchColumn() < 2) {
-            json_error('Valide d\'abord la présence réelle d\'au moins 2 joueurs avant d\'ouvrir les votes.');
-        }
-
-        $stmt = db()->prepare('SELECT status FROM vote_sessions WHERE event_id = ?');
-        $stmt->execute([$eventId]);
-        $existing = $stmt->fetchColumn();
-        if ($existing === 'closed') json_error('Les votes de cette séance ont déjà été clôturés.');
-
-        $stmt = db()->prepare("
-            INSERT INTO vote_sessions (event_id, status, opened_by) VALUES (?, 'open', ?)
-            ON DUPLICATE KEY UPDATE status = 'open', opened_by = VALUES(opened_by), opened_at = NOW(), closed_at = NULL
-        ");
-        $stmt->execute([$eventId, (int) $me['id']]);
-
-        $stmt = db()->prepare("SELECT club_member_id FROM event_attendances WHERE event_id = ? AND real_status = 'present'");
-        $stmt->execute([$eventId]);
-        $presents = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
-        notify_members($presents, 'vote_open', 'Les votes sont ouverts pour la séance', 'votes');
-
-        log_action((int) $me['id'], 'vote_session_open', "événement #$eventId");
-        json_out(['ok' => true]);
-        break;
-
-    case 'vote_session_close':
-        $me = current_user();
-        $clubId = (int) ($in['club_id'] ?? 0);
-        require_permission((int) $me['id'], $clubId, 'manage_votes');
-
-        $eventId = (int) ($in['event_id'] ?? 0);
-        event_in_club_or_404_eval($eventId, $clubId);
-
-        $stmt = db()->prepare("UPDATE vote_sessions SET status = 'closed', closed_at = NOW() WHERE event_id = ?");
-        $stmt->execute([$eventId]);
-        if (!$stmt->rowCount()) json_error('Aucune session de vote ouverte pour cette séance.', 404);
-
-        log_action((int) $me['id'], 'vote_session_close', "événement #$eventId");
-        json_out(['ok' => true]);
-        break;
-
-    // Vue coach : statut de la session + qui a voté / qui reste
+    // Vue coach : qui était présent (déclaré), qui a déjà voté / qui reste.
+    // Plus de validation manuelle ni d'ouverture/fermeture : dès que la
+    // séance est terminée, les présents déclarés peuvent voter.
     case 'vote_session_status':
         $me = current_user();
         $clubId = (int) ($in['club_id'] ?? ($_GET['club_id'] ?? 0));
         require_club_member((int) $me['id'], $clubId);
 
         $eventId = (int) ($in['event_id'] ?? ($_GET['event_id'] ?? 0));
-        event_in_club_or_404_eval($eventId, $clubId);
+        $event = event_in_club_or_404_eval($eventId, $clubId);
 
-        $stmt = db()->prepare('SELECT status, opened_at, closed_at FROM vote_sessions WHERE event_id = ?');
-        $stmt->execute([$eventId]);
-        $session = $stmt->fetch() ?: null;
+        $ended = event_has_ended($event);
 
-        $stmt = db()->prepare("SELECT club_member_id FROM event_attendances WHERE event_id = ? AND real_status = 'present'");
+        $stmt = db()->prepare("SELECT club_member_id FROM event_availabilities WHERE event_id = ? AND status = 'present'");
         $stmt->execute([$eventId]);
         $presentIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
         $names = member_name_map($presentIds);
@@ -359,7 +245,7 @@ switch ($action) {
         usort($participants, fn($a, $b) => strcmp($a['name'], $b['name']));
 
         json_out([
-            'session' => $session,
+            'ended' => $ended,
             'participants' => $participants,
             'submitted_count' => count($submitted),
             'present_count' => count($presentIds),
@@ -381,14 +267,11 @@ switch ($action) {
         $eventId = (int) ($in['event_id'] ?? ($_GET['event_id'] ?? 0));
         $event = event_in_club_or_404_eval($eventId, $clubId);
 
-        $stmt = db()->prepare('SELECT real_status FROM event_attendances WHERE event_id = ? AND club_member_id = ?');
+        $stmt = db()->prepare('SELECT status FROM event_availabilities WHERE event_id = ? AND club_member_id = ?');
         $stmt->execute([$eventId, $myId]);
         $myStatus = $stmt->fetchColumn();
-        $eligible = $myStatus === 'present';
-
-        $stmt = db()->prepare('SELECT status FROM vote_sessions WHERE event_id = ?');
-        $stmt->execute([$eventId]);
-        $sessionStatus = $stmt->fetchColumn() ?: null;
+        $ended = event_has_ended($event);
+        $eligible = $myStatus === 'present' && $ended;
 
         $stmt = db()->prepare('SELECT 1 FROM vote_submissions WHERE event_id = ? AND club_member_id = ?');
         $stmt->execute([$eventId, $myId]);
@@ -396,7 +279,7 @@ switch ($action) {
 
         $ratees = [];
         if ($eligible) {
-            $stmt = db()->prepare("SELECT club_member_id FROM event_attendances WHERE event_id = ? AND real_status = 'present' AND club_member_id != ?");
+            $stmt = db()->prepare("SELECT club_member_id FROM event_availabilities WHERE event_id = ? AND status = 'present' AND club_member_id != ?");
             $stmt->execute([$eventId, $myId]);
             $ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
             $names = member_name_map($ids);
@@ -421,7 +304,8 @@ switch ($action) {
         json_out([
             'event' => ['id' => $event['id'], 'title' => $event['title']],
             'eligible' => $eligible,
-            'session_status' => $sessionStatus,
+            'ended' => $ended,
+            'my_status' => $myStatus ?: null,
             'submitted' => $submitted,
             'ratees' => $ratees,
             'my_scores' => $myScores,
@@ -438,13 +322,11 @@ switch ($action) {
         $myId = my_member_id_eval((int) $me['id'], $clubId);
 
         $eventId = (int) ($in['event_id'] ?? 0);
-        event_in_club_or_404_eval($eventId, $clubId);
+        $event = event_in_club_or_404_eval($eventId, $clubId);
 
-        $stmt = db()->prepare('SELECT status FROM vote_sessions WHERE event_id = ?');
-        $stmt->execute([$eventId]);
-        if ($stmt->fetchColumn() !== 'open') json_error('Les votes ne sont pas ouverts pour cette séance.');
+        if (!event_has_ended($event)) json_error('La séance n\'est pas encore terminée, les votes ne sont pas encore ouverts.');
 
-        $stmt = db()->prepare("SELECT real_status FROM event_attendances WHERE event_id = ? AND club_member_id = ?");
+        $stmt = db()->prepare("SELECT status FROM event_availabilities WHERE event_id = ? AND club_member_id = ?");
         $stmt->execute([$eventId, $myId]);
         if ($stmt->fetchColumn() !== 'present') json_error('Tu n\'étais pas présent à cette séance, tu ne peux pas voter.', 403);
 
@@ -452,7 +334,7 @@ switch ($action) {
         $stmt->execute([$eventId, $myId]);
         if ($stmt->fetchColumn()) json_error('Ton vote a déjà été validé pour cette séance.');
 
-        $stmt = db()->prepare("SELECT club_member_id FROM event_attendances WHERE event_id = ? AND real_status = 'present' AND club_member_id != ?");
+        $stmt = db()->prepare("SELECT club_member_id FROM event_availabilities WHERE event_id = ? AND status = 'present' AND club_member_id != ?");
         $stmt->execute([$eventId, $myId]);
         $expectedRatees = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
 
@@ -506,9 +388,7 @@ switch ($action) {
         $eventId = (int) ($in['event_id'] ?? ($_GET['event_id'] ?? 0));
         $event = event_in_club_or_404_eval($eventId, $clubId);
 
-        $stmt = db()->prepare('SELECT status FROM vote_sessions WHERE event_id = ?');
-        $stmt->execute([$eventId]);
-        if ($stmt->fetchColumn() !== 'closed') json_error('Les résultats ne sont visibles qu\'une fois les votes clôturés.');
+        if (!event_has_ended($event)) json_error('Les résultats ne sont visibles qu\'une fois la séance terminée.');
 
         // Moyenne reçue par joueur — jamais l'identité des votants.
         $stmt = db()->prepare('
@@ -620,7 +500,7 @@ switch ($action) {
         $ph = implode(',', array_fill(0, count($eventIds), '?'));
 
         // Présence réelle (hors "cancelled", déjà filtré) par membre/séance
-        $stmt = db()->prepare("SELECT event_id, club_member_id, real_status FROM event_attendances WHERE event_id IN ($ph)");
+        $stmt = db()->prepare("SELECT event_id, club_member_id, status FROM event_availabilities WHERE event_id IN ($ph)");
         $stmt->execute($eventIds);
         $attendances = $stmt->fetchAll();
 
@@ -637,9 +517,9 @@ switch ($action) {
         $presentCount = [];    // séances réellement jouées
         foreach ($attendances as $a) {
             $mid = (int) $a['club_member_id'];
-            if ($a['real_status'] === 'injured') continue; // exclu du dénominateur
+            if ($a['status'] === 'injured') continue; // exclu du dénominateur
             $eligibleCount[$mid] = ($eligibleCount[$mid] ?? 0) + 1;
-            if ($a['real_status'] === 'present') $presentCount[$mid] = ($presentCount[$mid] ?? 0) + 1;
+            if ($a['status'] === 'present') $presentCount[$mid] = ($presentCount[$mid] ?? 0) + 1;
         }
 
         // Moyenne brute annuelle = moyenne des moyennes de séance (poids égal par séance)
@@ -848,7 +728,7 @@ switch ($action) {
             $r = $stmt->fetch();
             if ($r && (int) $r['total'] > 0) $convocationRespRate = round(100 * (int) $r['responded'] / (int) $r['total'], 1);
 
-            $stmt = db()->prepare("SELECT COUNT(*) present_count FROM event_attendances WHERE event_id IN ($ph) AND real_status = 'present'");
+            $stmt = db()->prepare("SELECT COUNT(*) present_count FROM event_availabilities WHERE event_id IN ($ph) AND status = 'present'");
             $stmt->execute($eventIds);
             $presentTotal = (int) $stmt->fetchColumn();
             $stmt = db()->prepare("SELECT COUNT(*) FROM vote_submissions WHERE event_id IN ($ph)");

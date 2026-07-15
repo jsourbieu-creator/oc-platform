@@ -77,7 +77,7 @@ switch ($action) {
             }
 
             $stmt = db()->prepare("
-                SELECT ea.event_id, u.id AS user_id, u.first_name, u.last_name, u.avatar_url
+                SELECT ea.event_id, cm.id AS club_member_id, u.id AS user_id, u.first_name, u.last_name, u.avatar_url
                 FROM event_availabilities ea
                 JOIN club_members cm ON cm.id = ea.club_member_id
                 JOIN users u ON u.id = cm.user_id
@@ -86,7 +86,7 @@ switch ($action) {
             $stmt->execute($ids);
             $presentNames = [];
             foreach ($stmt->fetchAll() as $r) {
-                $presentNames[$r['event_id']][] = ['name' => trim("{$r['first_name']} {$r['last_name']}"), 'user_id' => $r['user_id'], 'avatar_url' => $r['avatar_url']];
+                $presentNames[$r['event_id']][] = ['name' => trim("{$r['first_name']} {$r['last_name']}"), 'club_member_id' => (int) $r['club_member_id'], 'user_id' => $r['user_id'], 'avatar_url' => $r['avatar_url']];
             }
 
             foreach ($events as &$e) {

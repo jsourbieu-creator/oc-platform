@@ -7,7 +7,7 @@ import {
   EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, CONV_LABELS,
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
-import { REAL_STATUS_LABELS, fmtScore } from "@/lib/ballondor";
+import { SCORE_OPTIONS, fmtScore } from "@/lib/ballondor";
 import { DateBadge, AvatarStack, StatTile, CountChip, Avatar } from "@/components/ui";
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
@@ -605,7 +605,7 @@ function MenuItem({ children, onClick, color }) {
 /** Modal plein écran façon TeamPulse : en-tête + onglets Informations/Participants */
 function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStatus, onDelete }) {
   const { token, activeClubId } = useAuth();
-  const [tab, setTab] = useState("participants");
+  const [tab, setTab] = useState(() => (hasEndedClient(e) && e.my_availability === "present" ? "vote" : "participants"));
   const [menuOpen, setMenuOpen] = useState(false);
   const cancelled = e.status === "cancelled";
   const canRespond = !cancelled && !isPast(e.starts_at);
@@ -614,6 +614,8 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
     try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
     catch (_) { /* affiché en détail si besoin */ }
   };
+
+  const ended = hasEndedClient(e);
 
   return createPortal(
     <div className="event-modal-overlay" onClick={onClose}>
@@ -664,14 +666,131 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
 
         <div className="tab-switch">
           <div className={`tab-switch-item ${tab === "participants" ? "active" : ""}`} onClick={() => setTab("participants")}>Qui est là</div>
+          {!cancelled && ended && <div className={`tab-switch-item ${tab === "vote" ? "active" : ""}`} onClick={() => setTab("vote")}>Voter</div>}
           <div className={`tab-switch-item ${tab === "infos" ? "active" : ""}`} onClick={() => setTab("infos")}>Détails</div>
         </div>
 
         {tab === "infos" && <InfosTab event={e} reload={reload} manage={manage} members={members} />}
         {tab === "participants" && <ParticipantsTab event={e} manage={manage} />}
+        {tab === "vote" && !cancelled && ended && <VoteTab event={e} />}
       </div>
     </div>
   , document.body);
+}
+
+/** Même règle que côté API : terminé à ends_at, sinon 2h après starts_at. */
+function hasEndedClient(e) {
+  const end = e.ends_at ? new Date(e.ends_at.replace(" ", "T")) : new Date(new Date(e.starts_at.replace(" ", "T")).getTime() + 2 * 3600 * 1000);
+  return end < new Date();
+}
+
+/** Vote pour cette séance précise, directement depuis la modale (même logique que la page Votes globale). */
+function VoteTab({ event: e }) {
+  const { token, activeClubId } = useAuth();
+  const [status, setStatus] = useState(null);
+  const [scores, setScores] = useState({});
+  const [selfScore, setSelfScore] = useState("");
+  const [step, setStep] = useState("vote");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const loadStatus = useCallback(() => {
+    setError(""); setStep("vote"); setScores({}); setSelfScore("");
+    api("evaluations.php", "vote_my_status", { club_id: activeClubId, event_id: e.id }, token)
+      .then(setStatus).catch((err) => setError(err.message));
+  }, [activeClubId, e.id, token]);
+
+  useEffect(loadStatus, [loadStatus]);
+
+  const allFilled = status?.ratees.length > 0 && status.ratees.every((r) => scores[r.club_member_id]) && selfScore;
+
+  const submit = async () => {
+    setSubmitting(true); setError("");
+    try {
+      await api("evaluations.php", "vote_submit", {
+        club_id: activeClubId,
+        event_id: e.id,
+        scores: Object.entries(scores).map(([ratee_member_id, score]) => ({ ratee_member_id: Number(ratee_member_id), score: Number(score) })),
+        self_score: Number(selfScore),
+      }, token);
+      loadStatus();
+    } catch (err) { setError(err.message); } finally { setSubmitting(false); }
+  };
+
+  if (status === null) return <div className="spinner" />;
+
+  return (
+    <div>
+      {error && <div className="error-box">{error}</div>}
+
+      {!status.eligible && (
+        <p className="subtle">Tu n'étais pas présent à cette séance — rien à voter.</p>
+      )}
+
+      {status.eligible && status.submitted && (
+        <div>
+          <div className="label-title">Ton vote (validé)</div>
+          {status.my_scores?.map((s) => (
+            <div key={s.ratee_member_id} className="list-row">
+              <span>Joueur #{s.ratee_member_id}</span>
+              <strong className="num">{fmtScore(s.score)}/10</strong>
+            </div>
+          ))}
+          <div className="list-row">
+            <span>Mon auto-évaluation</span>
+            <strong className="num">{fmtScore(status.my_self_score)}/10</strong>
+          </div>
+          <p className="subtle" style={{ marginTop: 10 }}>Ton vote est définitif et ne peut plus être modifié.</p>
+        </div>
+      )}
+
+      {status.eligible && !status.submitted && step === "vote" && (
+        <div>
+          <div className="label-title">Note tes coéquipiers présents (1 à 10)</div>
+          {status.ratees.map((r) => (
+            <div key={r.club_member_id} className="field">
+              <label style={{ display: "flex", alignItems: "center", gap: 8, textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>
+                <Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}
+              </label>
+              <select value={scores[r.club_member_id] ?? ""} onChange={(ev) => setScores((s) => ({ ...s, [r.club_member_id]: ev.target.value }))}>
+                <option value="">— note —</option>
+                {SCORE_OPTIONS.map((v) => <option key={v} value={v}>{fmtScore(v)}/10</option>)}
+              </select>
+            </div>
+          ))}
+          <div className="field">
+            <label>Et toi ? Ton auto-évaluation</label>
+            <select value={selfScore} onChange={(ev) => setSelfScore(ev.target.value)}>
+              <option value="">— note —</option>
+              {SCORE_OPTIONS.map((v) => <option key={v} value={v}>{fmtScore(v)}/10</option>)}
+            </select>
+          </div>
+          <button className="btn btn-primary" disabled={!allFilled} onClick={() => setStep("confirm")}>Vérifier avant validation</button>
+        </div>
+      )}
+
+      {status.eligible && !status.submitted && step === "confirm" && (
+        <div>
+          <div className="label-title">Récapitulatif — vérifie avant de valider</div>
+          {status.ratees.map((r) => (
+            <div key={r.club_member_id} className="list-row">
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={24} />{r.name}</span>
+              <strong className="num">{fmtScore(scores[r.club_member_id])}/10</strong>
+            </div>
+          ))}
+          <div className="list-row">
+            <span>Toi (auto-évaluation)</span>
+            <strong className="num">{fmtScore(selfScore)}/10</strong>
+          </div>
+          <p className="subtle" style={{ margin: "12px 0" }}>Une fois validé, tu ne pourras plus modifier ce vote.</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn btn-secondary" onClick={() => setStep("vote")}>Revenir</button>
+            <button className="btn btn-primary" disabled={submitting} onClick={submit}>{submitting ? "Validation…" : "Valider définitivement"}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function fmtDateBadgeLabel(e) {
@@ -697,7 +816,56 @@ function InfosTab({ event: e, reload, manage, members }) {
 
       {manage && e.type === "match" && !cancelled && <ConvocationManager event={e} reload={reload} members={members} />}
 
-      {manage && !cancelled && <PresenceValidator event={e} members={members} />}
+      {manage && !cancelled && <PresenceCorrector event={e} reload={reload} />}
+    </div>
+  );
+}
+
+/** Un admin peut corriger un joueur qui a dit "présent" mais qui ne s'est pas
+ * présenté (ou qui s'est blessé) — repasse simplement sa disponibilité
+ * déclarée à absent/blessé, ce qui le retire aussi du vote automatiquement. */
+function PresenceCorrector({ event: e, reload }) {
+  const { token, activeClubId } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+  const [error, setError] = useState("");
+
+  const present = e.present_names ?? [];
+
+  const correct = async (member, status) => {
+    setBusyId(member.club_member_id); setError("");
+    try {
+      await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, target_member_id: member.club_member_id, status }, token);
+      reload();
+    } catch (err) { setError(err.message); } finally { setBusyId(null); }
+  };
+
+  if (!present.length) return null;
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <button className="btn btn-secondary btn-sm" onClick={() => setOpen((v) => !v)}>
+        <People size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer" : "Corriger une présence"}
+      </button>
+      {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
+      {open && (
+        <div className="card" style={{ marginTop: 10, boxShadow: "none" }}>
+          <p className="subtle" style={{ marginTop: 0 }}>
+            Un joueur a dit présent mais n'est pas venu, ou s'est blessé ? Corrige ici — il sera retiré du vote de cette séance.
+          </p>
+          {present.map((m) => (
+            <div key={m.club_member_id} className="list-row">
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Avatar name={m.name} userId={m.user_id} avatarUrl={m.avatar_url} size={26} />{m.name}
+              </span>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button className="btn btn-sm" style={{ background: "color-mix(in srgb, var(--status-absent) 20%, transparent)", color: "var(--status-absent)" }} disabled={busyId === m.club_member_id} onClick={() => correct(m, "absent")}>Absent</button>
+                <button className="btn btn-sm" style={{ background: "color-mix(in srgb, var(--oc-bluegray-500) 20%, transparent)", color: "var(--oc-bluegray-500)" }} disabled={busyId === m.club_member_id} onClick={() => correct(m, "injured")}>Blessé</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -901,132 +1069,3 @@ function ConvocationManager({ event: e, reload, members }) {
   );
 }
 
-/** Validation de la présence réelle + session de vote — scoping automatique à cette séance */
-function PresenceValidator({ event: e, members }) {
-  const { token, activeClubId } = useAuth();
-  const [candidates, setCandidates] = useState(null);
-  const [statuses, setStatuses] = useState({});
-  const [addMemberId, setAddMemberId] = useState("");
-  const [session, setSession] = useState(null);
-  const [open, setOpen] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  const loadCandidates = useCallback(() => {
-    setError(""); setNotice("");
-    api("evaluations.php", "attendance_candidates", { club_id: activeClubId, event_id: e.id }, token)
-      .then((d) => {
-        setCandidates(d.candidates);
-        const map = {};
-        d.candidates.forEach((c) => { if (c.real_status) map[c.club_member_id] = c.real_status; });
-        setStatuses(map);
-      }).catch((err) => setError(err.message));
-    api("evaluations.php", "vote_session_status", { club_id: activeClubId, event_id: e.id }, token)
-      .then(setSession).catch(() => setSession(null));
-  }, [activeClubId, e.id, token]);
-
-  const toggleOpen = () => { setOpen((v) => !v); if (!open && candidates === null) loadCandidates(); };
-
-  const setStatus = (mid, status) => setStatuses((s) => ({ ...s, [mid]: status }));
-
-  const addMember = () => {
-    if (!addMemberId || !candidates) return;
-    const m = members?.find((x) => x.id === Number(addMemberId));
-    if (!m || candidates.some((c) => c.club_member_id === m.id)) return;
-    setCandidates([...candidates, { club_member_id: m.id, name: `${m.first_name} ${m.last_name}`, real_status: null }]);
-    setAddMemberId("");
-  };
-
-  const save = async () => {
-    const rows = Object.entries(statuses).map(([mid, real_status]) => ({ club_member_id: Number(mid), real_status }));
-    if (!rows.length) return;
-    setSaving(true); setError(""); setNotice("");
-    try {
-      await api("evaluations.php", "attendance_set", { club_id: activeClubId, event_id: e.id, attendances: rows }, token);
-      setNotice("Présences enregistrées.");
-      loadCandidates();
-    } catch (err) { setError(err.message); } finally { setSaving(false); }
-  };
-
-  const presentCount = Object.values(statuses).filter((s) => s === "present").length;
-
-  const openVotes = async () => {
-    setError(""); setNotice("");
-    try { await api("evaluations.php", "vote_session_open", { club_id: activeClubId, event_id: e.id }, token); loadCandidates(); }
-    catch (err) { setError(err.message); }
-  };
-  const closeVotes = async () => {
-    setError(""); setNotice("");
-    try { await api("evaluations.php", "vote_session_close", { club_id: activeClubId, event_id: e.id }, token); loadCandidates(); }
-    catch (err) { setError(err.message); }
-  };
-
-  const availableToAdd = useMemo(
-    () => (members ?? []).filter((m) => !candidates?.some((c) => c.club_member_id === m.id)),
-    [members, candidates]
-  );
-
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <button className="btn btn-secondary btn-sm" onClick={toggleOpen}>
-        <People size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les présences réelles" : "Présences réelles & votes"}
-      </button>
-      {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
-      {notice && <div className="info-box" style={{ marginTop: 8 }}>{notice}</div>}
-
-      {open && (
-        <div style={{ marginTop: 10 }}>
-          {candidates === null && <div className="spinner" />}
-          {candidates !== null && (
-            <>
-              <div className="label-title">Qui était réellement présent ({presentCount})</div>
-              {candidates.length === 0 && <p className="subtle">Personne pour l'instant — ajoute des joueurs manuellement ci-dessous.</p>}
-              {candidates.map((c) => (
-                <div key={c.club_member_id} className="list-row" style={{ flexWrap: "wrap" }}>
-                  <strong>{c.name}</strong>
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                    {Object.entries(REAL_STATUS_LABELS).map(([v, l]) => (
-                      <button key={v} className={`btn btn-sm ${statuses[c.club_member_id] === v ? "btn-primary" : "btn-secondary"}`} onClick={() => setStatus(c.club_member_id, v)}>{l}</button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                <select style={{ flex: 1, minWidth: 160 }} value={addMemberId} onChange={(e2) => setAddMemberId(e2.target.value)}>
-                  <option value="">+ Ajouter un membre…</option>
-                  {availableToAdd.map((m) => <option key={m.id} value={m.id}>{m.first_name} {m.last_name}</option>)}
-                </select>
-                <button className="btn btn-secondary" style={{ width: "auto" }} onClick={addMember} disabled={!addMemberId}>Ajouter</button>
-              </div>
-              <button className="btn btn-primary" style={{ marginTop: 10 }} onClick={save} disabled={saving}>
-                {saving ? "Enregistrement…" : "Enregistrer les présences"}
-              </button>
-
-              {presentCount > 0 && (
-                <div style={{ marginTop: 18 }}>
-                  <div className="label-title">Session de vote</div>
-                  {!session?.session && (
-                    <>
-                      <p className="subtle">Les votes ne sont pas encore ouverts.</p>
-                      <button className="btn btn-primary btn-sm" onClick={openVotes}>Ouvrir les votes</button>
-                    </>
-                  )}
-                  {session?.session?.status === "open" && (
-                    <>
-                      <p className="subtle">{session.submitted_count} / {session.present_count} ont validé leur vote.</p>
-                      <button className="btn btn-danger btn-sm" onClick={closeVotes}>Clôturer les votes</button>
-                    </>
-                  )}
-                  {session?.session?.status === "closed" && (
-                    <p className="subtle" style={{ margin: 0 }}>Votes clôturés — {session.submitted_count} / {session.present_count} avaient voté.</p>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
