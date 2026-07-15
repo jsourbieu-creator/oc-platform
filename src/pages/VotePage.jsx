@@ -429,7 +429,7 @@ function ProfilTab({ season, myRanking, settings, perception, myTrophies }) {
         <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
           Les trophées sont décernés au meilleur de chaque catégorie sur la saison, recalculés à chaque nouveau vote — grisés ici tant que tu ne le décroches pas toi-même. Remplir la condition ne suffit pas forcément : un seul joueur gagne chaque trophée, le meilleur de tous sur ce critère.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {TROPHY_DEFS.map((def) => {
             const won = myTrophies.find((t) => t.code === def.code);
             const Icon = def.icon;
@@ -555,7 +555,7 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
       <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
         Décernés au meilleur de chaque catégorie, recalculés à chaque nouveau vote — grisés tant que personne ne remplit la condition.
       </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {TROPHY_DEFS.map((def) => {
           const awarded = list.find((t) => t.code === def.code);
           const Icon = def.icon;
