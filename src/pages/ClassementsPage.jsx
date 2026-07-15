@@ -1,4 +1,4 @@
-import { Trophy, Star, Users } from "@phosphor-icons/react";
+import { Trophy, Star, People } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -153,7 +153,7 @@ export function ClassementsPage() {
         <div className="stat-tiles">
           <StatTile icon={<Trophy size={20} />} value={rankings.official[0]?.name ?? "—"} label="En tête du classement" tint="gold" solid />
           <StatTile icon={<Star size={20} />} value={rankings.group_average !== null ? fmtScore(rankings.group_average) : "—"} label="Moyenne du groupe" tint="coral" solid />
-          <StatTile icon={<Users size={20} />} value={rankings.official.length + rankings.provisional.length} label="Joueurs classés" tint="lime" />
+          <StatTile icon={<People size={20} />} value={rankings.official.length + rankings.provisional.length} label="Joueurs classés" tint="lime" />
         </div>
       )}
 

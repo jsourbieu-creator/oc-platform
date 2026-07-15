@@ -1,30 +1,30 @@
 import {
-  Calendar, Newspaper, Shield, Users, ChatCircle, Star,
-  ChartBar, Trophy, Medal, FolderOpen, Images, Bell, UserCircle,
+  Calendar3, Megaphone, Shield, People, ChatDots, Star,
+  BarChartFill, Trophy, Award, Folder2Open, Images, Bell, PersonCircle,
   Gear, Wrench,
-} from "@phosphor-icons/react";
+} from "react-bootstrap-icons";
 
 export const NAV_ITEMS = [
-  { label: "Calendrier", view: "home", icon: Calendar, phase: 0 },
-  { label: "Vestiaire", view: "vestiaire", icon: Newspaper, phase: 4 },
+  { label: "Calendrier", view: "home", icon: Calendar3, phase: 0 },
+  { label: "Annonces", view: "vestiaire", icon: Megaphone, phase: 4 },
   { label: "Équipes", view: "equipes", icon: Shield, phase: 1 },
-  { label: "Membres", view: "membres", icon: Users, phase: 1 },
-  { label: "Messages", view: "messages", icon: ChatCircle, phase: 5 },
+  { label: "Membres", view: "membres", icon: People, phase: 1 },
+  { label: "Messages", view: "messages", icon: ChatDots, phase: 5 },
   { label: "Votes", view: "votes", icon: Star, phase: 2 },
-  { label: "Statistiques", view: "statistiques", icon: ChartBar, phase: 7 },
+  { label: "Statistiques", view: "statistiques", icon: BarChartFill, phase: 7 },
   { label: "Classements", view: "classements", icon: Trophy, phase: 2 },
-  { label: "Trophées", view: "trophees", icon: Medal, phase: 7 },
-  { label: "Documents", view: "documents", icon: FolderOpen, phase: 6 },
+  { label: "Trophées", view: "trophees", icon: Award, phase: 7 },
+  { label: "Documents", view: "documents", icon: Folder2Open, phase: 6 },
   { label: "Médias", view: "medias", icon: Images, phase: 6 },
   { label: "Notifications", view: "notifications", icon: Bell, phase: 4 },
-  { label: "Profil", view: "profil", icon: UserCircle, phase: 1 },
+  { label: "Profil", view: "profil", icon: PersonCircle, phase: 1 },
   { label: "Paramètres", view: "parametres", icon: Gear, phase: 1 },
   { label: "Administration", view: "administration", icon: Wrench, phase: 1 },
 ];
 
 export const MOBILE_NAV_ITEMS = [
   NAV_ITEMS.find((i) => i.label === "Calendrier"),
-  NAV_ITEMS.find((i) => i.label === "Vestiaire"),
+  NAV_ITEMS.find((i) => i.label === "Annonces"),
   NAV_ITEMS.find((i) => i.label === "Votes"),
   NAV_ITEMS.find((i) => i.label === "Profil"),
   NAV_ITEMS.find((i) => i.label === "Paramètres"),

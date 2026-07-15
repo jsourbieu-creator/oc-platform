@@ -1,15 +1,15 @@
-import { Newspaper, ChatCircle, ClipboardText, Warning, UserPlus, UserCheck, Star, Bell } from "@phosphor-icons/react";
+import { Megaphone, ChatDots, ClipboardCheck, ExclamationTriangle, PersonPlus, PersonCheck, Star, Bell } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 const TYPE_ICONS = {
-  new_post: Newspaper,
-  new_comment: ChatCircle,
-  convocation: ClipboardText,
-  event_cancelled: Warning,
-  join_request: UserPlus,
-  join_approved: UserCheck,
+  new_post: Megaphone,
+  new_comment: ChatDots,
+  convocation: ClipboardCheck,
+  event_cancelled: ExclamationTriangle,
+  join_request: PersonPlus,
+  join_approved: PersonCheck,
   rate_request: Star,
 };
 

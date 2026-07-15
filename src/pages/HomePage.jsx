@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { Calendar, CaretLeft, CaretRight, MapPin, Star, Shield, ArrowCounterClockwise, X, ClipboardText, Clock, SoccerBall, UsersThree, DotsThree, ChatCircle, MagnifyingGlass, Check, Trophy, Pulse } from "@phosphor-icons/react";
+import { Calendar3, CaretLeft, CaretRight, GeoAlt, Star, Shield, ArrowCounterclockwise, X, ClipboardCheck, Clock, Flag, People, ThreeDots, ChatDots, Search, Check, Trophy, Activity } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -178,12 +178,12 @@ export function HomePage({ gotoConversation }) {
 
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
         <div className="kpi solid-coral">
-          <Trophy size={18} weight="fill" style={{ opacity: 0.55, marginBottom: 8 }} />
+          <Trophy size={18} style={{ opacity: 0.55, marginBottom: 8 }} />
           <b>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
           <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
         </div>
         <div className="kpi solid-lime">
-          <Pulse size={18} weight="fill" style={{ opacity: 0.55, marginBottom: 8 }} />
+          <Activity size={18} style={{ opacity: 0.55, marginBottom: 8 }} />
           <b>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
           <span>Ma présence</span>
         </div>
@@ -204,7 +204,7 @@ export function HomePage({ gotoConversation }) {
             background: showPast ? "var(--oc-sky-100)" : "var(--surface)", color: showPast ? "var(--oc-sky-700)" : "var(--muted)",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}
-        ><ArrowCounterClockwise size={17} /></button>
+        ><ArrowCounterclockwise size={17} /></button>
         {manage && (
           <button
             title={form ? "Annuler" : "Ajouter une séance"}
@@ -312,7 +312,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
     if (!hasSeason) {
       return (
         <div className="card" style={{ marginBottom: 16, textAlign: "center", padding: "28px 20px" }}>
-          <Calendar size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
+          <Calendar3 size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
           <div style={{ fontWeight: 800 }}>Bienvenue sur la plateforme !</div>
           <div className="subtle" style={{ marginTop: 2, marginBottom: manage ? 14 : 0 }}>
             {manage
@@ -324,7 +324,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
     }
     return (
       <div className="card" style={{ marginBottom: 16, textAlign: "center", padding: "28px 20px" }}>
-        <Calendar size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
+        <Calendar3 size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
         <div style={{ fontWeight: 800 }}>Aucune séance à venir</div>
         <div className="subtle" style={{ marginTop: 2, marginBottom: manage ? 14 : 0 }}>
           {manage ? "Ajoute un entraînement ou un match pour lancer la saison." : "Le calendrier est vide pour le moment."}
@@ -359,9 +359,9 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
 
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", color: "var(--hero-ink)", opacity: 0.82, fontSize: "0.9rem", fontWeight: 600 }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <Calendar size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
+            <Calendar3 size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
           </span>
-          {e.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin size={15} /> {e.location}</span>}
+          {e.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><GeoAlt size={15} /> {e.location}</span>}
         </div>
 
         {e.opponent && <div style={{ marginTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>vs {e.opponent}</div>}
@@ -541,7 +541,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
             {e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
           </div>
         </div>
-        <DotsThree size={17} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
+        <ThreeDots size={17} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
@@ -572,12 +572,12 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
         <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={openConversation} disabled={convBusy}>
-          <ChatCircle size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
+          <ChatDots size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
         </button>
       </div>
 
       {e.type === "match" && convokedTotal > 0 && (
-        <div className="subtle" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}><ClipboardText size={13} />{confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""} à la convocation</div>
+        <div className="subtle" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}><ClipboardCheck size={13} />{confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""} à la convocation</div>
       )}
 
       <div style={{ textAlign: "center", marginTop: 6 }}>
@@ -626,7 +626,7 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
           </div>
           {manage ? (
             <div style={{ position: "relative", flexShrink: 0 }}>
-              <button className="event-modal-close" onClick={() => setMenuOpen((v) => !v)}><DotsThree size={17} /></button>
+              <button className="event-modal-close" onClick={() => setMenuOpen((v) => !v)}><ThreeDots size={17} /></button>
               {menuOpen && (
                 <div style={{
                   position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "none",
@@ -742,7 +742,7 @@ function ParticipantsTab({ event: e, manage }) {
     <div>
       {error && <div className="error-box">{error}</div>}
       <div style={{ position: "relative", marginBottom: 16 }}>
-        <MagnifyingGlass size={16} style={{ position: "absolute", left: 12, top: 12, color: "var(--text-dim)" }} />
+        <Search size={16} style={{ position: "absolute", left: 12, top: 12, color: "var(--text-dim)" }} />
         <input type="text" placeholder="Rechercher…" value={search} onChange={(e2) => setSearch(e2.target.value)} style={{ paddingLeft: 36 }} />
       </div>
 
@@ -874,7 +874,7 @@ function ConvocationManager({ event: e, reload, members }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <button className="btn btn-secondary btn-sm" onClick={openManager}>
-        <SoccerBall size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les convocations" : "Gérer les convocations (match)"}
+        <Flag size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les convocations" : "Gérer les convocations (match)"}
       </button>
       {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
       {open && (
@@ -970,7 +970,7 @@ function PresenceValidator({ event: e, members }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <button className="btn btn-secondary btn-sm" onClick={toggleOpen}>
-        <UsersThree size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les présences réelles" : "Présences réelles & votes"}
+        <People size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les présences réelles" : "Présences réelles & votes"}
       </button>
       {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
       {notice && <div className="info-box" style={{ marginTop: 8 }}>{notice}</div>}

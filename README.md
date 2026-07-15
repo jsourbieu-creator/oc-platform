@@ -173,6 +173,21 @@ via phpMyAdmin.
 - Cette palette a été proposée visuellement (nuancier interactif) avant
   implémentation et validée telle quelle.
 
+## Itération design du 15/07 (suite 4) — Bootstrap Icons + Vestiaire renommé Annonces
+
+- **Changement de bibliothèque d'icônes** : Phosphor → **Bootstrap Icons**
+  (`react-bootstrap-icons`), choisi après comparatif visuel — traits plus
+  nets, plus lisibles en petite taille. Toutes les icônes de l'app migrées
+  (nav, événements, statuts, trophées…), avec des équivalents sémantiques
+  choisis à la main pour les icônes sport absentes du set (match → drapeau,
+  entraînement → activité, événement club → ballon de fête).
+- **"Vestiaire" renommé "Annonces"**, icône mégaphone — plus clair sur ce
+  que fait vraiment cette section (le fil d'annonces du club). La clé
+  technique interne (`view: "vestiaire"`, fichier `VestiairePage.jsx`)
+  n'a pas changé, seul le libellé visible et l'icône ont bougé.
+- Bonus : le bundle JS a rétréci d'environ 60 Ko grâce au tree-shaking plus
+  efficace de Bootstrap Icons par rapport à Phosphor.
+
 ## Itération design du 15/07 (suite 3) — nettoyage complet de l'ancien bleu + fix lisibilité navbar
 
 - **Tous les résidus de l'ancien bleu saturé** (`--oc-blue-deep`,

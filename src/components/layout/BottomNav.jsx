@@ -15,7 +15,7 @@ export function BottomNav({ view, goto, badges = {} }) {
             onClick={() => goto(available ? item.view : "parametres")}
           >
             <span className="bottom-nav-icon">
-              <item.icon size={20} weight="bold" />
+              <item.icon size={20} />
               {badges[item.view] > 0 && (
                 <span style={{ position: "absolute", top: -4, right: -6, background: "var(--status-absent)", color: "var(--status-absent-ink)", borderRadius: "var(--radius-full)", fontSize: "0.55rem", fontWeight: 800, padding: "1px 5px", lineHeight: 1.4 }}>
                   {badges[item.view] > 9 ? "9+" : badges[item.view]}

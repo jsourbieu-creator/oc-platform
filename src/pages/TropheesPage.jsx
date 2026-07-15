@@ -1,4 +1,4 @@
-import { Trophy, Ruler, Fire, TrendUp, Target, SmileySad, Smiley, Medal } from "@phosphor-icons/react";
+import { Trophy, Rulers, Fire, GraphUpArrow, Bullseye, EmojiFrown, EmojiSmile, Award } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,12 +7,12 @@ import { Avatar } from "@/components/ui";
 
 const TROPHY_ICONS = {
   ballon_dor: Trophy,
-  most_regular: Ruler,
+  most_regular: Rulers,
   most_assiduous: Fire,
-  best_progression: TrendUp,
-  closest_perception: Target,
-  most_severe_self: SmileySad,
-  most_overrated_self: Smiley,
+  best_progression: GraphUpArrow,
+  closest_perception: Bullseye,
+  most_severe_self: EmojiFrown,
+  most_overrated_self: EmojiSmile,
 };
 
 export function TropheesPage() {
@@ -89,7 +89,7 @@ export function TropheesPage() {
           {trophies.trophies.map((t) => (
             <div key={t.code} className="list-row">
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ display: "inline-flex", color: "var(--gold-500)" }}>{(() => { const I = TROPHY_ICONS[t.code] ?? Medal; return <I size={22} />; })()}</span>
+                <span style={{ display: "inline-flex", color: "var(--gold-500)" }}>{(() => { const I = TROPHY_ICONS[t.code] ?? Award; return <I size={22} />; })()}</span>
                 <Avatar name={t.player} userId={t.user_id} avatarUrl={t.avatar_url} size={30} />
                 <div>
                   <strong>{t.label}</strong>

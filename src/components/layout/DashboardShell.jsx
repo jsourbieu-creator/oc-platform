@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Bell } from "@phosphor-icons/react";
+import { Bell } from "react-bootstrap-icons";
 import blason from "@/assets/blason.svg";
 
 const ROLE_LABELS = {
