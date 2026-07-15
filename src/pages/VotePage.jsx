@@ -64,13 +64,19 @@ const INK_DOTS = [
  * du vainqueur n'apparaît qu'à la cérémonie de fin de saison en vrai. */
 function TrophyWinnerReveal() {
   return (
-    <div className="invisible-ink" aria-hidden="true">
-      {INK_DOTS.map((d, i) => (
-        <span
-          key={i} className="invisible-ink-dot"
-          style={{ top: d.top, left: d.left, width: d.size, height: d.size, animationDelay: d.delay, animationDuration: d.dur }}
-        />
-      ))}
+    <div style={{ marginTop: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: "0.76rem", fontWeight: 700, color: "var(--text-dim)", flexShrink: 0 }}>Vainqueur :</span>
+        <div className="invisible-ink" aria-hidden="true">
+          {INK_DOTS.map((d, i) => (
+            <span
+              key={i} className="invisible-ink-dot"
+              style={{ top: d.top, left: d.left, width: d.size, height: d.size, animationDelay: d.delay, animationDuration: d.dur }}
+            />
+          ))}
+        </div>
+      </div>
+      <p className="subtle" style={{ fontSize: "0.72rem", margin: "4px 0 0" }}>Sera dévoilé à la cérémonie de fin de saison.</p>
     </div>
   );
 }
@@ -550,25 +556,6 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
           </div>
         ))}
       </div>
-
-      {rankings.provisional.length > 0 && (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="label-title">Classement provisoire (encore inéligibles)</div>
-          <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
-            Ces joueurs ont déjà un score calculé, mais pas encore assez de séances jouées pour être comparés équitablement aux autres et entrer dans le classement officiel.
-          </p>
-          {rankings.provisional.map((p) => (
-            <div key={p.club_member_id} className="list-row" style={{ flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                <Avatar name={p.name} userId={p.user_id} avatarUrl={p.avatar_url} size={28} />
-                <strong>{p.name}</strong>
-                <span className="subtle">encore {p.sessions_until_eligible} séance{p.sessions_until_eligible > 1 ? "s" : ""}</span>
-              </div>
-              <strong className="num" style={{ color: "var(--text-dim)", fontSize: "1.05rem" }}>{fmtScore(p.ballon_dor_score)}</strong>
-            </div>
-          ))}
-        </div>
-      )}
 
       <div className="label-title" style={{ marginBottom: 4 }}>Trophées de la saison</div>
       <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>

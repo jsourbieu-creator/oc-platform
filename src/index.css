@@ -247,7 +247,7 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 @keyframes ink-twinkle{ 0%, 100%{ opacity:.2; transform:scale(.5); } 50%{ opacity:1; transform:scale(1.2); } }
 
 .invisible-ink{
-  position:relative; height:16px; width:120px; margin-top:5px;
+  position:relative; height:16px; width:120px;
   pointer-events:none; user-select:none;
 }
 .invisible-ink-dot{
