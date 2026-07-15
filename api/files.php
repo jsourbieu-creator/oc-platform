@@ -26,8 +26,8 @@ const ALLOWED_MIME = [
 ];
 
 function permission_for_kind(string $kind): string {
-    if (!in_array($kind, ['document', 'media'], true)) json_error('Type invalide (document ou media).');
-    return $kind === 'document' ? 'manage_documents' : 'manage_media';
+    if (!in_array($kind, ['document', 'media', 'message'], true)) json_error('Type invalide (document, media ou message).');
+    return $kind === 'document' ? 'manage_documents' : ($kind === 'media' ? 'manage_media' : '');
 }
 
 function file_row_or_404(int $fileId, int $clubId): array {
@@ -71,15 +71,20 @@ switch ($action) {
         $me = current_user();
         $clubId = (int) ($in['club_id'] ?? 0);
         $kind = $in['kind'] ?? '';
-        require_permission((int) $me['id'], $clubId, permission_for_kind($kind));
+        if ($kind === 'message') {
+            require_club_member((int) $me['id'], $clubId);
+        } else {
+            require_permission((int) $me['id'], $clubId, permission_for_kind($kind));
+        }
 
         $title = trim($in['title'] ?? '');
-        if ($title === '') json_error('Titre requis.');
+        if ($title === '' && $kind !== 'message') json_error('Titre requis.');
 
         if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
             json_error('Fichier manquant ou upload échoué (code ' . ($_FILES['file']['error'] ?? 'inconnu') . ').');
         }
         $file = $_FILES['file'];
+        if ($title === '' && $kind === 'message') $title = $file['name'];
         if ($file['size'] > MAX_FILE_BYTES) json_error('Fichier trop volumineux (max 20 Mo).');
 
         $mime = mime_content_type($file['tmp_name']) ?: $file['type'];
@@ -125,6 +130,7 @@ switch ($action) {
         $clubId = (int) ($in['club_id'] ?? 0);
         $fileId = (int) ($in['file_id'] ?? 0);
         $f = file_row_or_404($fileId, $clubId);
+        if ($f['kind'] === 'message') json_error('Les pièces jointes de message se suppriment avec le message lui-même.');
         require_permission((int) $me['id'], $clubId, permission_for_kind($f['kind']));
 
         $path = rtrim(UPLOADS_DIR, '/') . "/club_{$clubId}/{$f['kind']}/{$f['stored_filename']}";

@@ -173,6 +173,28 @@ via phpMyAdmin.
 - Cette palette a été proposée visuellement (nuancier interactif) avant
   implémentation et validée telle quelle.
 
+## Itération design/fonctionnalité du 15/07 — messagerie enrichie
+
+- **Pièces jointes** : images, vidéos courtes et documents (PDF/Word/Excel)
+  peuvent être joints à un message, via l'infrastructure de stockage déjà
+  en place pour Documents/Médias (`files.php`, kind `message` — n'importe
+  quel membre du club peut y uploader, contrairement aux kinds
+  `document`/`media` qui restent réservés aux rôles habilités). Les images
+  et vidéos s'affichent directement dans la bulle (tap pour télécharger),
+  les autres fichiers en chip avec nom + taille. Les GIF passent par un
+  simple upload de fichier `.gif` (pas d'intégration Giphy/Tenor — ça
+  demanderait une clé d'API tierce qu'on n'a pas configurée).
+- **Modifier / supprimer un message** : menu ⋮ sur ses propres messages.
+  Modifier édite le contenu et marque « · modifié ». Supprimer fait une
+  suppression douce (`deleted_at`) — le message devient « Message
+  supprimé » en italique, sa pièce jointe est effacée du disque pour
+  libérer la place. Un modérateur (`moderate_content`) peut aussi
+  supprimer n'importe quel message.
+- **Accès direct aux messages** : icône 💬 avec pastille de non-lus ajoutée
+  dans la barre du haut, juste à côté de la cloche — visible sur mobile et
+  desktop, sans avoir à passer par le menu "Plus" ou la sidebar.
+- Migration : `0017_messages_attachments_edit_delete.sql`.
+
 ## Itération design du 15/07 (suite 5) — liste de conversations façon Messenger/WhatsApp
 
 - **Liste des messages repensée** : fini le bloc en carte fermée — avatar

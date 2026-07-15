@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Bell } from "react-bootstrap-icons";
+import { Bell, ChatDots } from "react-bootstrap-icons";
 import blason from "@/assets/blason.svg";
 
 const ROLE_LABELS = {
@@ -53,6 +53,12 @@ export function DashboardShell({ view, goto, children }) {
             )}
           </div>
           <div className="topbar-right" style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <span onClick={() => goto("messages")} style={{ cursor: "pointer", position: "relative", display: "inline-flex", color: "var(--text-dim)" }} title="Messages">
+              <ChatDots size={19} />
+              {unreadMessages > 0 && (
+                <span style={{ position: "absolute", top: -6, right: -8, background: "var(--danger-500)", color: "#fff", borderRadius: "999px", fontSize: "0.6rem", fontWeight: 800, padding: "1px 5px", lineHeight: 1.4 }}>{unreadMessages > 9 ? "9+" : unreadMessages}</span>
+              )}
+            </span>
             <span onClick={() => goto("notifications")} style={{ cursor: "pointer", position: "relative", display: "inline-flex", color: "var(--text-dim)" }} title="Notifications">
               <Bell size={19} />
               {unread > 0 && (
