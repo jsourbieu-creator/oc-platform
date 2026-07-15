@@ -694,12 +694,21 @@ switch ($action) {
         $closestPerception = $pick($players, 'avg_abs_gap', false);
         if ($closestPerception) $trophies[] = ['code' => 'closest_perception', 'label' => 'Ressenti le plus proche du groupe', 'player' => $closestPerception['name'], 'user_id' => $closestPerception['user_id'], 'avatar_url' => $closestPerception['avatar_url'], 'value' => $closestPerception['avg_abs_gap']];
 
+        $mostSessions = $pick($players, 'sessions_played', true);
+        if ($mostSessions) $trophies[] = ['code' => 'most_sessions', 'label' => 'Increvable', 'player' => $mostSessions['name'], 'user_id' => $mostSessions['user_id'], 'avatar_url' => $mostSessions['avatar_url'], 'value' => $mostSessions['sessions_played'] . ' séances'];
+
+        $bestRaw = $pick($players, 'raw_average', true);
+        if ($bestRaw) $trophies[] = ['code' => 'best_raw_average', 'label' => 'Meilleure moyenne brute', 'player' => $bestRaw['name'], 'user_id' => $bestRaw['user_id'], 'avatar_url' => $bestRaw['avatar_url'], 'value' => $bestRaw['raw_average']];
+
         if ($season['humorous_trophies_enabled']) {
             $mostSevere = $pick($players, 'avg_gap', false);
             if ($mostSevere) $trophies[] = ['code' => 'most_severe_self', 'label' => 'Le plus sévère avec lui-même', 'player' => $mostSevere['name'], 'user_id' => $mostSevere['user_id'], 'avatar_url' => $mostSevere['avatar_url'], 'value' => $mostSevere['avg_gap']];
 
             $mostOverrated = $pick($players, 'avg_gap', true);
             if ($mostOverrated) $trophies[] = ['code' => 'most_overrated_self', 'label' => 'Celui qui se voit un peu trop beau', 'player' => $mostOverrated['name'], 'user_id' => $mostOverrated['user_id'], 'avatar_url' => $mostOverrated['avatar_url'], 'value' => '+' . $mostOverrated['avg_gap']];
+
+            $mostIrregular = $pick($regularEligible, 'regularity_stddev', true);
+            if ($mostIrregular) $trophies[] = ['code' => 'most_irregular', 'label' => 'Montagnes russes', 'player' => $mostIrregular['name'], 'user_id' => $mostIrregular['user_id'], 'avatar_url' => $mostIrregular['avatar_url'], 'value' => $mostIrregular['regularity']];
         }
 
         json_out(['trophies' => $trophies, 'humorous_enabled' => (bool) $season['humorous_trophies_enabled']]);
