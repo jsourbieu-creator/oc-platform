@@ -101,7 +101,7 @@ export function VestiairePage() {
               <textarea
                 required rows={5} value={form.content}
                 onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-                style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", padding: "11px 13px", borderRadius: "var(--radius-sm)", fontFamily: "inherit", fontSize: "0.95rem", outline: "none", resize: "vertical" }}
+                style={{ width: "100%", background: "var(--surface-soft)", border: "none", color: "var(--text)", padding: "11px 13px", borderRadius: "var(--radius-sm)", fontFamily: "inherit", fontSize: "0.95rem", outline: "none", resize: "vertical" }}
               />
             </div>
             <button className="btn btn-primary" disabled={busy}>{busy ? "Publication…" : form.post_id ? "Enregistrer" : "Publier"}</button>
@@ -136,7 +136,7 @@ function PostCard({ post: p, myMemberId, activeRole, onEdit, onDelete, onPin, on
   const counts = p.reactions ?? {};
 
   return (
-    <div className="card" style={{ marginBottom: 12, borderColor: Number(p.pinned) ? "var(--oc-blue-600)" : undefined }}>
+    <div className="card" style={{ marginBottom: 12, boxShadow: Number(p.pinned) ? "0 0 0 2px var(--oc-blue-600), var(--shadow-sm)" : undefined }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

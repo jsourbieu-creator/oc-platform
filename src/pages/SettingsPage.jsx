@@ -84,7 +84,7 @@ export function SettingsPage({ goto }) {
         <p className="subtle" style={{ marginTop: 0, marginBottom: 14 }}>
           Connecté en tant que <strong style={{ color: "var(--text)" }}>{user?.first_name} {user?.last_name}</strong> ({user?.email}).
         </p>
-        <button className="btn btn-outline" onClick={signOut} style={{ color: "var(--danger-500)", borderColor: "var(--danger-500)" }}>
+        <button className="btn btn-outline" onClick={signOut} style={{ color: "var(--danger-500)", background: "var(--danger-50)" }}>
           Se déconnecter
         </button>
       </div>

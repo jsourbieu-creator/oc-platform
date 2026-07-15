@@ -179,7 +179,7 @@ export function HomePage({ gotoConversation }) {
           title={showPast ? "Masquer le passé" : "Voir le passé"}
           onClick={() => setShowPast((v) => !v)}
           style={{
-            width: 42, height: 42, borderRadius: "50%", border: "1px solid var(--line)", cursor: "pointer",
+            width: 42, height: 42, borderRadius: "50%", border: "none", cursor: "pointer", boxShadow: "var(--shadow-xs)",
             background: showPast ? "var(--oc-sky-100)" : "var(--surface)", color: showPast ? "var(--oc-sky-700)" : "var(--muted)",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}
@@ -504,8 +504,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
             return (
               <button
                 key={v} className="btn btn-sm" style={{
-                  flex: "1 1 80px", background: active ? AVAIL_FILL[v] : "transparent", color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
-                  border: `1.5px solid ${AVAIL_COLORS[v]}`,
+                  flex: "1 1 80px", background: active ? AVAIL_FILL[v] : `color-mix(in srgb, ${AVAIL_FILL[v]} 20%, transparent)`, color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
                 }}
                 onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
               >{l}</button>
@@ -566,7 +565,7 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
               <button className="event-modal-close" onClick={() => setMenuOpen((v) => !v)}><Ellipsis size={17} /></button>
               {menuOpen && (
                 <div style={{
-                  position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "1px solid var(--border)",
+                  position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "none",
                   borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-md)", zIndex: 10, minWidth: 140, overflow: "hidden",
                 }}>
                   <MenuItem onClick={() => { setMenuOpen(false); onClose(); onEdit(e); }}>Modifier</MenuItem>
@@ -693,8 +692,7 @@ function ParticipantsTab({ event: e, manage }) {
                       <button
                         key={v} className="btn btn-sm" style={{
                           width: "auto", padding: "5px 8px", fontSize: "0.68rem",
-                          background: p.status === v ? AVAIL_FILL[v] : "transparent", color: p.status === v ? AVAIL_INK[v] : AVAIL_COLORS[v],
-                          border: `1px solid ${AVAIL_COLORS[v]}`,
+                          background: p.status === v ? AVAIL_FILL[v] : `color-mix(in srgb, ${AVAIL_FILL[v]} 20%, transparent)`, color: p.status === v ? AVAIL_INK[v] : AVAIL_COLORS[v],
                         }}
                         onClick={() => setFor(p.club_member_id, v)}
                       >{l[0]}</button>
