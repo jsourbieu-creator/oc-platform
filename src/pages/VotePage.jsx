@@ -2,8 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { EVENT_TYPES, fmtDate, fmtTime } from "@/lib/events";
-import { SCORE_OPTIONS, fmtScore } from "@/lib/ballondor";
-import { Avatar } from "@/components/ui";
+import { Avatar, ScoreSlider, ScoreBar } from "@/components/ui";
 
 /** Une séance est terminée à ends_at si connu, sinon 2h après starts_at — même règle que côté API. */
 function hasEnded(e) {
@@ -46,7 +45,11 @@ export function VotePage() {
 
   useEffect(loadStatus, [loadStatus]);
 
-  const allFilled = status?.ratees.length > 0 && status.ratees.every((r) => scores[r.club_member_id]) && selfScore;
+  const totalToFill = (status?.ratees.length ?? 0) + 1; // + auto-évaluation
+  const filledCount = (status ? status.ratees.filter((r) => scores[r.club_member_id] != null).length : 0) + (selfScore ? 1 : 0);
+  const allFilled = status?.ratees.length > 0 && status.ratees.every((r) => scores[r.club_member_id] != null) && selfScore;
+
+  const selectedEvent = events?.find((e) => e.id === selectedEventId);
 
   const submit = async () => {
     setSubmitting(true); setError("");
@@ -61,25 +64,40 @@ export function VotePage() {
     } catch (e) { setError(e.message); } finally { setSubmitting(false); }
   };
 
+  const typeInfo = selectedEvent ? (EVENT_TYPES[selectedEvent.type] ?? EVENT_TYPES.match) : null;
+  const TypeIcon = typeInfo?.icon;
+
   return (
     <div>
       <h1 className="page-title" style={{ marginBottom: 18 }}>Votes</h1>
       {error && <div className="error-box">{error}</div>}
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="field">
-          <label>Séance</label>
-          <select value={selectedEventId ?? ""} onChange={(e) => setSelectedEventId(Number(e.target.value))}>
+      {events?.length === 0 && (
+        <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune séance terminée pour le moment — reviens après le prochain entraînement !</p></div>
+      )}
+
+      {events?.length > 0 && (
+        <div className="event-card-ds" style={{ marginBottom: 16 }}>
+          <div className="kicker" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {TypeIcon && <TypeIcon size={13} />}Séance à noter
+          </div>
+          <select
+            value={selectedEventId ?? ""} onChange={(e) => setSelectedEventId(Number(e.target.value))}
+            style={{
+              background: "rgba(255,255,255,.16)", border: "none", color: "inherit", fontFamily: "'Bricolage Grotesque',sans-serif",
+              fontWeight: 700, fontSize: "1.2rem", marginTop: 8, width: "100%", padding: "8px 10px", borderRadius: "var(--radius-sm)",
+            }}
+          >
             {events?.map((e) => (
-              <option key={e.id} value={e.id}>
-                {(() => { const I = (EVENT_TYPES[e.type] ?? EVENT_TYPES.match).icon; return <I size={15} style={{ verticalAlign: "-2px", marginRight: 6 }} />; })()}{e.title} — {fmtDate(e.starts_at)} {fmtTime(e.starts_at)}
+              <option key={e.id} value={e.id} style={{ color: "#000" }}>
+                {e.title} — {fmtDate(e.starts_at)} {fmtTime(e.starts_at)}
               </option>
             ))}
           </select>
         </div>
-      </div>
+      )}
 
-      {status === null && <div className="spinner" />}
+      {status === null && events?.length > 0 && <div className="spinner" />}
 
       {status && !status.eligible && status.ended && (
         <div className="card"><p className="subtle" style={{ margin: 0 }}>Tu n'étais pas présent à cette séance — rien à voter.</p></div>
@@ -91,43 +109,46 @@ export function VotePage() {
 
       {status && status.eligible && status.submitted && (
         <div className="card">
-          <div className="label-title">Ton vote (validé)</div>
+          <div className="label-title">Ton vote (validé) 🎉</div>
           {status.my_scores?.map((s) => (
-            <div key={s.ratee_member_id} className="list-row">
-              <span>Joueur #{s.ratee_member_id}</span>
-              <strong className="num">{fmtScore(s.score)}/10</strong>
-            </div>
+            <ScoreBar key={s.ratee_member_id} label={s.name} value={s.score} />
           ))}
-          <div className="list-row">
-            <span>Mon auto-évaluation</span>
-            <strong className="num">{fmtScore(status.my_self_score)}/10</strong>
-          </div>
+          <ScoreBar label="Mon auto-évaluation" value={status.my_self_score} highlight />
           <p className="subtle" style={{ marginTop: 10 }}>Ton vote est définitif et ne peut plus être modifié.</p>
         </div>
       )}
 
       {status && status.eligible && !status.submitted && step === "vote" && (
         <div className="card">
-          <div className="label-title">Note tes coéquipiers présents (1 à 10)</div>
-          {status.ratees.map((r) => (
-            <div key={r.club_member_id} className="field">
-              <label style={{ display: "flex", alignItems: "center", gap: 8, textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>
-                <Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}
-              </label>
-              <select value={scores[r.club_member_id] ?? ""} onChange={(e) => setScores((s) => ({ ...s, [r.club_member_id]: e.target.value }))}>
-                <option value="">— note —</option>
-                {SCORE_OPTIONS.map((v) => <option key={v} value={v}>{fmtScore(v)}/10</option>)}
-              </select>
-            </div>
-          ))}
-          <div className="field">
-            <label>Et toi ? Ton auto-évaluation</label>
-            <select value={selfScore} onChange={(e) => setSelfScore(e.target.value)}>
-              <option value="">— note —</option>
-              {SCORE_OPTIONS.map((v) => <option key={v} value={v}>{fmtScore(v)}/10</option>)}
-            </select>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <div className="label-title" style={{ marginBottom: 0 }}>Note tes coéquipiers présents</div>
+            <span className="subtle" style={{ fontWeight: 700 }}>{filledCount}/{totalToFill}</span>
           </div>
-          <button className="btn btn-primary" disabled={!allFilled} onClick={() => setStep("confirm")}>Vérifier avant validation</button>
+          <div style={{ height: 6, background: "var(--surface-soft)", borderRadius: 999, overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ height: "100%", width: `${(filledCount / totalToFill) * 100}%`, background: "var(--lime-600)", transition: "width .2s ease", borderRadius: 999 }} />
+          </div>
+
+          {status.ratees.map((r) => (
+            <ScoreSlider
+              key={r.club_member_id}
+              label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}</>}
+              value={scores[r.club_member_id] ?? null}
+              touched={scores[r.club_member_id] != null}
+              onChange={(v) => setScores((s) => ({ ...s, [r.club_member_id]: v }))}
+            />
+          ))}
+
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+            <div className="label-title">Et toi, t'en penses quoi de ta séance ?</div>
+            <ScoreSlider
+              label="Mon auto-évaluation"
+              value={selfScore || null}
+              touched={!!selfScore}
+              onChange={setSelfScore}
+            />
+          </div>
+
+          <button className="btn btn-primary" disabled={!allFilled} onClick={() => setStep("confirm")} style={{ marginTop: 8 }}>Vérifier avant validation</button>
         </div>
       )}
 
@@ -135,15 +156,9 @@ export function VotePage() {
         <div className="card">
           <div className="label-title">Récapitulatif — vérifie avant de valider</div>
           {status.ratees.map((r) => (
-            <div key={r.club_member_id} className="list-row">
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={24} />{r.name}</span>
-              <strong className="num">{fmtScore(scores[r.club_member_id])}/10</strong>
-            </div>
+            <ScoreBar key={r.club_member_id} label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={22} />{r.name}</>} value={scores[r.club_member_id]} />
           ))}
-          <div className="list-row">
-            <span>Toi (auto-évaluation)</span>
-            <strong className="num">{fmtScore(selfScore)}/10</strong>
-          </div>
+          <ScoreBar label="Toi (auto-évaluation)" value={selfScore} highlight />
           <p className="subtle" style={{ margin: "12px 0" }}>Une fois validé, tu ne pourras plus modifier ce vote.</p>
           <div style={{ display: "flex", gap: 8 }}>
             <button className="btn btn-secondary" onClick={() => setStep("vote")}>Revenir</button>

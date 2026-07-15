@@ -156,3 +156,47 @@ export function StatTile({ icon, value, label, tint = "blue", solid = false }) {
     </div>
   );
 }
+
+/** Slider de note 1-10 (pas de 0.5) avec dégradé sémantique rouge→ambre→lime et
+ * gros chiffre coloré — remplace le menu déroulant, plus tactile et plus "vivant". */
+export function ScoreSlider({ label, value, onChange, touched = true }) {
+  const display = value === "" || value == null ? "5.5" : value;
+  const v = Number(display);
+  const tone = !touched ? "var(--text-dim)" : v < 4 ? "var(--oc-orange-500)" : v < 7.5 ? "var(--oc-amber-500)" : "var(--lime-600)";
+  return (
+    <div className="score-slider">
+      <div className="score-slider-top">
+        <span className="score-slider-label">{label}</span>
+        <span className="score-slider-value" style={{ color: tone }}>{touched ? fmtScoreVal(v) : "?"}</span>
+      </div>
+      <input
+        type="range" min="1" max="10" step="0.5" value={display}
+        onChange={(e) => onChange(e.target.value)}
+        className={`score-range${touched ? " touched" : ""}`}
+      />
+      {!touched && <div className="score-slider-hint">Glisse pour noter →</div>}
+    </div>
+  );
+}
+
+function fmtScoreVal(v) {
+  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
+/** Barre de score en lecture seule — même code couleur que ScoreSlider (résultats validés). */
+export function ScoreBar({ label, value, highlight = false }) {
+  const v = Number(value);
+  const tone = v < 4 ? "var(--oc-orange-500)" : v < 7.5 ? "var(--oc-amber-500)" : "var(--lime-600)";
+  const pct = ((v - 1) / 9) * 100;
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.9rem", fontWeight: highlight ? 700 : 600 }}>{label}</span>
+        <strong className="num" style={{ color: tone, fontSize: "1.1rem" }}>{fmtScoreVal(v)}/10</strong>
+      </div>
+      <div style={{ height: 8, background: "var(--surface-soft)", borderRadius: 999, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: tone, borderRadius: 999 }} />
+      </div>
+    </div>
+  );
+}

@@ -296,6 +296,9 @@ switch ($action) {
             $stmt = db()->prepare('SELECT ratee_member_id, score FROM evaluations WHERE event_id = ? AND rater_member_id = ?');
             $stmt->execute([$eventId, $myId]);
             $myScores = $stmt->fetchAll();
+            $scoreNames = member_name_map(array_column($myScores, 'ratee_member_id'));
+            foreach ($myScores as &$ms) $ms['name'] = $scoreNames[$ms['ratee_member_id']] ?? '?';
+            unset($ms);
             $stmt = db()->prepare('SELECT score FROM self_evaluations WHERE event_id = ? AND club_member_id = ?');
             $stmt->execute([$eventId, $myId]);
             $mySelf = $stmt->fetchColumn();

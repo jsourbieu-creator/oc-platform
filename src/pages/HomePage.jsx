@@ -7,8 +7,8 @@ import {
   EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, CONV_LABELS,
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
-import { SCORE_OPTIONS, fmtScore } from "@/lib/ballondor";
-import { DateBadge, AvatarStack, StatTile, CountChip, Avatar } from "@/components/ui";
+import { fmtScore } from "@/lib/ballondor";
+import { DateBadge, AvatarStack, StatTile, CountChip, Avatar, ScoreSlider, ScoreBar } from "@/components/ui";
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
@@ -702,7 +702,9 @@ function VoteTab({ event: e }) {
 
   useEffect(loadStatus, [loadStatus]);
 
-  const allFilled = status?.ratees.length > 0 && status.ratees.every((r) => scores[r.club_member_id]) && selfScore;
+  const allFilled = status?.ratees.length > 0 && status.ratees.every((r) => scores[r.club_member_id] != null) && selfScore;
+  const totalToFill = (status?.ratees.length ?? 0) + 1;
+  const filledCount = (status ? status.ratees.filter((r) => scores[r.club_member_id] != null).length : 0) + (selfScore ? 1 : 0);
 
   const submit = async () => {
     setSubmitting(true); setError("");
@@ -729,43 +731,38 @@ function VoteTab({ event: e }) {
 
       {status.eligible && status.submitted && (
         <div>
-          <div className="label-title">Ton vote (validé)</div>
+          <div className="label-title">Ton vote (validé) 🎉</div>
           {status.my_scores?.map((s) => (
-            <div key={s.ratee_member_id} className="list-row">
-              <span>Joueur #{s.ratee_member_id}</span>
-              <strong className="num">{fmtScore(s.score)}/10</strong>
-            </div>
+            <ScoreBar key={s.ratee_member_id} label={s.name} value={s.score} />
           ))}
-          <div className="list-row">
-            <span>Mon auto-évaluation</span>
-            <strong className="num">{fmtScore(status.my_self_score)}/10</strong>
-          </div>
+          <ScoreBar label="Mon auto-évaluation" value={status.my_self_score} highlight />
           <p className="subtle" style={{ marginTop: 10 }}>Ton vote est définitif et ne peut plus être modifié.</p>
         </div>
       )}
 
       {status.eligible && !status.submitted && step === "vote" && (
         <div>
-          <div className="label-title">Note tes coéquipiers présents (1 à 10)</div>
-          {status.ratees.map((r) => (
-            <div key={r.club_member_id} className="field">
-              <label style={{ display: "flex", alignItems: "center", gap: 8, textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>
-                <Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}
-              </label>
-              <select value={scores[r.club_member_id] ?? ""} onChange={(ev) => setScores((s) => ({ ...s, [r.club_member_id]: ev.target.value }))}>
-                <option value="">— note —</option>
-                {SCORE_OPTIONS.map((v) => <option key={v} value={v}>{fmtScore(v)}/10</option>)}
-              </select>
-            </div>
-          ))}
-          <div className="field">
-            <label>Et toi ? Ton auto-évaluation</label>
-            <select value={selfScore} onChange={(ev) => setSelfScore(ev.target.value)}>
-              <option value="">— note —</option>
-              {SCORE_OPTIONS.map((v) => <option key={v} value={v}>{fmtScore(v)}/10</option>)}
-            </select>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <div className="label-title" style={{ marginBottom: 0 }}>Note tes coéquipiers présents</div>
+            <span className="subtle" style={{ fontWeight: 700 }}>{filledCount}/{totalToFill}</span>
           </div>
-          <button className="btn btn-primary" disabled={!allFilled} onClick={() => setStep("confirm")}>Vérifier avant validation</button>
+          <div style={{ height: 6, background: "var(--surface-soft)", borderRadius: 999, overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ height: "100%", width: `${(filledCount / totalToFill) * 100}%`, background: "var(--lime-600)", transition: "width .2s ease", borderRadius: 999 }} />
+          </div>
+          {status.ratees.map((r) => (
+            <ScoreSlider
+              key={r.club_member_id}
+              label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}</>}
+              value={scores[r.club_member_id] ?? null}
+              touched={scores[r.club_member_id] != null}
+              onChange={(v) => setScores((s) => ({ ...s, [r.club_member_id]: v }))}
+            />
+          ))}
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+            <div className="label-title">Et toi, t'en penses quoi de ta séance ?</div>
+            <ScoreSlider label="Mon auto-évaluation" value={selfScore || null} touched={!!selfScore} onChange={setSelfScore} />
+          </div>
+          <button className="btn btn-primary" disabled={!allFilled} onClick={() => setStep("confirm")} style={{ marginTop: 8 }}>Vérifier avant validation</button>
         </div>
       )}
 
@@ -773,15 +770,9 @@ function VoteTab({ event: e }) {
         <div>
           <div className="label-title">Récapitulatif — vérifie avant de valider</div>
           {status.ratees.map((r) => (
-            <div key={r.club_member_id} className="list-row">
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={24} />{r.name}</span>
-              <strong className="num">{fmtScore(scores[r.club_member_id])}/10</strong>
-            </div>
+            <ScoreBar key={r.club_member_id} label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={22} />{r.name}</>} value={scores[r.club_member_id]} />
           ))}
-          <div className="list-row">
-            <span>Toi (auto-évaluation)</span>
-            <strong className="num">{fmtScore(selfScore)}/10</strong>
-          </div>
+          <ScoreBar label="Toi (auto-évaluation)" value={selfScore} highlight />
           <p className="subtle" style={{ margin: "12px 0" }}>Une fois validé, tu ne pourras plus modifier ce vote.</p>
           <div style={{ display: "flex", gap: 8 }}>
             <button className="btn btn-secondary" onClick={() => setStep("vote")}>Revenir</button>
