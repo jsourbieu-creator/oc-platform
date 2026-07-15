@@ -53,7 +53,7 @@ export function StatistiquesPage() {
       {stats && (
         <>
           <div className="stat-tiles">
-            <StatTile icon={<Activity size={20} />} value={stats.total_sessions} label="Séances jouées" tint="coral" />
+            <StatTile icon={<Activity size={20} />} value={stats.total_sessions} label="Séances jouées" tint="coral" solid />
             <StatTile icon={<Star size={20} />} value={stats.group_average !== null ? fmtScore(stats.group_average) : "—"} label="Moyenne du groupe" tint="gold" />
             <StatTile icon={<Users size={20} />} value={stats.nb_ranked_players} label="Joueurs classés" tint="lime" />
           </div>

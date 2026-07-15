@@ -6,7 +6,7 @@ const THEME_KEY = "oc_theme";
 function getInitial() {
   const stored = localStorage.getItem(THEME_KEY);
   if (stored) return stored;
-  return "light"; // clair par défaut : la charte mega DS est claire/crème
+  return "dark"; // sombre par défaut : nouvelle direction design (refonte moderne)
 }
 
 export function ThemeToggle() {

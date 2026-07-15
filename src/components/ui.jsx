@@ -119,14 +119,35 @@ const TINTS = {
   neutral: { bg: "var(--surface-soft)", fg: "var(--text-muted)" },
 };
 
-/** Bloc "icône + gros chiffre + libellé" façon callout Alan/J&A */
-export function StatTile({ icon, value, label, tint = "blue" }) {
-  const t = TINTS[tint] ?? TINTS.blue;
+/** Variantes "aplat plein" — cartes stats saturées façon refonte moderne */
+const SOLID_TINTS = {
+  blue: { bg: "var(--electric-blue)", fg: "#052430" },
+  gold: { bg: "var(--oc-amber-500)", fg: "#402C05" },
+  green: { bg: "var(--oc-green-500)", fg: "#0A2E1B" },
+  red: { bg: "var(--oc-red-500)", fg: "#3C0E0E" },
+  coral: { bg: "var(--oc-orange-500)", fg: "#3C1204" },
+  lime: { bg: "var(--lime-500)", fg: "var(--lime-ink)" },
+  pink: { bg: "#E85B9E", fg: "#3C0E28" },
+  sage: { bg: "var(--oc-bluegray-500)", fg: "#fff" },
+  neutral: { bg: "var(--surface-soft)", fg: "var(--text-muted)" },
+};
+
+/** Bloc "icône + gros chiffre + libellé" façon callout Alan/J&A.
+ * `solid`: aplat de couleur saturé sur toute la tuile (mise en avant des stats clés). */
+export function StatTile({ icon, value, label, tint = "blue", solid = false }) {
+  const t = (solid ? SOLID_TINTS : TINTS)[tint] ?? (solid ? SOLID_TINTS.blue : TINTS.blue);
   return (
-    <div style={{ background: "var(--surface)", border: "none", borderRadius: "var(--radius-lg)", padding: "16px", flex: 1, minWidth: 130, boxShadow: "var(--shadow-sm)" }}>
-      {icon && <div className="icon-chip" style={{ background: t.bg, color: t.fg, marginBottom: 10 }}>{icon}</div>}
-      <div className="num" style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.05, color: t.fg }}>{value}</div>
-      <div style={{ fontSize: "0.78rem", color: "var(--text-dim)", marginTop: 4 }}>{label}</div>
+    <div style={{
+      background: solid ? t.bg : "var(--surface)", border: "none", borderRadius: "var(--radius-lg)",
+      padding: "16px", flex: 1, minWidth: 130, boxShadow: "var(--shadow-sm)",
+    }}>
+      {icon && (
+        <div className="icon-chip" style={{
+          background: solid ? "rgba(255,255,255,.28)" : t.bg, color: solid ? t.fg : t.fg, marginBottom: 10,
+        }}>{icon}</div>
+      )}
+      <div className="num" style={{ fontSize: "2rem", letterSpacing: "-0.02em", lineHeight: 1.05, color: t.fg }}>{value}</div>
+      <div style={{ fontSize: "0.78rem", color: solid ? t.fg : "var(--text-dim)", opacity: solid ? 0.75 : 1, marginTop: 4 }}>{label}</div>
     </div>
   );
 }

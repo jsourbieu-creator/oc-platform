@@ -95,7 +95,7 @@ export function ProfilePage() {
 
       {myStats !== null && (
         <div className="stat-tiles" style={{ marginBottom: 16 }}>
-          <StatTile icon={<Star size={20} />} value={myStats === undefined ? "…" : fmtScore(myStats.ballon_dor_score)} label="Score Ballon d'Or" tint="gold" />
+          <StatTile icon={<Star size={20} />} value={myStats === undefined ? "…" : fmtScore(myStats.ballon_dor_score)} label="Score Ballon d'Or" tint="gold" solid />
           <StatTile icon={<Activity size={20} />} value={myStats === undefined ? "…" : myStats.sessions_played} label="Séances jouées" tint="blue" />
           <StatTile icon={<CheckCircle2 size={20} />} value={myStats === undefined ? "…" : `${myStats.attendance_rate}%`} label="Taux de présence" tint="green" />
         </div>
