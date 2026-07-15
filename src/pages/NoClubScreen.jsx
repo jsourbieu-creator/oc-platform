@@ -80,7 +80,7 @@ function JoinScreen({ signOut }) {
   return (
     <div className="auth-screen">
       <div className="auth-box" style={{ textAlign: "center" }}>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 10, color: "var(--oc-blue-mid)" }}><UsersThree size={36} weight="bold" /></div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 10, color: "var(--hero-sky)" }}><UsersThree size={36} weight="bold" /></div>
         <h2 style={{ fontSize: "1.4rem", marginBottom: 8 }}>Rejoindre {clubName || "le club"}</h2>
         {error && <div className="error-box" style={{ textAlign: "left" }}>{error}</div>}
 

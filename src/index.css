@@ -292,11 +292,12 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 .bottom-nav-item .nav-label{
   font-family:'Bricolage Grotesque',sans-serif; font-size:0.62rem; font-weight:600; white-space:nowrap;
 }
-.bottom-nav-item.active{ color:var(--hero-ink); }
+.bottom-nav-item.active{ color:var(--hero-sky); }
 .bottom-nav-item.active .nav-label{ font-weight:700; }
 .bottom-nav-item.active .bottom-nav-icon{
   background:var(--hero-sky); box-shadow:0 6px 16px rgba(143,211,238,.4);
 }
+.bottom-nav-item.active .bottom-nav-icon svg{ color:var(--hero-ink); }
 .bottom-nav-item.disabled{ opacity:0.4; }
 .bottom-nav-item.disabled svg{ color:var(--muted); }
 .bottom-nav-icon{
@@ -434,8 +435,9 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
   border-radius:999px;
   box-shadow:var(--shadow-md);
 }
-[data-theme="dark"] .bottom-nav-item.active{ color:var(--hero-ink); }
+[data-theme="dark"] .bottom-nav-item.active{ color:var(--hero-sky); }
 [data-theme="dark"] .bottom-nav-item.active .bottom-nav-icon{ background:var(--hero-sky); }
+[data-theme="dark"] .bottom-nav-item.active .bottom-nav-icon svg{ color:var(--hero-ink); }
 
 /* ═══ Composants OC Design System ═══ */
 .segmented{ display:inline-flex; background:var(--surface-soft); padding:6px; border-radius:18px; gap:6px; }

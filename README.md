@@ -173,6 +173,21 @@ via phpMyAdmin.
 - Cette palette a été proposée visuellement (nuancier interactif) avant
   implémentation et validée telle quelle.
 
+## Itération design du 15/07 (suite 3) — nettoyage complet de l'ancien bleu + fix lisibilité navbar
+
+- **Tous les résidus de l'ancien bleu saturé** (`--oc-blue-deep`,
+  `--oc-sky-600`, `--electric-blue`) remplacés par le bleu ciel du hero
+  (`--hero-sky` + `--hero-ink`) : couleur des types d'événement
+  (entraînement/événement club), case sélectionnée du calendrier mensuel,
+  bouton rond "+ Ajouter", tuile KPI bleue, icônes décoratives (épingle du
+  Vestiaire, écran "rejoindre un club").
+- **Fix de lisibilité navbar mobile** : le label actif héritait de l'encre
+  marine (foncée) — invisible sur la barre sombre. Corrigé en séparant les
+  deux : le **label** reste clair (bleu ciel) sur la barre sombre, seule
+  l'**icône** passe en encre marine sur son propre rond clair.
+- Les boutons "primaire" classiques (Enregistrer, Créer un compte…) gardent
+  pour l'instant le bleu plus saturé — à repasser en pastel si demandé.
+
 ## Itération design du 15/07 (suite 2) — cohérence charte, hero cliquable, navbar avec labels
 
 - **Boutons de présence du hero** : le bouton actif utilise maintenant la

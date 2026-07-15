@@ -2,8 +2,8 @@ import { SoccerBall, Volleyball, Confetti } from "@phosphor-icons/react";
 
 export const EVENT_TYPES = {
   match: { label: "Match", icon: SoccerBall, color: "var(--oc-orange-700)" },
-  training: { label: "Entraînement", icon: Volleyball, color: "var(--oc-blue-deep)" },
-  club_event: { label: "Événement club", icon: Confetti, color: "var(--oc-sky-600)" },
+  training: { label: "Entraînement", icon: Volleyball, color: "var(--hero-sky)" },
+  club_event: { label: "Événement club", icon: Confetti, color: "var(--hero-sky)" },
 };
 
 export const AVAIL_LABELS = {

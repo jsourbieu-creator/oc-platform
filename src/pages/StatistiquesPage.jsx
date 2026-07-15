@@ -63,7 +63,7 @@ export function StatistiquesPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <Donut
                   segments={[
-                    { value: stats.convocation_response_rate, color: "var(--oc-blue-bright)" },
+                    { value: stats.convocation_response_rate, color: "var(--hero-sky)" },
                     { value: 100 - stats.convocation_response_rate, color: "var(--surface-alt)" },
                   ]}
                   centerLabel={`${stats.convocation_response_rate}%`} centerSub="réponses"

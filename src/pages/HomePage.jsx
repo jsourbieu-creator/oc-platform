@@ -211,9 +211,9 @@ export function HomePage({ gotoConversation }) {
             onClick={() => setForm(form ? null : { ...EMPTY_FORM })}
             style={{
               width: 42, height: 42, borderRadius: "50%", border: "none", cursor: "pointer",
-              background: form ? "var(--oc-red-50)" : "var(--oc-sky-600)", color: form ? "var(--oc-red-700)" : "#fff",
+              background: form ? "var(--oc-red-50)" : "var(--hero-sky)", color: form ? "var(--oc-red-700)" : "var(--hero-ink)",
               display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              boxShadow: form ? "none" : "0 8px 18px rgba(24,143,192,.3)", fontSize: "1.3rem", fontWeight: 700,
+              boxShadow: form ? "none" : "0 8px 18px rgba(143,211,238,.35)", fontSize: "1.3rem", fontWeight: 700,
               transition: ".2s var(--ease-spring)",
             }}
           >{form ? <X size={18} /> : "+"}</button>
@@ -470,8 +470,8 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
               style={{
                 aspectRatio: "1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
                 borderRadius: 14, cursor: c.events.length ? "pointer" : "default",
-                background: active ? "var(--oc-sky-600)" : respondedBg ?? (c.events.length ? "var(--oc-sky-50)" : "var(--oc-bluegray-50)"),
-                color: active ? "#fff" : respondedInk ?? (c.events.length ? "var(--oc-sky-700)" : "var(--text)"),
+                background: active ? "var(--hero-sky)" : respondedBg ?? (c.events.length ? "var(--oc-sky-50)" : "var(--oc-bluegray-50)"),
+                color: active ? "var(--hero-ink)" : respondedInk ?? (c.events.length ? "var(--oc-sky-700)" : "var(--text)"),
                 fontWeight: 800,
                 boxShadow: c.isToday && !active ? "inset 0 0 0 100px var(--oc-sky-50)" : "none",
                 transition: "background .12s ease",
@@ -528,7 +528,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         <DateBadge
           date={e.starts_at}
           color={cancelled ? "var(--neutral-400)" : e.my_availability ? AVAIL_FILL[e.my_availability] : t.color}
-          ink={!cancelled && e.my_availability ? AVAIL_INK[e.my_availability] : "#fff"}
+          ink={!cancelled && e.my_availability ? AVAIL_INK[e.my_availability] : "var(--hero-ink)"}
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

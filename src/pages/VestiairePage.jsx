@@ -140,7 +140,7 @@ function PostCard({ post: p, myMemberId, activeRole, onEdit, onDelete, onPin, on
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            {Number(p.pinned) === 1 && <span title="Épinglé" style={{ display: "inline-flex", color: "var(--oc-blue-deep)" }}><PushPin size={15} /></span>}
+            {Number(p.pinned) === 1 && <span title="Épinglé" style={{ display: "inline-flex", color: "var(--hero-sky)" }}><PushPin size={15} /></span>}
             <strong style={{ fontSize: "1.05rem" }}>{p.title}</strong>
           </div>
           <div className="subtle">

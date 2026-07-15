@@ -23,7 +23,7 @@ export function Avatar({ name, userId, avatarUrl, size = 26, ring = true }) {
 
 /** Date compacte : bloc coloré plein (jour/mois), identité forte par type d'événement.
  * Si la personne a répondu à sa disponibilité, le bloc prend la couleur de sa réponse. */
-export function DateBadge({ date, color = "var(--electric-blue)", ink = "#fff" }) {
+export function DateBadge({ date, color = "var(--hero-sky)", ink = "var(--hero-ink)" }) {
   const { day, month } = fmtDateBadge(date);
   return (
     <div
@@ -126,7 +126,7 @@ const TINTS = {
 
 /** Variantes "aplat plein" — cartes stats saturées façon refonte moderne */
 const SOLID_TINTS = {
-  blue: { bg: "var(--electric-blue)", fg: "#052430" },
+  blue: { bg: "var(--hero-sky)", fg: "var(--hero-ink)" },
   gold: { bg: "var(--oc-amber-500)", fg: "#402C05" },
   green: { bg: "var(--oc-green-500)", fg: "#0A2E1B" },
   red: { bg: "var(--oc-red-500)", fg: "#3C0E0E" },
