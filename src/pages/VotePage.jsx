@@ -7,7 +7,7 @@ import { Avatar, ScoreSlider, ScoreBar, StatTile, SeasonPicker } from "@/compone
 import {
   Trophy, People, Star, Activity, ClipboardCheck, GraphUpArrow, Bullseye,
   Fire, Rulers, EmojiFrown, EmojiSmile, Award, InfoCircle, ChevronLeft,
-  GraphDown,
+  GraphDown, Stars,
 } from "react-bootstrap-icons";
 
 const PODIUM_COLORS = ["var(--gold-500)", "var(--silver-400)", "var(--bronze-500)"];
@@ -30,6 +30,32 @@ const TROPHY_DEFS = [
   { code: "most_overrated_self", label: "Celui qui se voit un peu trop beau", icon: EmojiSmile, requirement: "Celui qui se note beaucoup mieux que ce que le groupe pense de lui — trophée humoristique désactivé pour cette saison.", humorous: true },
   { code: "most_irregular", label: "Montagnes russes", icon: GraphDown, requirement: "L'opposé du plus régulier : des séances excellentes, d'autres ratées, un vrai grand huit — trophée humoristique désactivé pour cette saison.", humorous: true },
 ];
+
+/** Nom du vainqueur flouté par défaut — tape pour révéler. Garde le suspense
+ * avant la cérémonie de fin de saison où les trophées sont annoncés en vrai. */
+function TrophyWinnerReveal({ player, value }) {
+  const [revealed, setRevealed] = useState(false);
+  if (revealed) {
+    return (
+      <div style={{ marginTop: 4, animation: "trophy-reveal .35s ease" }}>
+        <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{player}</div>
+        <div className="subtle num" style={{ fontSize: "0.78rem" }}>{value}</div>
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => setRevealed(true)}
+      style={{
+        marginTop: 4, border: "none", background: "none", cursor: "pointer", textAlign: "left", padding: 0,
+        display: "flex", alignItems: "center", gap: 6, color: "var(--oc-sky-700)", fontSize: "0.76rem", fontWeight: 700,
+      }}
+    >
+      <Stars size={13} /> Secret jusqu'à la cérémonie — tape pour tricher 👀
+    </button>
+  );
+}
 
 /** Formate la valeur d'un trophée avec une unité claire — évite d'afficher un chiffre nu sans contexte. */
 function fmtTrophyValue(t) {
@@ -526,31 +552,6 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
         </div>
       )}
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="label-title">Records du groupe</div>
-        <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
-          Recalculés à chaque nouveau vote, sur toute la saison.
-        </p>
-        <StatRow
-          icon={<Rulers size={14} />} label="Joueur le plus régulier"
-          value={teamStats?.most_regular?.name}
-          empty="Il faut qu'au moins un joueur ait joué 5 séances notées."
-          description={'"Régulier" = ses notes ne montent ni ne descendent beaucoup d\'une fois sur l\'autre. Mesuré par l\'écart-type le plus faible.'}
-        />
-        <StatRow
-          icon={<Fire size={14} />} label="Joueur le plus assidu"
-          value={teamStats?.most_assiduous && `${teamStats.most_assiduous.name} (${teamStats.most_assiduous.value}%)`}
-          empty="Aucune présence enregistrée pour le moment."
-          description={'"Assidu" = vient le plus souvent aux séances où il est attendu. Taux de présence = séances jouées ÷ séances attendues (hors blessures).'}
-        />
-        <StatRow
-          icon={<GraphUpArrow size={14} />} label="Meilleure progression"
-          value={teamStats?.best_progression?.name}
-          empty="Il faut au moins 4 séances notées pour un même joueur."
-          description="La plus grosse hausse entre la moyenne de la 1ère moitié de saison et celle de la 2e moitié."
-        />
-      </div>
-
       <div className="label-title" style={{ marginBottom: 4 }}>Trophées de la saison</div>
       <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
         Décernés au meilleur de chaque catégorie, recalculés à chaque nouveau vote — grisés tant que personne ne remplit la condition.
@@ -572,12 +573,7 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
               </div>
               <strong style={{ fontSize: "0.88rem" }}>{def.label}</strong>
               <p className="subtle" style={{ margin: 0, fontSize: "0.74rem", lineHeight: 1.4 }}>{def.requirement}</p>
-              {awarded && (
-                <div style={{ marginTop: 4 }}>
-                  <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{awarded.player}</div>
-                  <div className="subtle num" style={{ fontSize: "0.78rem" }}>{fmtTrophyValue(awarded)}</div>
-                </div>
-              )}
+              {awarded && <TrophyWinnerReveal player={awarded.player} value={fmtTrophyValue(awarded)} />}
             </div>
           );
         })}
@@ -587,16 +583,4 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
 }
 
 /** Ligne de stat toujours visible : valeur normale, ou grisée + explication si pas encore de donnée. */
-function StatRow({ icon, label, value, empty, description }) {
-  return (
-    <div className="list-row" style={{ alignItems: "flex-start" }}>
-      <div>
-        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>{icon}{label}</span>
-        {description && <div className="subtle" style={{ fontSize: "0.76rem", marginTop: 2, maxWidth: 260 }}>{description}</div>}
-      </div>
-      {value
-        ? <strong style={{ flexShrink: 0 }}>{value}</strong>
-        : <span className="subtle" style={{ textAlign: "right", maxWidth: 180, opacity: 0.75, flexShrink: 0 }}>{empty}</span>}
-    </div>
-  );
-}
+

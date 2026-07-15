@@ -244,6 +244,7 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 
 .spinner{ width:26px; height:26px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--oc-blue-600); animation:spin .8s linear infinite; margin:20px auto; }
 @keyframes spin{ to{ transform:rotate(360deg); } }
+@keyframes trophy-reveal{ from{ opacity:0; filter:blur(6px); transform:scale(.96); } to{ opacity:1; filter:blur(0); transform:none; } }
 
 /* Layout dashboard */
 .dashboard-shell{ display:flex; min-height:100vh; background:var(--bg); }
