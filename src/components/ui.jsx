@@ -1,5 +1,6 @@
 import { fmtDateBadge, initials, avatarColor, avatarSrc } from "@/lib/events";
 import { useState } from "react";
+import { CaretDownFill } from "react-bootstrap-icons";
 
 /** Avatar rond : photo réelle si dispo, sinon initiales colorées */
 export function Avatar({ name, userId, avatarUrl, size = 26, ring = true }) {
@@ -232,6 +233,61 @@ export function SeasonPicker({ seasons, value, onChange }) {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+/** Pastille colorée + petit menu déroulant custom — remplace un <select> natif
+ * pour changer une valeur (rôle, statut...) parmi une liste d'options. */
+export function PillMenu({ value, options, colors, onChange, disabled = false }) {
+  const [open, setOpen] = useState(false);
+  const color = colors?.[value] ?? "var(--text-dim)";
+
+  if (disabled) {
+    return (
+      <span className="badge badge-neutral" style={{ color }}>{options[value]}</span>
+    );
+  }
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "0.78rem", fontWeight: 700,
+          padding: "6px 10px", borderRadius: 999, display: "flex", alignItems: "center", gap: 6,
+          background: `color-mix(in srgb, ${color} 16%, transparent)`, color,
+        }}
+      >
+        {options[value]}
+        <CaretDownFill size={9} style={{ opacity: 0.7 }} />
+      </button>
+      {open && (
+        <>
+          <div style={{ position: "fixed", inset: 0, zIndex: 9 }} onClick={() => setOpen(false)} />
+          <div style={{
+            position: "absolute", right: 0, top: "calc(100% + 4px)", background: "var(--surface)",
+            borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-md)", zIndex: 10, minWidth: 150, overflow: "hidden",
+          }}>
+            {Object.entries(options).map(([v, l]) => (
+              <div
+                key={v}
+                onClick={() => { onChange(v); setOpen(false); }}
+                style={{
+                  padding: "10px 14px", fontSize: "0.85rem", fontWeight: v === value ? 700 : 500, cursor: "pointer",
+                  color: v === value ? (colors?.[v] ?? "var(--text)") : "var(--text)",
+                  background: v === value ? "var(--surface-soft)" : "transparent",
+                }}
+                onMouseEnter={(e) => { if (v !== value) e.currentTarget.style.background = "var(--surface-alt)"; }}
+                onMouseLeave={(e) => { if (v !== value) e.currentTarget.style.background = "transparent"; }}
+              >
+                {l}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

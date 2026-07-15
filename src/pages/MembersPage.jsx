@@ -2,7 +2,7 @@ import { Check } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { Avatar } from "@/components/ui";
+import { Avatar, PillMenu } from "@/components/ui";
 
 const ROLE_LABELS = {
   super_admin: "Super admin",
@@ -11,7 +11,18 @@ const ROLE_LABELS = {
   board_member: "Bureau",
   player: "Joueur",
 };
+const ROLE_COLORS = {
+  super_admin: "var(--oc-orange-500)",
+  admin: "var(--electric-blue)",
+  coach: "var(--lime-600)",
+  board_member: "var(--oc-amber-700)",
+  player: "var(--text-dim)",
+};
 const STATUS_LABELS = { active: "Actif", invited: "En attente", suspended: "Suspendu", archived: "Archivé" };
+const STATUS_COLORS = {
+  active: "var(--lime-600)", invited: "var(--oc-amber-700)",
+  suspended: "var(--oc-orange-500)", archived: "var(--text-dim)",
+};
 const canManage = (role) => role === "super_admin" || role === "admin";
 
 export function MembersPage() {
@@ -69,12 +80,8 @@ export function MembersPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                 {manage && !isSelf ? (
                   <>
-                    <select value={m.role} onChange={(e) => setRole(m.id, e.target.value)} style={{ width: "auto", padding: "6px 8px", fontSize: "0.8rem" }}>
-                      {Object.entries(ROLE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
-                    <select value={m.status} onChange={(e) => setStatus(m.id, e.target.value)} style={{ width: "auto", padding: "6px 8px", fontSize: "0.8rem" }}>
-                      {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
+                    <PillMenu value={m.role} options={ROLE_LABELS} colors={ROLE_COLORS} onChange={(v) => setRole(m.id, v)} />
+                    <PillMenu value={m.status} options={STATUS_LABELS} colors={STATUS_COLORS} onChange={(v) => setStatus(m.id, v)} />
                   </>
                 ) : (
                   <>
