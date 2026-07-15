@@ -31,6 +31,16 @@ const TROPHY_DEFS = [
   { code: "most_irregular", label: "Montagnes russes", icon: GraphDown, requirement: "L'opposé du plus régulier : des séances excellentes, d'autres ratées, un vrai grand huit — trophée humoristique désactivé pour cette saison.", humorous: true },
 ];
 
+/** Formate la valeur d'un trophée avec une unité claire — évite d'afficher un chiffre nu sans contexte. */
+function fmtTrophyValue(t) {
+  const v = t.value;
+  if (typeof v !== "number") return v; // déjà une chaîne formatée côté API (ex: "92%", "+1.2")
+  if (t.code === "ballon_dor" || t.code === "best_raw_average") return `${fmtScore(v)}/10`;
+  if (t.code === "closest_perception") return `${fmtScore(v)} pt${v >= 1.5 ? "s" : ""} d'écart`;
+  if (t.code === "most_severe_self") return `${fmtScore(Math.abs(v))} pt${Math.abs(v) >= 1.5 ? "s" : ""} en dessous de ce que pense le groupe`;
+  return fmtScore(v);
+}
+
 /** Une séance est terminée à ends_at si connu, sinon 2h après starts_at — même règle que côté API. */
 function hasEnded(e) {
   const end = e.ends_at ? new Date(e.ends_at.replace(" ", "T")) : new Date(new Date(e.starts_at.replace(" ", "T")).getTime() + 2 * 3600 * 1000);
@@ -419,21 +429,24 @@ function ProfilTab({ season, myRanking, settings, perception, myTrophies }) {
         <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
           Les trophées sont décernés au meilleur de chaque catégorie sur la saison, recalculés à chaque nouveau vote — grisés ici tant que tu ne le décroches pas toi-même. Remplir la condition ne suffit pas forcément : un seul joueur gagne chaque trophée, le meilleur de tous sur ce critère.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8 }}>
           {TROPHY_DEFS.map((def) => {
             const won = myTrophies.find((t) => t.code === def.code);
             const Icon = def.icon;
             return (
               <div
-                key={def.code} className="card"
-                style={{ opacity: won ? 1 : 0.5, background: won ? "var(--surface)" : "var(--surface-soft)", display: "flex", flexDirection: "column", gap: 8, minHeight: 140, boxShadow: "none" }}
+                key={def.code}
+                style={{
+                  opacity: won ? 1 : 0.5, background: won ? "var(--surface)" : "var(--surface-soft)",
+                  display: "flex", flexDirection: "column", gap: 6, borderRadius: "var(--radius-md)", padding: 14,
+                }}
               >
                 <div className="icon-chip" style={{ background: won ? "var(--oc-yellow-100)" : "var(--surface-alt)", color: won ? "var(--gold-500)" : "var(--text-dim)" }}>
                   <Icon size={18} />
                 </div>
                 <strong style={{ fontSize: "0.86rem" }}>{def.label}</strong>
                 <p className="subtle" style={{ margin: 0, fontSize: "0.74rem", lineHeight: 1.4 }}>{def.requirement}</p>
-                {won && <div className="num" style={{ marginTop: "auto", fontWeight: 700, color: "var(--gold-500)" }}>{typeof won.value === "number" ? fmtScore(won.value) : won.value}</div>}
+                {won && <div className="num" style={{ marginTop: 4, fontWeight: 700, color: "var(--gold-500)" }}>{fmtTrophyValue(won)}</div>}
               </div>
             );
           })}
@@ -542,14 +555,17 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
       <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
         Décernés au meilleur de chaque catégorie, recalculés à chaque nouveau vote — grisés tant que personne ne remplit la condition.
       </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8 }}>
         {TROPHY_DEFS.map((def) => {
           const awarded = list.find((t) => t.code === def.code);
           const Icon = def.icon;
           return (
             <div
-              key={def.code} className="card"
-              style={{ opacity: awarded ? 1 : 0.5, background: awarded ? "var(--surface)" : "var(--surface-soft)", display: "flex", flexDirection: "column", gap: 8, minHeight: 150 }}
+              key={def.code}
+              style={{
+                opacity: awarded ? 1 : 0.5, background: awarded ? "var(--surface)" : "var(--surface-soft)",
+                display: "flex", flexDirection: "column", gap: 6, borderRadius: "var(--radius-md)", padding: 14,
+              }}
             >
               <div className="icon-chip" style={{ background: awarded ? "var(--oc-yellow-100)" : "var(--surface-alt)", color: awarded ? "var(--gold-500)" : "var(--text-dim)" }}>
                 <Icon size={18} />
@@ -557,7 +573,10 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
               <strong style={{ fontSize: "0.88rem" }}>{def.label}</strong>
               <p className="subtle" style={{ margin: 0, fontSize: "0.74rem", lineHeight: 1.4 }}>{def.requirement}</p>
               {awarded && (
-                <div style={{ marginTop: "auto" }}><div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{awarded.player}</div><div className="subtle num" style={{ fontSize: "0.78rem" }}>{typeof awarded.value === "number" ? fmtScore(awarded.value) : awarded.value}</div></div>
+                <div style={{ marginTop: 4 }}>
+                  <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{awarded.player}</div>
+                  <div className="subtle num" style={{ fontSize: "0.78rem" }}>{fmtTrophyValue(awarded)}</div>
+                </div>
               )}
             </div>
           );
