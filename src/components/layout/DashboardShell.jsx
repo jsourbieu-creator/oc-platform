@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Bell } from "lucide-react";
+import blason from "@/assets/blason.svg";
 
 const ROLE_LABELS = {
   super_admin: "Super admin",
@@ -42,26 +43,24 @@ export function DashboardShell({ view, goto, children }) {
       <Sidebar view={view} goto={goto} badges={badges} />
       <div className="dashboard-main">
         <header className="topbar">
-          <div className="topbar-left">
+          <div className="topbar-left" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <img src={blason} alt="" style={{ width: 30, height: 30, flexShrink: 0 }} />
             {memberships.length > 1 ? (
-              <select value={activeClubId ?? ""} onChange={(e) => setActiveClubId(Number(e.target.value))} style={{ width: "auto", border: "none", fontWeight: 700 }}>
+              <select value={activeClubId ?? ""} onChange={(e) => setActiveClubId(Number(e.target.value))} style={{ width: "auto", border: "none", fontWeight: 700, background: "transparent", minHeight: 0, padding: 0 }}>
                 {memberships.map((m) => <option key={m.club_id} value={m.club_id}>{m.club_short_name}</option>)}
               </select>
             ) : (
-              <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>{memberships[0]?.club_name}</span>
+              <span style={{ fontWeight: 800, fontSize: "0.92rem", letterSpacing: "-0.01em" }}>{memberships[0]?.club_name}</span>
             )}
-            {activeRole && <span className="badge badge-info">{ROLE_LABELS[activeRole] ?? activeRole}</span>}
           </div>
-          <div className="topbar-right">
-            <span className="subtle" style={{ display: "none" }}>{user?.first_name} {user?.last_name}</span>
+          <div className="topbar-right" style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <span onClick={() => goto("notifications")} style={{ cursor: "pointer", position: "relative", display: "inline-flex", color: "var(--text-dim)" }} title="Notifications">
-              <Bell size={18} />
+              <Bell size={19} />
               {unread > 0 && (
-                <span style={{ position: "absolute", top: -6, right: -8, background: "var(--danger-600)", color: "#fff", borderRadius: "var(--radius-full)", fontSize: "0.6rem", fontWeight: 800, padding: "1px 5px", lineHeight: 1.4 }}>{unread > 9 ? "9+" : unread}</span>
+                <span style={{ position: "absolute", top: -6, right: -8, background: "var(--danger-500)", color: "#fff", borderRadius: "999px", fontSize: "0.6rem", fontWeight: 800, padding: "1px 5px", lineHeight: 1.4 }}>{unread > 9 ? "9+" : unread}</span>
               )}
             </span>
             <ThemeToggle />
-            <span onClick={signOut} className="subtle" style={{ cursor: "pointer" }}>Déconnexion</span>
           </div>
         </header>
         <main className="dashboard-content"><div key={view} className="view-enter">{children}</div></main>

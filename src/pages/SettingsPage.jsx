@@ -7,7 +7,7 @@ const canManage = (role) => role === "super_admin" || role === "admin";
 const HUB_LABELS = ["Équipes", "Membres", "Messages", "Statistiques", "Classements", "Trophées", "Documents", "Médias", "Notifications", "Charte graphique", "Administration"];
 
 export function SettingsPage({ goto }) {
-  const { token, activeClubId, activeRole, memberships, refresh } = useAuth();
+  const { token, activeClubId, activeRole, memberships, refresh, signOut, user } = useAuth();
   const club = memberships.find((m) => m.club_id === activeClubId);
   const manage = canManage(activeRole);
 
@@ -77,6 +77,16 @@ export function SettingsPage({ goto }) {
             peuvent modifier ces informations.
           </p>
         )}
+      </div>
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <div className="label-title">Mon compte</div>
+        <p className="subtle" style={{ marginTop: 0, marginBottom: 14 }}>
+          Connecté en tant que <strong style={{ color: "var(--text)" }}>{user?.first_name} {user?.last_name}</strong> ({user?.email}).
+        </p>
+        <button className="btn btn-outline" onClick={signOut} style={{ color: "var(--danger-500)", borderColor: "var(--danger-500)" }}>
+          Se déconnecter
+        </button>
       </div>
     </div>
   );

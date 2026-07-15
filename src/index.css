@@ -52,8 +52,8 @@
   --oc-gradient:linear-gradient(90deg, var(--oc-blue-700), var(--oc-blue-500), var(--oc-blue-700));
 }
 [data-theme="dark"]{
-  --page:#101214; --surface:#181B1E; --surface-soft:#202428; --surface-raised:#23272B;
-  --text:#F5F7F8; --text-muted:#A8B0B6; --border:#2C3135;
+  --page:#0B0D0F; --surface:#141719; --surface-soft:#1C2024; --surface-raised:#22262A;
+  --text:#F5F7F8; --text-muted:#9BA5AD; --border:#262B30;
   --nav:#F4F5F2; --nav-text:#131517; --overlay:rgba(0,0,0,.62);
   --shadow-1:0 2px 8px rgba(0,0,0,.18); --shadow-2:0 8px 24px rgba(0,0,0,.22);
   --shadow-3:0 18px 46px rgba(0,0,0,.30); --shadow-4:0 30px 80px rgba(0,0,0,.42);
@@ -203,7 +203,7 @@ label{ font-size:12px; font-weight:850; color:var(--text); display:block; margin
 
 .bottom-nav{
   display:flex; position:fixed; z-index:20; gap:2px;
-  bottom:calc(12px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+  bottom:calc(16px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
   width:min(calc(100% - 24px), 420px); height:62px; padding:6px;
   background:color-mix(in srgb, var(--surface) 88%, transparent);
   backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
@@ -218,7 +218,7 @@ label{ font-size:12px; font-weight:850; color:var(--text); display:block; margin
   border-radius:var(--radius-full); transition:background .15s ease, color .15s ease;
 }
 .bottom-nav-item svg{ color:var(--oc-blue-600); }
-.bottom-nav-item.active{ color:#fff; background:linear-gradient(135deg, var(--oc-blue-deep), var(--oc-blue-mid)); }
+.bottom-nav-item.active{ color:#fff; background:var(--oc-blue-600); box-shadow:0 6px 16px color-mix(in srgb, var(--oc-blue-600) 45%, transparent); }
 .bottom-nav-item.active svg{ color:#fff; filter:drop-shadow(0 0 5px rgba(255,255,255,0.75)); }
 .bottom-nav-item.disabled{ opacity:0.4; }
 .bottom-nav-item.disabled svg{ color:var(--text-dim); }
@@ -346,10 +346,11 @@ label{ font-size:12px; font-weight:850; color:var(--text); display:block; margin
 
 /* Nav inversée en mode sombre (signature OC Design System) */
 [data-theme="dark"] .bottom-nav{
-  background:color-mix(in srgb, var(--nav) 90%, transparent);
-  border-color:transparent;
+  background:rgba(28,32,36,0.82);
+  border-color:rgba(255,255,255,0.08);
+  box-shadow:0 16px 42px rgba(0,0,0,0.6);
 }
-[data-theme="dark"] .bottom-nav-item{ color:#5A6067; }
+[data-theme="dark"] .bottom-nav-item{ color:#8A939B; }
 [data-theme="dark"] .bottom-nav-item.active{ color:#fff; }
 
 /* ═══ Composants OC Design System ═══ */

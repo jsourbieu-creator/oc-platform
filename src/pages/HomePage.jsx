@@ -141,6 +141,8 @@ export function HomePage({ gotoConversation }) {
         <img src={blason} alt="Blason OC" style={{ width: 46, height: 46, flexShrink: 0 }} />
       </div>
 
+      <WeekStrip events={events} selectedDay={selectedDay} onSelect={setSelectedDay} />
+
       <NextSessionCard
         event={nextEvent}
         loading={nextEvent === undefined}
@@ -173,7 +175,6 @@ export function HomePage({ gotoConversation }) {
         ))}
       </div>
 
-      {scope === "week" && <WeekStrip events={events} selectedDay={selectedDay} onSelect={setSelectedDay} />}
       {scope === "month" && (
         <MonthGrid
           events={events}
@@ -286,27 +287,36 @@ function WeekStrip({ events, selectedDay, onSelect }) {
   });
 
   return (
-    <div className="card" style={{ marginBottom: 14, padding: 10 }}>
-      <div style={{ display: "flex", gap: 6, overflowX: "auto" }}>
-        {days.map((d) => {
-          const active = selectedDay === d.iso;
-          return (
-            <div
-              key={d.iso}
-              onClick={() => onSelect(active ? null : d.iso)}
+    <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 18, paddingBottom: 2 }}>
+      {days.map((d) => {
+        const active = selectedDay === d.iso;
+        return (
+          <button
+            key={d.iso}
+            onClick={() => onSelect(active ? null : d.iso)}
+            style={{
+              flex: "1 0 44px", display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
+              background: "transparent", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit",
+            }}
+          >
+            <span style={{ fontSize: "0.62rem", fontWeight: 850, textTransform: "uppercase", letterSpacing: "0.06em", color: active ? "var(--oc-blue-600)" : "var(--text-dim)" }}>
+              {d.label}
+            </span>
+            <span
+              className="num"
               style={{
-                flex: "0 0 44px", textAlign: "center", padding: "8px 0", borderRadius: "var(--radius-md)", cursor: "pointer",
-                background: active ? "var(--oc-blue-deep)" : "transparent", color: active ? "#fff" : "var(--text)",
-                border: d.isToday && !active ? "1.5px solid var(--oc-blue-deep)" : "1.5px solid transparent",
+                width: 42, height: 42, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "1rem", fontWeight: 800, transition: ".18s var(--ease-standard)",
+                background: active ? "var(--oc-blue-600)" : "var(--surface)",
+                color: active ? "#fff" : "var(--text)",
+                border: d.isToday && !active ? "2px solid var(--oc-blue-600)" : "2px solid transparent",
+                boxShadow: active ? "0 8px 18px color-mix(in srgb, var(--oc-blue-600) 40%, transparent)" : "none",
               }}
-            >
-              <div className="num" style={{ fontSize: "1.05rem", lineHeight: 1.1 }}>{d.day}</div>
-              <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", color: active ? "#fff" : "var(--text-dim)" }}>{d.label}</div>
-              {d.hasEvent && <div style={{ width: 4, height: 4, borderRadius: "50%", background: active ? "#fff" : "var(--oc-blue-bright)", margin: "3px auto 0" }} />}
-            </div>
-          );
-        })}
-      </div>
+            >{d.day}</span>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: d.hasEvent ? (active ? "var(--oc-blue-600)" : "var(--oc-lime-500)") : "transparent" }} />
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -367,16 +377,18 @@ function NextSessionCard({ event: e, loading, onOpen, onSetAvailability }) {
         <div style={{ display: "flex", gap: 8 }}>
           {Object.entries(AVAIL_LABELS).map(([v, l]) => {
             const active = e.my_availability === v;
+            const C = { available: ["var(--oc-lime-300)", "#2C3608"], maybe: ["var(--oc-yellow-300)", "#3B2F06"], unavailable: ["var(--oc-coral-500)", "#fff"] }[v];
             return (
               <button
                 key={v}
                 onClick={() => onSetAvailability(e.id, v)}
                 style={{
-                  flex: 1, border: "none", cursor: "pointer", padding: "10px 6px", borderRadius: 13,
-                  fontSize: "0.82rem", fontWeight: 850, fontFamily: "inherit",
-                  background: active ? "#fff" : "rgba(255,255,255,0.16)",
-                  color: active ? (isCoral ? "var(--oc-coral-700)" : "var(--oc-blue-700)") : "#fff",
-                  transition: ".15s",
+                  flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
+                  fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
+                  background: active ? C[0] : "rgba(255,255,255,0.14)",
+                  color: active ? C[1] : "rgba(255,255,255,0.92)",
+                  transform: active ? "scale(1.02)" : "none",
+                  transition: ".18s var(--ease-spring)",
                 }}
               >{l}</button>
             );
