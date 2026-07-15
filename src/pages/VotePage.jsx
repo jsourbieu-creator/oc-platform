@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { EVENT_TYPES, fmtDate, fmtTime } from "@/lib/events";
 import { fmtScore } from "@/lib/ballondor";
-import { Avatar, ScoreSlider, ScoreBar, StatTile } from "@/components/ui";
+import { Avatar, ScoreSlider, ScoreBar, StatTile, SeasonPicker } from "@/components/ui";
 import {
   Trophy, People, Star, Activity, ClipboardCheck, GraphUpArrow, Bullseye,
   Fire, Rulers, EmojiFrown, EmojiSmile, Award, InfoCircle, ChevronLeft,
@@ -15,6 +15,17 @@ const TROPHY_ICONS = {
   best_progression: GraphUpArrow, closest_perception: Bullseye,
   most_severe_self: EmojiFrown, most_overrated_self: EmojiSmile,
 };
+/** Liste canonique de tous les trophées possibles — affichés en tuile même
+ * quand ils n'ont pas encore été décernés (grisée + condition manquante). */
+const TROPHY_DEFS = [
+  { code: "ballon_dor", label: "Ballon d'Or", icon: Trophy, requirement: "Le meilleur score, une fois classé officiellement." },
+  { code: "most_regular", label: "Joueur le plus régulier", icon: Rulers, requirement: "Il faut au moins 5 séances jouées et notées par un même joueur." },
+  { code: "most_assiduous", label: "Joueur le plus assidu", icon: Fire, requirement: "Au moins une présence enregistrée cette saison." },
+  { code: "best_progression", label: "Meilleure progression", icon: GraphUpArrow, requirement: "Il faut au moins 4 séances notées pour un même joueur." },
+  { code: "closest_perception", label: "Ressenti le plus proche du groupe", icon: Bullseye, requirement: "Il faut avoir fait au moins une auto-évaluation." },
+  { code: "most_severe_self", label: "Le plus sévère avec lui-même", icon: EmojiFrown, requirement: "Trophée humoristique désactivé pour cette saison.", humorous: true },
+  { code: "most_overrated_self", label: "Celui qui se voit un peu trop beau", icon: EmojiSmile, requirement: "Trophée humoristique désactivé pour cette saison.", humorous: true },
+];
 
 /** Une séance est terminée à ends_at si connu, sinon 2h après starts_at — même règle que côté API. */
 function hasEnded(e) {
@@ -89,14 +100,9 @@ export function VotePage() {
       {tab !== "seances" && (
         <>
           {seasons?.length > 0 && (
-            <div className="card" style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
-              <div className="icon-chip" style={{ background: "var(--oc-sky-100)", color: "var(--oc-sky-700)", flexShrink: 0 }}><Trophy size={18} /></div>
-              <div className="field" style={{ margin: 0, flex: 1 }}>
-                <label>Saison</label>
-                <select value={seasonId ?? ""} onChange={(e) => setSeasonId(Number(e.target.value))}>
-                  {seasons.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
+            <div className="card" style={{ marginBottom: 16 }}>
+              <label className="label-title" style={{ marginBottom: 8, display: "block" }}>Saison</label>
+              <SeasonPicker seasons={seasons} value={seasonId} onChange={setSeasonId} />
             </div>
           )}
           {tab === "profil" && (
@@ -461,40 +467,59 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
         </div>
       )}
 
-      {teamStats && (teamStats.most_regular || teamStats.most_assiduous || teamStats.best_progression) && (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="label-title">Records du groupe</div>
-          {teamStats.most_regular && (
-            <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Rulers size={14} />Joueur le plus régulier</span><strong>{teamStats.most_regular.name}</strong></div>
-          )}
-          {teamStats.most_assiduous && (
-            <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Fire size={14} />Joueur le plus assidu</span><strong>{teamStats.most_assiduous.name} ({teamStats.most_assiduous.value}%)</strong></div>
-          )}
-          {teamStats.best_progression && (
-            <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><GraphUpArrow size={14} />Meilleure progression</span><strong>{teamStats.best_progression.name}</strong></div>
-          )}
-        </div>
-      )}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="label-title">Records du groupe</div>
+        <StatRow
+          icon={<Rulers size={14} />} label="Joueur le plus régulier"
+          value={teamStats?.most_regular?.name}
+          empty="Il faut qu'au moins un joueur ait joué 5 séances notées."
+        />
+        <StatRow
+          icon={<Fire size={14} />} label="Joueur le plus assidu"
+          value={teamStats?.most_assiduous && `${teamStats.most_assiduous.name} (${teamStats.most_assiduous.value}%)`}
+          empty="Aucune présence enregistrée pour le moment."
+        />
+        <StatRow
+          icon={<GraphUpArrow size={14} />} label="Meilleure progression"
+          value={teamStats?.best_progression?.name}
+          empty="Il faut au moins 4 séances notées pour un même joueur."
+        />
+      </div>
 
-      <div className="card">
-        <div className="label-title">Trophées de la saison</div>
-        {list.length === 0 && <p className="subtle" style={{ margin: 0 }}>Pas encore assez de votes cette saison pour attribuer des trophées.</p>}
-        {list.map((t) => {
-          const Icon = TROPHY_ICONS[t.code] ?? Award;
+      <div className="label-title" style={{ marginBottom: 10 }}>Trophées de la saison</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 12 }}>
+        {TROPHY_DEFS.map((def) => {
+          const awarded = list.find((t) => t.code === def.code);
+          if (def.humorous && !awarded) return null; // masqué si désactivé et rien à montrer
+          const Icon = def.icon;
           return (
-            <div key={t.code} className="list-row">
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div className="icon-chip" style={{ background: "var(--oc-yellow-100)", color: "var(--gold-500)" }}><Icon size={18} /></div>
-                <div>
-                  <strong>{t.label}</strong>
-                  <div className="subtle">{t.player}</div>
-                </div>
+            <div
+              key={def.code} className="card"
+              style={{ opacity: awarded ? 1 : 0.5, background: awarded ? "var(--surface)" : "var(--surface-soft)", display: "flex", flexDirection: "column", gap: 8, minHeight: 130 }}
+            >
+              <div className="icon-chip" style={{ background: awarded ? "var(--oc-yellow-100)" : "var(--surface-alt)", color: awarded ? "var(--gold-500)" : "var(--text-dim)" }}>
+                <Icon size={18} />
               </div>
-              <strong className="num">{t.value}</strong>
+              <strong style={{ fontSize: "0.88rem" }}>{def.label}</strong>
+              {awarded
+                ? <div style={{ marginTop: "auto" }}><div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{awarded.player}</div><div className="subtle num" style={{ fontSize: "0.78rem" }}>{awarded.value}</div></div>
+                : <p className="subtle" style={{ margin: "auto 0 0", fontSize: "0.76rem" }}>{def.requirement}</p>}
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** Ligne de stat toujours visible : valeur normale, ou grisée + explication si pas encore de donnée. */
+function StatRow({ icon, label, value, empty }) {
+  return (
+    <div className="list-row">
+      <span style={{ display: "flex", alignItems: "center", gap: 7 }}>{icon}{label}</span>
+      {value
+        ? <strong>{value}</strong>
+        : <span className="subtle" style={{ textAlign: "right", maxWidth: 220, opacity: 0.75 }}>{empty}</span>}
     </div>
   );
 }

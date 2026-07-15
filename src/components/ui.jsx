@@ -200,3 +200,38 @@ export function ScoreBar({ label, value, highlight = false }) {
     </div>
   );
 }
+
+/** Sélecteur de saison sous forme de tuiles au lieu d'un menu déroulant. */
+export function SeasonPicker({ seasons, value, onChange }) {
+  if (!seasons?.length) return null;
+  return (
+    <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2 }}>
+      {seasons.map((s) => {
+        const active = s.id === value;
+        return (
+          <button
+            key={s.id}
+            onClick={() => onChange(s.id)}
+            className="season-tile"
+            style={{
+              flexShrink: 0, border: "none", cursor: "pointer", fontFamily: "inherit",
+              padding: "10px 16px", borderRadius: "var(--radius-md)",
+              background: active ? "var(--electric-blue)" : "var(--surface-soft)",
+              color: active ? "#052430" : "var(--text)",
+              fontWeight: 700, fontSize: "0.88rem", display: "flex", alignItems: "center", gap: 8,
+              transition: "background .15s ease",
+            }}
+          >
+            {s.name}
+            {s.status === "active" && (
+              <span style={{
+                width: 6, height: 6, borderRadius: "50%",
+                background: active ? "#052430" : "var(--lime-600)", flexShrink: 0,
+              }} />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
