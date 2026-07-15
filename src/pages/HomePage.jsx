@@ -154,16 +154,16 @@ export function HomePage({ gotoConversation }) {
       />
 
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
-        <div className="kpi">
-          <b style={{ color: "var(--oc-sky-700)" }}>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
+        <div className="kpi solid-amber">
+          <b>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
           <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
         </div>
-        <div className="kpi">
-          <b style={{ color: "var(--oc-sky-700)" }}>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
+        <div className="kpi solid-lime">
+          <b>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
           <span>Ma présence</span>
         </div>
-        <div className="kpi">
-          <b style={{ color: "var(--oc-sky-700)" }}>{events === null ? "…" : (events.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled").length)}</b>
+        <div className="kpi solid-sky">
+          <b>{events === null ? "…" : (events.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled").length)}</b>
           <span>À venir</span>
         </div>
       </div>
