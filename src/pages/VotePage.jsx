@@ -322,11 +322,16 @@ function ProfilTab({ season, myRanking, settings, perception, myTrophies }) {
         <div className="label-title">Ta position — {season.name}</div>
         {myRanking ? (
           <>
-            <div className="stat-tiles" style={{ marginBottom: 14 }}>
+            <div className="stat-tiles" style={{ marginBottom: 8 }}>
               <StatTile icon={<Trophy size={18} />} value={fmtScore(myRanking.ballon_dor_score)} label="Score Ballon d'Or" tint="gold" solid />
               <StatTile icon={<Activity size={18} />} value={`${myRanking.sessions_played}`} label="Séances jouées" tint="coral" solid />
               <StatTile icon={<ClipboardCheck size={18} />} value={`${myRanking.attendance_rate}%`} label="Taux de présence" tint="lime" solid />
             </div>
+            <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 14 }}>
+              <strong>Score</strong> = moyenne des notes reçues, ajustée par ta régularité et ta présence (détails ci-dessous).{" "}
+              <strong>Séances jouées</strong> = nombre de séances où tu as répondu "présent".{" "}
+              <strong>Taux de présence</strong> = séances jouées ÷ séances où tu étais attendu (hors blessures).
+            </p>
 
             {myRanking.rank ? (
               <p style={{ margin: 0, fontSize: "0.92rem" }}>
@@ -405,7 +410,7 @@ function ProfilTab({ season, myRanking, settings, perception, myTrophies }) {
                 <div className="icon-chip" style={{ background: "var(--oc-yellow-100)", color: "var(--gold-500)" }}><Icon size={18} /></div>
                 <strong>{t.label}</strong>
               </div>
-              <strong className="num">{t.value}</strong>
+              <strong className="num">{typeof t.value === "number" ? fmtScore(t.value) : t.value}</strong>
             </div>
           );
         })}
@@ -427,11 +432,18 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
   return (
     <div>
       {teamStats && (
-        <div className="stat-tiles" style={{ marginBottom: 16 }}>
-          <StatTile icon={<Activity size={18} />} value={`${teamStats.sessions_with_votes}/${teamStats.total_sessions}`} label="Séances notées" tint="coral" solid />
-          <StatTile icon={<Star size={18} />} value={teamStats.group_average !== null ? `${fmtScore(teamStats.group_average)}/10` : "—/10"} label="Moyenne du groupe" tint="lime" solid />
-          <StatTile icon={<People size={18} />} value={`${teamStats.nb_ranked_players}/${teamStats.total_members}`} label="Joueurs classés" tint="blue" solid />
-        </div>
+        <>
+          <div className="stat-tiles" style={{ marginBottom: 8 }}>
+            <StatTile icon={<Activity size={18} />} value={`${teamStats.sessions_with_votes}/${teamStats.total_sessions}`} label="Séances notées" tint="coral" solid />
+            <StatTile icon={<Star size={18} />} value={teamStats.group_average !== null ? `${fmtScore(teamStats.group_average)}/10` : "—/10"} label="Moyenne du groupe" tint="lime" solid />
+            <StatTile icon={<People size={18} />} value={`${teamStats.nb_ranked_players}/${teamStats.total_members}`} label="Joueurs classés" tint="blue" solid />
+          </div>
+          <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 16 }}>
+            <strong>Séances notées</strong> = séances de la saison qui ont déjà au moins un vote, sur le total programmé.{" "}
+            <strong>Moyenne du groupe</strong> = moyenne de toutes les notes reçues par tout le monde.{" "}
+            <strong>Joueurs classés</strong> = joueurs ayant au moins une note, sur l'effectif actif total.
+          </p>
+        </>
       )}
 
       <div className="card" style={{ marginBottom: 16 }}>
@@ -505,7 +517,7 @@ function GroupeTab({ season, rankings, teamStats, trophies }) {
               </div>
               <strong style={{ fontSize: "0.88rem" }}>{def.label}</strong>
               {awarded
-                ? <div style={{ marginTop: "auto" }}><div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{awarded.player}</div><div className="subtle num" style={{ fontSize: "0.78rem" }}>{awarded.value}</div></div>
+                ? <div style={{ marginTop: "auto" }}><div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{awarded.player}</div><div className="subtle num" style={{ fontSize: "0.78rem" }}>{typeof awarded.value === "number" ? fmtScore(awarded.value) : awarded.value}</div></div>
                 : <p className="subtle" style={{ margin: "auto 0 0", fontSize: "0.76rem" }}>{def.requirement}</p>}
             </div>
           );
