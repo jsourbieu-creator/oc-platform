@@ -21,15 +21,16 @@ export function Avatar({ name, userId, avatarUrl, size = 26, ring = true }) {
   );
 }
 
-/** Date compacte : bloc coloré plein (jour/mois), identité forte par type d'événement */
-export function DateBadge({ date, color = "var(--electric-blue)" }) {
+/** Date compacte : bloc coloré plein (jour/mois), identité forte par type d'événement.
+ * Si la personne a répondu à sa disponibilité, le bloc prend la couleur de sa réponse. */
+export function DateBadge({ date, color = "var(--electric-blue)", ink = "#fff" }) {
   const { day, month } = fmtDateBadge(date);
   return (
     <div
       className="num"
       style={{
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        width: 54, height: 54, borderRadius: "var(--radius-md)", background: color, color: "#fff",
+        width: 54, height: 54, borderRadius: "var(--radius-md)", background: color, color: ink,
         flexShrink: 0,
       }}
     >

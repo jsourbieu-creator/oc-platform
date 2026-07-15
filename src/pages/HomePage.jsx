@@ -361,7 +361,14 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
         )}
       </div>
 
-      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }} onClick={onOpen} role="button">
+      <div
+        style={{
+          marginTop: 16, margin: "16px -20px -20px", padding: "14px 20px",
+          background: "rgba(6,20,28,0.28)", borderRadius: "0 0 var(--radius-xl) var(--radius-xl)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+        }}
+        onClick={onOpen} role="button"
+      >
         <div>
           <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 6 }}>
             Qui est là
@@ -424,6 +431,9 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
           if (!c) return <div key={`e${i}`} />;
           const active = selectedDay === c.iso;
           const types = [...new Set(c.events.map((e) => e.type))];
+          const myStatus = c.events.find((e) => e.my_availability)?.my_availability;
+          const respondedBg = myStatus ? AVAIL_FILL[myStatus] : null;
+          const respondedInk = myStatus ? AVAIL_INK[myStatus] : null;
           return (
             <div
               key={c.iso}
@@ -431,8 +441,8 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
               style={{
                 aspectRatio: "1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
                 borderRadius: 14, cursor: c.events.length ? "pointer" : "default",
-                background: active ? "var(--oc-sky-600)" : c.events.length ? "var(--oc-sky-50)" : "var(--oc-bluegray-50)",
-                color: active ? "#fff" : c.events.length ? "var(--oc-sky-700)" : "var(--text)",
+                background: active ? "var(--oc-sky-600)" : respondedBg ?? (c.events.length ? "var(--oc-sky-50)" : "var(--oc-bluegray-50)"),
+                color: active ? "#fff" : respondedInk ?? (c.events.length ? "var(--oc-sky-700)" : "var(--text)"),
                 fontWeight: 800,
                 outline: c.isToday && !active ? "2px solid var(--oc-sky-500)" : "none", outlineOffset: -2,
                 transition: "background .12s ease",
@@ -442,7 +452,7 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
               {types.length > 0 && (
                 <span style={{ display: "flex", gap: 2 }}>
                   {types.slice(0, 3).map((t) => (
-                    <span key={t} style={{ width: 5, height: 5, borderRadius: "50%", background: active ? "#fff" : (EVENT_TYPES[t] ?? EVENT_TYPES.match).color }} />
+                    <span key={t} style={{ width: 5, height: 5, borderRadius: "50%", background: active || respondedBg ? "currentColor" : (EVENT_TYPES[t] ?? EVENT_TYPES.match).color, opacity: active || respondedBg ? 0.55 : 1 }} />
                   ))}
                 </span>
               )}
@@ -486,7 +496,11 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   return (
     <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1, position: "relative" }}>
       <div style={{ cursor: "pointer", display: "flex", gap: 12 }} onClick={toggle}>
-        <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
+        <DateBadge
+          date={e.starts_at}
+          color={cancelled ? "var(--neutral-400)" : e.my_availability ? AVAIL_FILL[e.my_availability] : t.color}
+          ink={!cancelled && e.my_availability ? AVAIL_INK[e.my_availability] : "#fff"}
+        />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <strong>{e.title}</strong>
