@@ -7,7 +7,7 @@ import { Avatar, ScoreSlider, ScoreBar, StatTile, SeasonPicker } from "@/compone
 import {
   Trophy, People, Star, Activity, ClipboardCheck, GraphUpArrow, Bullseye,
   Fire, Rulers, EmojiFrown, EmojiSmile, Award, InfoCircle, ChevronLeft,
-  HeartPulse, GraphDown,
+  GraphDown,
 } from "react-bootstrap-icons";
 
 const PODIUM_COLORS = ["var(--gold-500)", "var(--silver-400)", "var(--bronze-500)"];
@@ -15,7 +15,7 @@ const TROPHY_ICONS = {
   ballon_dor: Trophy, most_regular: Rulers, most_assiduous: Fire,
   best_progression: GraphUpArrow, closest_perception: Bullseye,
   most_severe_self: EmojiFrown, most_overrated_self: EmojiSmile,
-  most_sessions: HeartPulse, best_raw_average: Star, most_irregular: GraphDown,
+  best_raw_average: Star, most_irregular: GraphDown,
 };
 /** Liste canonique de tous les trophées possibles — affichés en tuile même
  * quand ils n'ont pas encore été décernés (grisée + condition manquante). */
@@ -25,7 +25,6 @@ const TROPHY_DEFS = [
   { code: "most_assiduous", label: "Joueur le plus assidu", icon: Fire, requirement: "Au moins une présence enregistrée cette saison." },
   { code: "best_progression", label: "Meilleure progression", icon: GraphUpArrow, requirement: "Il faut au moins 4 séances notées pour un même joueur." },
   { code: "closest_perception", label: "Ressenti le plus proche du groupe", icon: Bullseye, requirement: "Il faut avoir fait au moins une auto-évaluation." },
-  { code: "most_sessions", label: "Increvable", icon: HeartPulse, requirement: "Le joueur qui a joué le plus de séances, en valeur brute." },
   { code: "best_raw_average", label: "Meilleure moyenne brute", icon: Star, requirement: "La moyenne des notes reçues, avant ajustement présence/régularité." },
   { code: "most_severe_self", label: "Le plus sévère avec lui-même", icon: EmojiFrown, requirement: "Trophée humoristique désactivé pour cette saison.", humorous: true },
   { code: "most_overrated_self", label: "Celui qui se voit un peu trop beau", icon: EmojiSmile, requirement: "Trophée humoristique désactivé pour cette saison.", humorous: true },

@@ -694,9 +694,6 @@ switch ($action) {
         $closestPerception = $pick($players, 'avg_abs_gap', false);
         if ($closestPerception) $trophies[] = ['code' => 'closest_perception', 'label' => 'Ressenti le plus proche du groupe', 'player' => $closestPerception['name'], 'user_id' => $closestPerception['user_id'], 'avatar_url' => $closestPerception['avatar_url'], 'value' => $closestPerception['avg_abs_gap']];
 
-        $mostSessions = $pick($players, 'sessions_played', true);
-        if ($mostSessions) $trophies[] = ['code' => 'most_sessions', 'label' => 'Increvable', 'player' => $mostSessions['name'], 'user_id' => $mostSessions['user_id'], 'avatar_url' => $mostSessions['avatar_url'], 'value' => $mostSessions['sessions_played'] . ' séances'];
-
         $bestRaw = $pick($players, 'raw_average', true);
         if ($bestRaw) $trophies[] = ['code' => 'best_raw_average', 'label' => 'Meilleure moyenne brute', 'player' => $bestRaw['name'], 'user_id' => $bestRaw['user_id'], 'avatar_url' => $bestRaw['avatar_url'], 'value' => $bestRaw['raw_average']];
 
