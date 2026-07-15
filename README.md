@@ -195,6 +195,28 @@ via phpMyAdmin.
   desktop, sans avoir à passer par le menu "Plus" ou la sidebar.
 - Migration : `0017_messages_attachments_edit_delete.sql`.
 
+## Reconstruction du 15/07 — Ballon d'Or repensé en 3 blocs (Séances / Mon profil / Le groupe)
+
+Après une première tentative en 5 onglets jugée "trop brouillon", la page a
+été repensée autour de **moments d'usage** plutôt que de fonctionnalités :
+
+- **Séances** (l'onglet "action") : si une séance attend un vote, une grande
+  carte "Tu as une séance à noter" apparaît en premier (tap → flux de vote
+  dédié à cette séance, avec retour). En dessous : séances à venir avec le
+  rappel "vote après la séance", puis l'historique séance par séance
+  (auto-évaluation vs moyenne reçue). `events.php:list` renvoie désormais
+  `my_vote_submitted` par séance pour repérer les votes en attente sans
+  requête supplémentaire.
+- **Mon profil** (l'onglet "où j'en suis") : score, jauge d'éligibilité avec
+  discours en clair ("si tu fais X séances de plus..."), explication
+  dépliable des coefficients avec les vrais réglages du club, mon ressenti
+  de la saison, et mes trophées personnels uniquement.
+- **Le groupe** (l'onglet "curiosité") : classement officiel + provisoire
+  complets, stats collectives, records du groupe, galerie complète des
+  trophées de la saison.
+- Sélecteur de saison partagé par "Mon profil" et "Le groupe" (pas
+  "Séances", qui reste centré sur l'instant présent).
+
 ## Itération majeure du 15/07 — Ballon d'Or devient un vrai hub (Votes fusionné avec Classements/Stats/Trophées)
 
 - **La page Votes devient "Ballon d'Or"**, avec 5 onglets : **Voter** (inchangé),

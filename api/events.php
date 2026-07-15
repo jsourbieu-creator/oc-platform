@@ -89,6 +89,10 @@ switch ($action) {
                 $presentNames[$r['event_id']][] = ['name' => trim("{$r['first_name']} {$r['last_name']}"), 'club_member_id' => (int) $r['club_member_id'], 'user_id' => $r['user_id'], 'avatar_url' => $r['avatar_url']];
             }
 
+            $stmt = db()->prepare("SELECT event_id FROM vote_submissions WHERE event_id IN ($ph) AND club_member_id = ?");
+            $stmt->execute([...$ids, $myMemberId]);
+            $myVoted = array_fill_keys(array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN)), true);
+
             foreach ($events as &$e) {
                 $e['avail_counts'] = $availCounts[$e['id']] ?? new stdClass();
                 $e['conv_counts'] = $convCounts[$e['id']] ?? new stdClass();
@@ -97,6 +101,7 @@ switch ($action) {
                 $e['my_convocation'] = $myConv[$e['id']] ?? null;
                 $e['confirmed_names'] = $confirmedNames[$e['id']] ?? [];
                 $e['present_names'] = $presentNames[$e['id']] ?? [];
+                $e['my_vote_submitted'] = isset($myVoted[$e['id']]);
             }
             unset($e);
         }

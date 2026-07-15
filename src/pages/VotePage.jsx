@@ -6,7 +6,7 @@ import { fmtScore } from "@/lib/ballondor";
 import { Avatar, ScoreSlider, ScoreBar, StatTile } from "@/components/ui";
 import {
   Trophy, People, Star, Activity, ClipboardCheck, GraphUpArrow, Bullseye,
-  Fire, Rulers, EmojiFrown, EmojiSmile, Award, InfoCircle,
+  Fire, Rulers, EmojiFrown, EmojiSmile, Award, InfoCircle, ChevronLeft,
 } from "react-bootstrap-icons";
 
 const PODIUM_COLORS = ["var(--gold-500)", "var(--silver-400)", "var(--bronze-500)"];
@@ -24,9 +24,9 @@ function hasEnded(e) {
 
 export function VotePage() {
   const { user, token, activeClubId } = useAuth();
-  const [tab, setTab] = useState("voter"); // voter | sessions | classement | stats | trophees
+  const [tab, setTab] = useState("seances"); // seances | profil | groupe
 
-  // ── Saison choisie, partagée par tous les onglets sauf Voter ──
+  // ── Saison choisie, partagée par "Mon profil" et "Le groupe" ──
   const [seasons, setSeasons] = useState(null);
   const [seasonId, setSeasonId] = useState(null);
   const season = seasons?.find((s) => s.id === seasonId);
@@ -41,14 +41,13 @@ export function VotePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClubId, token]);
 
-  // ── Données de la saison choisie (Séances / Classement / Stats / Trophées) ──
+  // ── Données de la saison choisie ──
   const [myMemberId, setMyMemberId] = useState(null);
   const [perception, setPerception] = useState(null);
   const [rankings, setRankings] = useState(null);
   const [settings, setSettings] = useState(null);
   const [teamStats, setTeamStats] = useState(null);
   const [trophies, setTrophies] = useState(null);
-  const [upcoming, setUpcoming] = useState(null);
 
   useEffect(() => {
     if (!activeClubId || !seasonId) return;
@@ -62,214 +61,104 @@ export function VotePage() {
     api("evaluations.php", "season_trophies", { club_id: activeClubId, season_id: seasonId }, token).then(setTrophies).catch(() => setTrophies(null));
   }, [activeClubId, seasonId, token, user?.id]);
 
-  useEffect(() => {
-    if (!activeClubId || !season) return;
-    api("events.php", "list", { club_id: activeClubId }, token).then((d) => {
-      setUpcoming(d.events.filter((e) => e.status !== "cancelled" && !hasEnded(e)
-        && e.starts_at >= season.start_date + " 00:00:00" && e.starts_at <= season.end_date + " 23:59:59")
-        .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at)));
-    }).catch(() => setUpcoming(null));
-  }, [activeClubId, season, token]);
+  const myRanking = rankings === null ? undefined
+    : (myMemberId ? [...rankings.official, ...rankings.provisional].find((p) => p.club_member_id === myMemberId) : null) ?? null;
+  const myFullName = user ? `${user.first_name} ${user.last_name}`.trim() : null;
+  const myTrophies = trophies?.trophies?.filter((t) => t.player === myFullName) ?? [];
 
-  const myRanking = myMemberId && rankings ? [...rankings.official, ...rankings.provisional].find((p) => p.club_member_id === myMemberId) : null;
-
-  // ── Onglet Voter (état + logique inchangés) ──
+  // ── Tous les événements (utilisés par l'onglet Séances) ──
   const [events, setEvents] = useState(null);
-  const [selectedEventId, setSelectedEventId] = useState(null);
-  const [status, setStatus] = useState(null);
-  const [scores, setScores] = useState({});
-  const [selfScore, setSelfScore] = useState("");
-  const [step, setStep] = useState("vote"); // vote | confirm
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
+  const reloadEvents = useCallback(() => {
     if (!activeClubId) return;
-    api("events.php", "list", { club_id: activeClubId }, token).then((d) => {
-      const sorted = [...d.events].filter((e) => e.status !== "cancelled" && hasEnded(e))
-        .sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at));
-      setEvents(sorted);
-      if (sorted.length && !selectedEventId) {
-        const pending = sorted.find((e) => e.my_availability === "present");
-        setSelectedEventId((pending ?? sorted[0]).id);
-      }
-    }).catch((e) => setError(e.message));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    api("events.php", "list", { club_id: activeClubId }, token).then((d) => setEvents(d.events)).catch(() => {});
   }, [activeClubId, token]);
-
-  const loadStatus = useCallback(() => {
-    if (!activeClubId || !selectedEventId) return;
-    setError(""); setStep("vote"); setScores({}); setSelfScore("");
-    api("evaluations.php", "vote_my_status", { club_id: activeClubId, event_id: selectedEventId }, token)
-      .then(setStatus).catch((e) => setError(e.message));
-  }, [activeClubId, selectedEventId, token]);
-
-  useEffect(loadStatus, [loadStatus]);
-
-  const totalToFill = (status?.ratees.length ?? 0) + 1;
-  const filledCount = (status ? status.ratees.filter((r) => scores[r.club_member_id] != null).length : 0) + (selfScore ? 1 : 0);
-  const allFilled = status?.ratees.length > 0 && status.ratees.every((r) => scores[r.club_member_id] != null) && selfScore;
-
-  const selectedEvent = events?.find((e) => e.id === selectedEventId);
-
-  const submit = async () => {
-    setSubmitting(true); setError("");
-    try {
-      await api("evaluations.php", "vote_submit", {
-        club_id: activeClubId,
-        event_id: selectedEventId,
-        scores: Object.entries(scores).map(([ratee_member_id, score]) => ({ ratee_member_id: Number(ratee_member_id), score: Number(score) })),
-        self_score: Number(selfScore),
-      }, token);
-      loadStatus();
-    } catch (e) { setError(e.message); } finally { setSubmitting(false); }
-  };
-
-  const typeInfo = selectedEvent ? (EVENT_TYPES[selectedEvent.type] ?? EVENT_TYPES.match) : null;
-  const TypeIcon = typeInfo?.icon;
+  useEffect(reloadEvents, [reloadEvents]);
 
   return (
     <div>
       <h1 className="page-title" style={{ marginBottom: 18 }}>Ballon d'Or</h1>
-      {error && <div className="error-box">{error}</div>}
 
-      <div className="segmented" style={{ marginBottom: 16, flexWrap: "wrap" }}>
-        {[["voter", "Voter"], ["sessions", "Séances"], ["classement", "Classement"], ["stats", "Statistiques"], ["trophees", "Trophées"]].map(([v, l]) => (
+      <div className="segmented" style={{ marginBottom: 16 }}>
+        {[["seances", "Séances"], ["profil", "Mon profil"], ["groupe", "Le groupe"]].map(([v, l]) => (
           <button key={v} className={tab === v ? "active" : ""} onClick={() => setTab(v)}>{l}</button>
         ))}
       </div>
 
-      {tab !== "voter" && seasons?.length > 0 && (
-        <div className="card" style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
-          <div className="icon-chip" style={{ background: "var(--oc-sky-100)", color: "var(--oc-sky-700)", flexShrink: 0 }}><Trophy size={18} /></div>
-          <div className="field" style={{ margin: 0, flex: 1 }}>
-            <label>Saison</label>
-            <select value={seasonId ?? ""} onChange={(e) => setSeasonId(Number(e.target.value))}>
-              {seasons.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-        </div>
+      {tab === "seances" && <SeancesTab events={events} reloadEvents={reloadEvents} season={season} perception={perception} />}
+
+      {tab !== "seances" && (
+        <>
+          {seasons?.length > 0 && (
+            <div className="card" style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
+              <div className="icon-chip" style={{ background: "var(--oc-sky-100)", color: "var(--oc-sky-700)", flexShrink: 0 }}><Trophy size={18} /></div>
+              <div className="field" style={{ margin: 0, flex: 1 }}>
+                <label>Saison</label>
+                <select value={seasonId ?? ""} onChange={(e) => setSeasonId(Number(e.target.value))}>
+                  {seasons.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+          {tab === "profil" && (
+            <ProfilTab season={season} myRanking={myRanking} settings={settings} perception={perception} myTrophies={myTrophies} />
+          )}
+          {tab === "groupe" && (
+            <GroupeTab season={season} rankings={rankings} teamStats={teamStats} trophies={trophies} />
+          )}
+        </>
       )}
-
-      {tab === "sessions" && <SessionsTab season={season} perception={perception} upcoming={upcoming} />}
-      {tab === "classement" && <ClassementTab season={season} rankings={rankings} myRanking={myRanking} settings={settings} />}
-      {tab === "stats" && <StatsTab teamStats={teamStats} myRanking={myRanking} />}
-      {tab === "trophees" && <TrophiesTab trophies={trophies} />}
-
-      {tab === "voter" && (<>
-      {events?.length === 0 && (
-        <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune séance terminée pour le moment — reviens après le prochain entraînement !</p></div>
-      )}
-
-      {events?.length > 0 && (
-        <div className="event-card-ds" style={{ marginBottom: 16 }}>
-          <div className="kicker" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            {TypeIcon && <TypeIcon size={13} />}Séance à noter
-          </div>
-          <select
-            value={selectedEventId ?? ""} onChange={(e) => setSelectedEventId(Number(e.target.value))}
-            style={{
-              background: "rgba(255,255,255,.16)", border: "none", color: "inherit", fontFamily: "'Bricolage Grotesque',sans-serif",
-              fontWeight: 700, fontSize: "1.2rem", marginTop: 8, width: "100%", padding: "8px 10px", borderRadius: "var(--radius-sm)",
-            }}
-          >
-            {events?.map((e) => (
-              <option key={e.id} value={e.id} style={{ color: "#000" }}>
-                {e.title} — {fmtDate(e.starts_at)} {fmtTime(e.starts_at)}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {status === null && events?.length > 0 && <div className="spinner" />}
-
-      {status && !status.eligible && status.ended && (
-        <div className="card"><p className="subtle" style={{ margin: 0 }}>Tu n'étais pas présent à cette séance — rien à voter.</p></div>
-      )}
-
-      {status && !status.eligible && !status.ended && (
-        <div className="card"><p className="subtle" style={{ margin: 0 }}>Cette séance n'est pas encore terminée — le vote s'ouvrira automatiquement à la fin.</p></div>
-      )}
-
-      {status && status.eligible && status.submitted && (
-        <div className="card">
-          <div className="label-title">Ton vote (validé) 🎉</div>
-          {status.my_scores?.map((s) => (
-            <ScoreBar key={s.ratee_member_id} label={s.name} value={s.score} />
-          ))}
-          <ScoreBar label="Mon auto-évaluation" value={status.my_self_score} highlight />
-          <p className="subtle" style={{ marginTop: 10 }}>Ton vote est définitif et ne peut plus être modifié.</p>
-        </div>
-      )}
-
-      {status && status.eligible && !status.submitted && step === "vote" && (
-        <div className="card">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <div className="label-title" style={{ marginBottom: 0 }}>Note tes coéquipiers présents</div>
-            <span className="subtle" style={{ fontWeight: 700 }}>{filledCount}/{totalToFill}</span>
-          </div>
-          <div style={{ height: 6, background: "var(--surface-soft)", borderRadius: 999, overflow: "hidden", marginBottom: 16 }}>
-            <div style={{ height: "100%", width: `${(filledCount / totalToFill) * 100}%`, background: "var(--lime-600)", transition: "width .2s ease", borderRadius: 999 }} />
-          </div>
-
-          {status.ratees.map((r) => (
-            <ScoreSlider
-              key={r.club_member_id}
-              label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}</>}
-              value={scores[r.club_member_id] ?? null}
-              touched={scores[r.club_member_id] != null}
-              onChange={(v) => setScores((s) => ({ ...s, [r.club_member_id]: v }))}
-            />
-          ))}
-
-          <div style={{ marginTop: 18 }}>
-            <div className="label-title">Et toi, t'en penses quoi de ta séance ?</div>
-            <ScoreSlider
-              label="Mon auto-évaluation"
-              value={selfScore || null}
-              touched={!!selfScore}
-              onChange={setSelfScore}
-            />
-          </div>
-
-          <button className="btn btn-primary" disabled={!allFilled} onClick={() => setStep("confirm")} style={{ marginTop: 8 }}>Vérifier avant validation</button>
-        </div>
-      )}
-
-      {status && status.eligible && !status.submitted && step === "confirm" && (
-        <div className="card">
-          <div className="label-title">Récapitulatif — vérifie avant de valider</div>
-          {status.ratees.map((r) => (
-            <ScoreBar key={r.club_member_id} label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={22} />{r.name}</>} value={scores[r.club_member_id]} />
-          ))}
-          <ScoreBar label="Toi (auto-évaluation)" value={selfScore} highlight />
-          <p className="subtle" style={{ margin: "12px 0" }}>Une fois validé, tu ne pourras plus modifier ce vote.</p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-secondary" onClick={() => setStep("vote")}>Revenir</button>
-            <button className="btn btn-primary" disabled={submitting} onClick={submit}>{submitting ? "Validation…" : "Valider définitivement"}</button>
-          </div>
-        </div>
-      )}
-      </>)}
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SÉANCES — historique personnel + rappel sur les séances à venir
+// SÉANCES — l'onglet "action" : voter, séances à venir, historique.
 // ═══════════════════════════════════════════════════════════════
 
-function SessionsTab({ season, perception, upcoming }) {
-  if (!season) return <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune saison pour le moment.</p></div>;
-  if (perception === null) return <div className="spinner" />;
-  const sessions = perception?.sessions ?? [];
+function SeancesTab({ events, reloadEvents, season, perception }) {
+  const [votingEventId, setVotingEventId] = useState(null);
+
+  if (events === null) return <div className="spinner" />;
+
+  const ended = events.filter((e) => e.status !== "cancelled" && hasEnded(e));
+  const pending = ended.filter((e) => e.my_availability === "present" && !e.my_vote_submitted)
+    .sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at));
+  const upcoming = events.filter((e) => e.status !== "cancelled" && !hasEnded(e))
+    .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+
+  if (votingEventId) {
+    const event = events.find((e) => e.id === votingEventId);
+    return (
+      <VotingFlow
+        event={event}
+        onDone={() => { setVotingEventId(null); reloadEvents(); }}
+        onBack={() => setVotingEventId(null)}
+      />
+    );
+  }
 
   return (
     <div>
-      {upcoming?.length > 0 && (
+      {pending.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          {pending.map((e) => {
+            const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
+            const Icon = t.icon;
+            return (
+              <div key={e.id} className="event-card-ds" style={{ marginBottom: 10, cursor: "pointer" }} onClick={() => setVotingEventId(e.id)}>
+                <div className="kicker" style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon size={13} />Tu as une séance à noter</div>
+                <h3>{e.title}</h3>
+                <div style={{ opacity: 0.85, fontSize: "0.9rem", marginBottom: 12 }}>{fmtDate(e.starts_at)} · {fmtTime(e.starts_at)}</div>
+                <button className="btn" style={{ background: "#fff", color: "var(--hero-ink)", width: "auto", padding: "9px 18px" }}>Noter cette séance</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {upcoming.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="label-title">Séances à venir sur "{season.name}"</div>
+          <div className="label-title">Séances à venir</div>
           {upcoming.map((e) => (
             <div key={e.id} className="list-row">
               <div>
@@ -284,20 +173,13 @@ function SessionsTab({ season, perception, upcoming }) {
         </div>
       )}
 
-      {perception?.summary && (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="label-title">Ton ressenti sur la saison</div>
-          <p style={{ margin: 0, fontSize: "0.92rem" }}>{perception.summary.perception_level}</p>
-          <p className="subtle" style={{ marginTop: 4 }}>
-            Moyenne de tes auto-évaluations : <strong style={{ color: "var(--text)" }}>{fmtScore(perception.summary.avg_self)}</strong> — moyenne reçue du groupe : <strong style={{ color: "var(--text)" }}>{fmtScore(perception.summary.avg_received)}</strong>
-          </p>
-        </div>
-      )}
-
       <div className="card">
-        <div className="label-title">Séances notées</div>
-        {sessions.length === 0 && <p className="subtle" style={{ margin: 0 }}>Aucune séance notée pour l'instant sur "{season.name}".</p>}
-        {[...sessions].reverse().map((s) => {
+        <div className="label-title">Historique {season ? `— ${season.name}` : ""}</div>
+        {perception === null && <div className="spinner" />}
+        {perception && perception.sessions.length === 0 && (
+          <p className="subtle" style={{ margin: 0 }}>Aucune séance notée pour l'instant.</p>
+        )}
+        {perception && [...perception.sessions].reverse().map((s) => {
           const gapTone = Math.abs(s.gap) <= 0.25 ? "var(--lime-600)" : (s.gap > 0 ? "var(--oc-amber-500)" : "var(--oc-orange-500)");
           const gapLabel = Math.abs(s.gap) <= 0.25 ? "proche du groupe" : (s.gap > 0 ? `surestimation +${s.gap.toFixed(1)}` : `sous-estimation ${s.gap.toFixed(1)}`);
           return (
@@ -325,23 +207,109 @@ function SessionsTab({ season, perception, upcoming }) {
   );
 }
 
+// ── Flux de vote pour une séance donnée (repris tel quel, juste recentré sur un event fixe) ──
+function VotingFlow({ event, onDone, onBack }) {
+  const { token, activeClubId } = useAuth();
+  const [status, setStatus] = useState(null);
+  const [scores, setScores] = useState({});
+  const [selfScore, setSelfScore] = useState("");
+  const [step, setStep] = useState("vote");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!activeClubId || !event) return;
+    api("evaluations.php", "vote_my_status", { club_id: activeClubId, event_id: event.id }, token)
+      .then(setStatus).catch((e) => setError(e.message));
+  }, [activeClubId, event, token]);
+
+  const totalToFill = (status?.ratees.length ?? 0) + 1;
+  const filledCount = (status ? status.ratees.filter((r) => scores[r.club_member_id] != null).length : 0) + (selfScore ? 1 : 0);
+  const allFilled = status?.ratees.length > 0 && status.ratees.every((r) => scores[r.club_member_id] != null) && selfScore;
+
+  const submit = async () => {
+    setSubmitting(true); setError("");
+    try {
+      await api("evaluations.php", "vote_submit", {
+        club_id: activeClubId,
+        event_id: event.id,
+        scores: Object.entries(scores).map(([ratee_member_id, score]) => ({ ratee_member_id: Number(ratee_member_id), score: Number(score) })),
+        self_score: Number(selfScore),
+      }, token);
+      onDone();
+    } catch (e) { setError(e.message); setSubmitting(false); }
+  };
+
+  if (!event) return null;
+
+  return (
+    <div>
+      <button className="btn btn-ghost btn-sm" style={{ width: "auto", marginBottom: 12 }} onClick={onBack}>
+        <ChevronLeft size={14} style={{ marginRight: 4, verticalAlign: "-2px" }} />Retour
+      </button>
+      {error && <div className="error-box">{error}</div>}
+      {status === null && <div className="spinner" />}
+
+      {status && step === "vote" && (
+        <div className="card">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <div className="label-title" style={{ marginBottom: 0 }}>{event.title} — note tes coéquipiers présents</div>
+            <span className="subtle" style={{ fontWeight: 700 }}>{filledCount}/{totalToFill}</span>
+          </div>
+          <div style={{ height: 6, background: "var(--surface-soft)", borderRadius: 999, overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ height: "100%", width: `${(filledCount / totalToFill) * 100}%`, background: "var(--lime-600)", transition: "width .2s ease", borderRadius: 999 }} />
+          </div>
+          {status.ratees.map((r) => (
+            <ScoreSlider
+              key={r.club_member_id}
+              label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}</>}
+              value={scores[r.club_member_id] ?? null}
+              touched={scores[r.club_member_id] != null}
+              onChange={(v) => setScores((s) => ({ ...s, [r.club_member_id]: v }))}
+            />
+          ))}
+          <div style={{ marginTop: 18 }}>
+            <div className="label-title">Et toi, t'en penses quoi de ta séance ?</div>
+            <ScoreSlider label="Mon auto-évaluation" value={selfScore || null} touched={!!selfScore} onChange={setSelfScore} />
+          </div>
+          <button className="btn btn-primary" disabled={!allFilled} onClick={() => setStep("confirm")} style={{ marginTop: 8 }}>Vérifier avant validation</button>
+        </div>
+      )}
+
+      {status && step === "confirm" && (
+        <div className="card">
+          <div className="label-title">Récapitulatif — vérifie avant de valider</div>
+          {status.ratees.map((r) => (
+            <ScoreBar key={r.club_member_id} label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={22} />{r.name}</>} value={scores[r.club_member_id]} />
+          ))}
+          <ScoreBar label="Toi (auto-évaluation)" value={selfScore} highlight />
+          <p className="subtle" style={{ margin: "12px 0" }}>Une fois validé, tu ne pourras plus modifier ce vote.</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn btn-secondary" onClick={() => setStep("vote")}>Revenir</button>
+            <button className="btn btn-primary" disabled={submitting} onClick={submit}>{submitting ? "Validation…" : "Valider définitivement"}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
-// CLASSEMENT — position, jauge d'éligibilité, coefficients expliqués,
-// classement officiel + provisoire complet.
+// MON PROFIL — où j'en suis : score, jauge, explication, ressenti, mes trophées.
 // ═══════════════════════════════════════════════════════════════
 
-function ClassementTab({ season, rankings, myRanking, settings }) {
+function ProfilTab({ season, myRanking, settings, perception, myTrophies }) {
   const [showHow, setShowHow] = useState(false);
   if (!season) return <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune saison pour le moment.</p></div>;
-  if (rankings === null) return <div className="spinner" />;
+  if (myRanking === undefined) return <div className="spinner" />;
 
   const minSessions = settings?.eligibility_min_sessions ?? 10;
-  const seasonEndLabel = new Date(season.end_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const seasonEndLabel = season.end_date ? new Date(season.end_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "";
 
   return (
     <div>
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="label-title">Ta position</div>
+        <div className="label-title">Ta position — {season.name}</div>
         {myRanking ? (
           <>
             <div className="stat-tiles" style={{ marginBottom: 14 }}>
@@ -366,13 +334,13 @@ function ClassementTab({ season, rankings, myRanking, settings }) {
                 <p style={{ margin: 0, fontSize: "0.92rem" }}>
                   Actuellement, ta note est de <strong>{fmtScore(myRanking.ballon_dor_score)}</strong>.
                   Si tu fais <strong>{myRanking.sessions_until_eligible}</strong> entraînement{myRanking.sessions_until_eligible > 1 ? "s" : ""} supplémentaire{myRanking.sessions_until_eligible > 1 ? "s" : ""},
-                  tu seras éligible au classement officiel et à la remise des trophées, avant la fin de la saison le <strong>{seasonEndLabel}</strong>.
+                  tu seras éligible au classement officiel et à la remise des trophées{seasonEndLabel ? `, avant la fin de la saison le ${seasonEndLabel}` : ""}.
                 </p>
               </div>
             )}
           </>
         ) : (
-          <p className="subtle" style={{ margin: 0 }}>Tu n'as pas encore de score sur cette saison — vote après une séance pour apparaître ici.</p>
+          <p className="subtle" style={{ margin: 0 }}>Tu n'as pas encore de score sur cette saison — va dans "Séances" pour voter après ta prochaine présence.</p>
         )}
 
         {settings && (
@@ -406,6 +374,56 @@ function ClassementTab({ season, rankings, myRanking, settings }) {
         )}
       </div>
 
+      {perception?.summary && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="label-title">Ton ressenti</div>
+          <p style={{ margin: 0, fontSize: "0.92rem" }}>{perception.summary.perception_level}</p>
+          <p className="subtle" style={{ marginTop: 4 }}>
+            Moyenne de tes auto-évaluations : <strong style={{ color: "var(--text)" }}>{fmtScore(perception.summary.avg_self)}</strong> — moyenne reçue du groupe : <strong style={{ color: "var(--text)" }}>{fmtScore(perception.summary.avg_received)}</strong>
+          </p>
+        </div>
+      )}
+
+      <div className="card">
+        <div className="label-title">Mes trophées</div>
+        {myTrophies.length === 0 && <p className="subtle" style={{ margin: 0 }}>Aucun trophée pour l'instant sur cette saison — continue à jouer et voter !</p>}
+        {myTrophies.map((t) => {
+          const Icon = TROPHY_ICONS[t.code] ?? Award;
+          return (
+            <div key={t.code} className="list-row">
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div className="icon-chip" style={{ background: "var(--oc-yellow-100)", color: "var(--gold-500)" }}><Icon size={18} /></div>
+                <strong>{t.label}</strong>
+              </div>
+              <strong className="num">{t.value}</strong>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LE GROUPE — classement complet, stats collectives, trophées du club.
+// ═══════════════════════════════════════════════════════════════
+
+function GroupeTab({ season, rankings, teamStats, trophies }) {
+  if (!season) return <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune saison pour le moment.</p></div>;
+  if (rankings === null || teamStats === null || trophies === null) return <div className="spinner" />;
+
+  const list = trophies?.trophies ?? [];
+
+  return (
+    <div>
+      {teamStats && (
+        <div className="stat-tiles" style={{ marginBottom: 16 }}>
+          <StatTile icon={<Activity size={18} />} value={teamStats.total_sessions} label="Séances jouées" tint="coral" solid />
+          <StatTile icon={<Star size={18} />} value={teamStats.group_average !== null ? fmtScore(teamStats.group_average) : "—"} label="Moyenne du groupe" tint="lime" solid />
+          <StatTile icon={<People size={18} />} value={teamStats.nb_ranked_players} label="Joueurs classés" tint="blue" solid />
+        </div>
+      )}
+
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="label-title">Classement officiel</div>
         {rankings.official.length === 0 && <p className="subtle" style={{ margin: 0 }}>Personne ne remplit encore les conditions d'éligibilité.</p>}
@@ -428,7 +446,7 @@ function ClassementTab({ season, rankings, myRanking, settings }) {
       </div>
 
       {rankings.provisional.length > 0 && (
-        <div className="card">
+        <div className="card" style={{ marginBottom: 16 }}>
           <div className="label-title">Classement provisoire (encore inéligibles)</div>
           {rankings.provisional.map((p) => (
             <div key={p.club_member_id} className="list-row" style={{ flexWrap: "wrap" }}>
@@ -442,103 +460,41 @@ function ClassementTab({ season, rankings, myRanking, settings }) {
           ))}
         </div>
       )}
-    </div>
-  );
-}
 
-// ═══════════════════════════════════════════════════════════════
-// STATISTIQUES — collectives + rappel individuel
-// ═══════════════════════════════════════════════════════════════
-
-function StatsTab({ teamStats, myRanking }) {
-  if (teamStats === null) return <div className="spinner" />;
-  if (!teamStats) return <div className="card"><p className="subtle" style={{ margin: 0 }}>Pas encore de statistiques sur cette saison.</p></div>;
-
-  return (
-    <div>
-      <div className="stat-tiles" style={{ marginBottom: 16 }}>
-        <StatTile icon={<Activity size={18} />} value={teamStats.total_sessions} label="Séances jouées" tint="coral" solid />
-        <StatTile icon={<Star size={18} />} value={teamStats.group_average !== null ? fmtScore(teamStats.group_average) : "—"} label="Moyenne du groupe" tint="lime" solid />
-        <StatTile icon={<People size={18} />} value={teamStats.nb_ranked_players} label="Joueurs classés" tint="blue" solid />
-      </div>
-
-      {(teamStats.convocation_response_rate !== null || teamStats.vote_participation_rate !== null) && (
-        <div className="card" style={{ marginBottom: 16, display: "flex", gap: 24, flexWrap: "wrap" }}>
-          {teamStats.convocation_response_rate !== null && (
-            <div>
-              <div className="num" style={{ fontSize: "1.6rem", fontWeight: 700 }}>{teamStats.convocation_response_rate}%</div>
-              <div className="subtle">taux de réponse aux convocations</div>
-            </div>
+      {teamStats && (teamStats.most_regular || teamStats.most_assiduous || teamStats.best_progression) && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="label-title">Records du groupe</div>
+          {teamStats.most_regular && (
+            <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Rulers size={14} />Joueur le plus régulier</span><strong>{teamStats.most_regular.name}</strong></div>
           )}
-          {teamStats.vote_participation_rate !== null && (
-            <div>
-              <div className="num" style={{ fontSize: "1.6rem", fontWeight: 700 }}>{teamStats.vote_participation_rate}%</div>
-              <div className="subtle">participation aux votes Ballon d'Or</div>
-            </div>
+          {teamStats.most_assiduous && (
+            <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Fire size={14} />Joueur le plus assidu</span><strong>{teamStats.most_assiduous.name} ({teamStats.most_assiduous.value}%)</strong></div>
+          )}
+          {teamStats.best_progression && (
+            <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><GraphUpArrow size={14} />Meilleure progression</span><strong>{teamStats.best_progression.name}</strong></div>
           )}
         </div>
       )}
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="label-title">Records du groupe</div>
-        {teamStats.most_regular && (
-          <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Rulers size={14} />Joueur le plus régulier</span><strong>{teamStats.most_regular.name}</strong></div>
-        )}
-        {teamStats.most_assiduous && (
-          <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><Fire size={14} />Joueur le plus assidu</span><strong>{teamStats.most_assiduous.name} ({teamStats.most_assiduous.value}%)</strong></div>
-        )}
-        {teamStats.best_progression && (
-          <div className="list-row"><span style={{ display: "flex", alignItems: "center", gap: 7 }}><GraphUpArrow size={14} />Meilleure progression</span><strong>{teamStats.best_progression.name}</strong></div>
-        )}
-        {!teamStats.most_regular && !teamStats.most_assiduous && !teamStats.best_progression && (
-          <p className="subtle" style={{ margin: 0 }}>Pas encore assez de données pour dégager des records.</p>
-        )}
-      </div>
-
-      {myRanking && (
-        <div className="card" style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div className="icon-chip" style={{ background: "var(--oc-sky-100)", color: "var(--oc-sky-700)", flexShrink: 0 }}><Star size={18} /></div>
-          <div>
-            <div style={{ fontWeight: 700 }}>Toi : {fmtScore(myRanking.ballon_dor_score)}/10</div>
-            <div className="subtle">{myRanking.sessions_played} séances jouées · {myRanking.attendance_rate}% de présence</div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// TROPHÉES — galerie complète de la saison
-// ═══════════════════════════════════════════════════════════════
-
-function TrophiesTab({ trophies }) {
-  if (trophies === null) return <div className="spinner" />;
-  const list = trophies.trophies ?? [];
-  if (list.length === 0) {
-    return <div className="card"><p className="subtle" style={{ margin: 0 }}>Pas encore assez de votes cette saison pour attribuer des trophées — reviens après quelques séances notées.</p></div>;
-  }
-  return (
-    <div className="card">
-      <div className="label-title">Trophées de la saison</div>
-      {list.map((t) => {
-        const Icon = TROPHY_ICONS[t.code] ?? Award;
-        return (
-          <div key={t.code} className="list-row">
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div className="icon-chip" style={{ background: "var(--oc-yellow-100)", color: "var(--gold-500)" }}><Icon size={18} /></div>
-              <div>
-                <strong>{t.label}</strong>
-                <div className="subtle">{t.player}</div>
+      <div className="card">
+        <div className="label-title">Trophées de la saison</div>
+        {list.length === 0 && <p className="subtle" style={{ margin: 0 }}>Pas encore assez de votes cette saison pour attribuer des trophées.</p>}
+        {list.map((t) => {
+          const Icon = TROPHY_ICONS[t.code] ?? Award;
+          return (
+            <div key={t.code} className="list-row">
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div className="icon-chip" style={{ background: "var(--oc-yellow-100)", color: "var(--gold-500)" }}><Icon size={18} /></div>
+                <div>
+                  <strong>{t.label}</strong>
+                  <div className="subtle">{t.player}</div>
+                </div>
               </div>
+              <strong className="num">{t.value}</strong>
             </div>
-            <strong className="num">{t.value}</strong>
-          </div>
-        );
-      })}
-      <p className="subtle" style={{ marginTop: 12, marginBottom: 0 }}>
-        Les trophées se recalculent à chaque nouvelle séance notée — reviens régulièrement pour voir l'évolution.
-      </p>
+          );
+        })}
+      </div>
     </div>
   );
 }
