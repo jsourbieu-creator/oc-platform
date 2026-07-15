@@ -248,7 +248,7 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
   font-family:'Bricolage Grotesque',sans-serif;
 }
 .sidebar-item svg{ color:currentColor; }
-.sidebar-item:hover:not(.disabled){ background:var(--surface-alt); }
+.sidebar-item:hover:not(.disabled):not(.active){ background:var(--surface-alt); }
 .sidebar-item.active{ background:var(--hero-sky); color:var(--hero-ink); }
 .sidebar-item.active svg{ color:var(--hero-ink); filter:none; }
 .sidebar-item.disabled{ color:var(--text-dim); opacity:0.5; cursor:not-allowed; }
