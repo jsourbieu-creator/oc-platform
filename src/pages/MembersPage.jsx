@@ -157,9 +157,9 @@ function InvitationsBlock() {
       <form onSubmit={create} style={{ marginBottom: lastCode || pending.length ? 14 : 0 }}>
         <div className="field">
           <label>Rôle</label>
-          <div className="segmented" style={{ display: "flex", width: "100%" }}>
+          <div className="segmented" style={{ display: "flex", flexWrap: "wrap", width: "100%" }}>
             {Object.entries(INVITE_ROLES).filter(([v]) => v !== "admin" || activeRole === "super_admin").map(([v, l]) => (
-              <button key={v} type="button" className={role === v ? "active" : ""} style={{ flex: 1 }} onClick={() => setRole(v)}>{l}</button>
+              <button key={v} type="button" className={role === v ? "active" : ""} style={{ flex: "1 1 45%" }} onClick={() => setRole(v)}>{l}</button>
             ))}
           </div>
         </div>
