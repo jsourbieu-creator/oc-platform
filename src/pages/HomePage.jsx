@@ -106,7 +106,7 @@ export function HomePage({ gotoConversation }) {
 
   const club = memberships.find((m) => m.club_id === activeClubId);
   const activeSeason = seasons?.find((s) => s.status === "active");
-  const nextEvent = events?.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled")[0];
+  const nextEvent = events?.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled")?.[0];
 
   const now = new Date();
   const viewingOtherMonth = scope === "month" && (gridMonth.getFullYear() !== now.getFullYear() || gridMonth.getMonth() !== now.getMonth());
@@ -377,7 +377,6 @@ function NextSessionCard({ event: e, loading, onOpen, onSetAvailability }) {
         <div style={{ display: "flex", gap: 8 }}>
           {Object.entries(AVAIL_LABELS).map(([v, l]) => {
             const active = e.my_availability === v;
-            const C = { available: ["var(--oc-lime-300)", "#2C3608"], maybe: ["var(--oc-yellow-300)", "#3B2F06"], unavailable: ["var(--oc-coral-500)", "#fff"] }[v];
             return (
               <button
                 key={v}
@@ -385,8 +384,8 @@ function NextSessionCard({ event: e, loading, onOpen, onSetAvailability }) {
                 style={{
                   flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
                   fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
-                  background: active ? C[0] : "rgba(255,255,255,0.14)",
-                  color: active ? C[1] : "rgba(255,255,255,0.92)",
+                  background: active ? (AVAIL_FILL[v] ?? "#fff") : "rgba(255,255,255,0.14)",
+                  color: active ? (AVAIL_INK[v] ?? "#000") : "rgba(255,255,255,0.92)",
                   transform: active ? "scale(1.02)" : "none",
                   transition: ".18s var(--ease-spring)",
                 }}
