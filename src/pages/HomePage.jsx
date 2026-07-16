@@ -533,8 +533,8 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
       <div style={{ cursor: "pointer", display: "flex", gap: 12 }} onClick={toggle}>
         <DateBadge
           date={e.starts_at}
-          color={cancelled ? "var(--neutral-400)" : e.my_availability ? AVAIL_FILL[e.my_availability] : t.color}
-          ink={!cancelled && e.my_availability ? AVAIL_INK[e.my_availability] : "var(--hero-ink)"}
+          color={cancelled ? "var(--neutral-400)" : t.color}
+          ink={!cancelled && e.type === "match" ? "#fff" : "var(--hero-ink)"}
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -563,8 +563,8 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
               <button
                 key={v} className="btn btn-sm" style={{
                   flex: "1 1 80px",
-                  background: active ? AVAIL_FILL[v] : "transparent",
-                  color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                  background: active ? t.color : "transparent",
+                  color: active ? (e.type === "match" ? "#fff" : "var(--hero-ink)") : AVAIL_COLORS[v],
                   border: active ? "none" : "1.5px solid var(--line)",
                 }}
                 onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
@@ -632,6 +632,7 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
   const [menuOpen, setMenuOpen] = useState(false);
   const cancelled = e.status === "cancelled";
   const canRespond = !cancelled && !isPast(e.starts_at);
+  const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
 
   const setMyAvailability = async (status) => {
     try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
@@ -678,8 +679,8 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
                   <button
                     key={v} className="btn btn-sm" style={{
                       flex: "1 1 80px",
-                      background: active ? AVAIL_FILL[v] : "transparent",
-                      color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                      background: active ? t.color : "transparent",
+                      color: active ? (e.type === "match" ? "#fff" : "var(--hero-ink)") : AVAIL_COLORS[v],
                       border: active ? "none" : "1.5px solid var(--line)",
                     }}
                     onClick={() => setMyAvailability(v)}
@@ -888,6 +889,7 @@ function PresenceCorrector({ event: e, reload }) {
 }
 
 function ParticipantsTab({ event: e, manage }) {
+  const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   const { token, activeClubId } = useAuth();
   const [list, setList] = useState(null);
   const [search, setSearch] = useState("");
@@ -959,8 +961,8 @@ function ParticipantsTab({ event: e, manage }) {
                       <button
                         key={v} className="btn btn-sm" style={{
                           width: "auto", padding: "5px 8px", fontSize: "0.68rem",
-                          background: p.status === v ? AVAIL_FILL[v] : "transparent",
-                          color: p.status === v ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                          background: p.status === v ? t.color : "transparent",
+                          color: p.status === v ? (e.type === "match" ? "#fff" : "var(--hero-ink)") : AVAIL_COLORS[v],
                           border: p.status === v ? "none" : "1.5px solid var(--line)",
                         }}
                         onClick={() => setFor(p.club_member_id, v)}

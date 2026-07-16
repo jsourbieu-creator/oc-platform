@@ -188,7 +188,7 @@ svg{ flex-shrink:0; }
 .btn-ghost{ background:transparent; color:var(--oc-bluegray-700); }
 .btn-success{ background:var(--oc-green-500); color:#fff; }
 .btn-orange{ background:var(--oc-orange-500); color:#fff; }
-.btn-primary{ background:var(--oc-sky-600); color:#fff; box-shadow:0 9px 18px rgba(24,143,192,.23); }
+.btn-primary{ background:var(--hero-sky); color:var(--hero-ink); box-shadow:0 9px 18px rgba(127,184,224,.28); }
 .btn-warning{ background:var(--warning-500); color:#2F220B; }
 .btn-danger{ background:var(--oc-red-50); color:var(--oc-red-700); }
 .btn-sm{ min-height:38px; padding:0 14px; font-size:0.82rem; width:auto; border-radius:13px; }
