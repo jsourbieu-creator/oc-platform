@@ -500,8 +500,8 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
   position:relative; overflow:hidden;
 }
 .event-card-ds .tower-deco{
-  position:absolute; right:-18px; top:-14px; width:150px; height:auto;
-  opacity:.16; pointer-events:none; z-index:0;
+  position:absolute; right:-14px; top:-10px; width:125px; height:auto;
+  opacity:.13; pointer-events:none; z-index:0;
 }
 .event-card-ds .tower-deco svg{ width:100%; height:auto; display:block; }
 .event-card-ds.orange{ background:var(--kpi-coral); color:var(--kpi-coral-ink); }

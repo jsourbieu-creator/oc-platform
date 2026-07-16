@@ -359,7 +359,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
 
         <h3>{e.title}</h3>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", color: "var(--hero-ink)", opacity: 0.82, fontSize: "0.9rem", fontWeight: 600 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", opacity: 0.82, fontSize: "0.9rem", fontWeight: 600 }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             <Calendar3 size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
           </span>
@@ -384,7 +384,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", marginBottom: (e.present_names?.length ?? 0) > 0 || onOpen ? 14 : 0 }}
           onClick={onOpen} role="button"
         >
-          <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--hero-ink)", opacity: 0.65 }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.65 }}>
             Qui est là
           </div>
           {(e.present_names?.length ?? 0) > 0 ? (
@@ -397,7 +397,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
           )}
         </div>
 
-        <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--hero-ink)", opacity: 0.65, marginBottom: 8 }}>
+        <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.65, marginBottom: 8 }}>
           Ma présence
         </div>
         <div style={{ display: "flex", gap: 8 }}>
