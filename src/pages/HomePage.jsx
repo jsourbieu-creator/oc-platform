@@ -1,10 +1,10 @@
 import { createPortal } from "react-dom";
-import { Calendar3, CaretLeft, CaretRight, GeoAlt, Star, Shield, ArrowCounterclockwise, X, ClipboardCheck, Clock, Flag, People, ThreeDots, ChatDots, Search, Check, Trophy, Activity, PlusLg } from "react-bootstrap-icons";
+import { Calendar3, CaretLeft, CaretRight, GeoAlt, Star, Shield, ArrowCounterclockwise, X, ClipboardCheck, Clock, Flag, People, ThreeDots, ChatDots, Search, Check, Trophy, Activity, PlusLg, Bandaid } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK,
+  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, AVAIL_ICONS,
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
 import { fmtScore } from "@/lib/ballondor";
@@ -417,6 +417,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
         <div style={{ display: "flex", gap: 8 }}>
           {Object.entries(AVAIL_LABELS).map(([v, l]) => {
             const active = e.my_availability === v;
+            const Icon = AVAIL_ICONS[v];
             return (
               <button
                 key={v}
@@ -424,12 +425,13 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
                 style={{
                   flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
                   fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                   background: active ? "#fff" : "rgba(255,255,255,0.16)",
                   color: active ? "var(--hero-ink)" : "currentColor",
                   transform: active ? "scale(1.02)" : "none",
                   transition: ".18s var(--ease-spring)",
                 }}
-              >{l}</button>
+              ><Icon size={13} />{l}</button>
             );
           })}
         </div>
@@ -577,16 +579,17 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
           {Object.entries(AVAIL_LABELS).map(([v, l]) => {
             const active = e.my_availability === v;
+            const Icon = AVAIL_ICONS[v];
             return (
               <button
                 key={v} className="btn btn-sm" style={{
-                  flex: "1 1 80px",
+                  flex: "1 1 80px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                   background: active ? t.color : "transparent",
                   color: active ? (e.type === "match" ? "#fff" : "var(--hero-ink)") : AVAIL_COLORS[v],
                   border: active ? "none" : "1.5px solid var(--line)",
                 }}
                 onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
-              >{l}</button>
+              ><Icon size={13} />{l}</button>
             );
           })}
         </div>
@@ -693,16 +696,17 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {Object.entries(AVAIL_LABELS).map(([v, l]) => {
                 const active = e.my_availability === v;
+                const Icon = AVAIL_ICONS[v];
                 return (
                   <button
                     key={v} className="btn btn-sm" style={{
-                      flex: "1 1 80px",
+                      flex: "1 1 80px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                       background: active ? t.color : "transparent",
                       color: active ? (e.type === "match" ? "#fff" : "var(--hero-ink)") : AVAIL_COLORS[v],
                       border: active ? "none" : "1.5px solid var(--line)",
                     }}
                     onClick={() => setMyAvailability(v)}
-                  >{l}</button>
+                  ><Icon size={13} />{l}</button>
                 );
               })}
             </div>
@@ -991,7 +995,7 @@ function ParticipantsTab({ event: e, manage }) {
                   <div className="participant-status-icon" style={{ background: sec.key ? AVAIL_COLORS[sec.key] : "var(--neutral-400)" }}>
                     {sec.key === "present" && <Check size={14} />}
                     {sec.key === "absent" && <X size={14} />}
-                    {sec.key === "injured" && <span style={{ fontSize: 12 }}>!</span>}
+                    {sec.key === "injured" && <Bandaid size={12} />}
                     {!sec.key && <Clock size={14} />}
                   </div>
                 )}

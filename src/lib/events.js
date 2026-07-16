@@ -1,4 +1,4 @@
-import { Flag, Activity, Balloon } from "react-bootstrap-icons";
+import { Flag, Activity, Balloon, Check, X, Bandaid } from "react-bootstrap-icons";
 
 export const EVENT_TYPES = {
   match: { label: "Match", icon: Flag, color: "#3852D6" },
@@ -10,6 +10,12 @@ export const AVAIL_LABELS = {
   present: "Présent",
   absent: "Absent",
   injured: "Blessé",
+};
+
+export const AVAIL_ICONS = {
+  present: Check,
+  absent: X,
+  injured: Bandaid,
 };
 
 /** Couleur de texte à l'état INACTIF — gris neutre pour tous les statuts (nouvelle charte calme) */

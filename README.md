@@ -195,6 +195,19 @@ via phpMyAdmin.
   desktop, sans avoir à passer par le menu "Plus" ou la sidebar.
 - Migration : `0017_messages_attachments_edit_delete.sql`.
 
+## Itération du 16/07 — palette des statuts apaisée + icônes
+
+- **Fini l'effet guirlande de Noël** sur les pastilles de comptage et les
+  boutons Présent/Absent/Blessé : au lieu de 4 teintes saturées différentes
+  (lime, rouge-rose, violet, gris), la palette se resserre autour de
+  l'identité bleue déjà présente partout ailleurs — présent en bleu, absent
+  en rouge calmé, blessé en ambre, sans réponse en gris neutre.
+- **Icônes ajoutées** dans les boutons Présent/Absent/Blessé (coche, croix,
+  pansement) sur les trois emplacements où ils apparaissent (hero, carte de
+  liste, modale de détail), plus la petite icône de statut dans la liste des
+  participants (le "!" de blessé devient un vrai pansement, cohérent avec
+  les coche/croix déjà en place pour présent/absent).
+
 ## Reconstruction du 15/07 — Ballon d'Or repensé en 3 blocs (Séances / Mon profil / Le groupe)
 
 Après une première tentative en 5 onglets jugée "trop brouillon", la page a
