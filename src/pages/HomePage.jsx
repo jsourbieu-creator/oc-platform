@@ -157,7 +157,7 @@ export function HomePage({ gotoConversation }) {
   return (
     <div>
       <div style={{ marginBottom: 18 }}>
-        <div className="eyebrow" style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
+        <div className="eyebrow" style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
           {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
         </div>
         <h1 className="page-title" style={{ marginTop: 2 }}>{greeting(user?.first_name)}</h1>

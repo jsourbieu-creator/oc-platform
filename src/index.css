@@ -237,7 +237,7 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 .error-box{ background:var(--danger-50); color:var(--danger-700); padding:12px 14px; border-radius:14px; font-size:0.88rem; margin-bottom:14px; }
 .info-box{ background:var(--oc-blue-50); color:var(--oc-blue-800); padding:12px 14px; border-radius:14px; font-size:0.88rem; margin-bottom:14px; }
 
-.badge{ display:inline-flex; align-items:center; gap:7px; padding:8px 11px; border-radius:999px; font-size:11px; font-weight:800; text-transform:none; letter-spacing:0; }
+.badge{ font-family:'Bricolage Grotesque',sans-serif; display:inline-flex; align-items:center; gap:7px; padding:8px 11px; border-radius:999px; font-size:11px; font-weight:800; text-transform:none; letter-spacing:0; }
 .badge::before{ content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
 .badge-info{ background:var(--oc-blue-50); color:var(--oc-blue-800); }
 .badge-neutral{ background:var(--surface-soft); color:var(--text-muted); }
@@ -363,7 +363,7 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 .auth-box{ width:100%; max-width:380px; }
 .auth-header{ text-align:center; margin-bottom:28px; }
 
-.label-title{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-dim); font-weight:700; margin-bottom:10px; }
+.label-title{ font-family:'Bricolage Grotesque',sans-serif; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-dim); font-weight:700; margin-bottom:10px; }
 .subtle{ font-size:0.85rem; color:var(--text-dim); }
 
 .list-row{
@@ -506,5 +506,5 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 .event-card-ds .tower-deco svg{ width:100%; height:auto; display:block; }
 .event-card-ds.orange{ background:var(--kpi-coral); color:var(--kpi-coral-ink); }
 .event-card-ds.royal{ background:#3852D6; color:#fff; }
-.event-card-ds .kicker{ font-size:10px; font-weight:900; letter-spacing:.11em; text-transform:uppercase; opacity:.68; position:relative; z-index:1; }
+.event-card-ds .kicker{ font-family:'Bricolage Grotesque',sans-serif; font-size:10px; font-weight:900; letter-spacing:.11em; text-transform:uppercase; opacity:.68; position:relative; z-index:1; }
 .event-card-ds h3{ font-size:28px; margin:9px 0; letter-spacing:-.035em; position:relative; z-index:1; }
