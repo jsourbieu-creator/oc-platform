@@ -529,8 +529,9 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   };
 
   return (
-    <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1, position: "relative" }}>
-      <div style={{ cursor: "pointer", display: "flex", gap: 12 }} onClick={toggle}>
+    <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1, position: "relative", overflow: "hidden" }}>
+      {!cancelled && <div className="tower-deco-list" dangerouslySetInnerHTML={{ __html: towerSvg }} />}
+      <div style={{ cursor: "pointer", display: "flex", gap: 12, position: "relative", zIndex: 1 }}>
         <DateBadge
           date={e.starts_at}
           color={cancelled ? "var(--neutral-400)" : t.color}

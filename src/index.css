@@ -504,6 +504,12 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
   opacity:.20; color:#fff; pointer-events:none; z-index:0;
 }
 .event-card-ds .tower-deco svg{ width:100%; height:auto; display:block; }
+
+.tower-deco-list{
+  position:absolute; right:-20px; top:-16px; width:130px; height:auto;
+  opacity:.06; color:#fff; pointer-events:none; z-index:0;
+}
+.tower-deco-list svg{ width:100%; height:auto; display:block; }
 .event-card-ds.orange{ background:var(--kpi-coral); color:var(--kpi-coral-ink); }
 .event-card-ds.royal{ background:#3852D6; color:#fff; }
 .event-card-ds .kicker{ font-family:'Bricolage Grotesque',sans-serif; font-size:10px; font-weight:900; letter-spacing:.11em; text-transform:uppercase; opacity:.68; position:relative; z-index:1; }
