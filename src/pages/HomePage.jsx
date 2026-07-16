@@ -382,12 +382,9 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
 
       <div style={{ marginTop: 20, position: "relative", zIndex: 1 }}>
         <div
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", marginBottom: (e.present_names?.length ?? 0) > 0 || onOpen ? 14 : 0 }}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", marginBottom: 10 }}
           onClick={onOpen} role="button"
         >
-          <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.65 }}>
-            Qui est là
-          </div>
           {(e.present_names?.length ?? 0) > 0 ? (
             <AvatarStack people={e.present_names} />
           ) : (
@@ -402,18 +399,15 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
           const totalMembers = members?.length ?? 0;
           const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
           return (
-            <div style={{ display: "flex", gap: 8, marginBottom: 14, position: "relative", zIndex: 1 }}>
-              <CountChip value={presentCount} tint="green" icon={Check} ringColor={t.color} />
-              <CountChip value={absentCount} tint="orange" icon={X} ringColor={t.color} />
-              <CountChip value={injuredCount} tint="coral" icon={Bandaid} ringColor={t.color} />
-              <CountChip value={noResponseCount} tint="gray" icon={Clock} ringColor={t.color} />
+            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+              <CountChip value={presentCount} tint="green" icon={Check} ringColor={t.color} size="sm" />
+              <CountChip value={absentCount} tint="orange" icon={X} ringColor={t.color} size="sm" />
+              <CountChip value={injuredCount} tint="coral" icon={Bandaid} ringColor={t.color} size="sm" />
+              <CountChip value={noResponseCount} tint="gray" icon={Clock} ringColor={t.color} size="sm" />
             </div>
           );
         })()}
 
-        <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.65, marginBottom: 8 }}>
-          Ma présence
-        </div>
         <div style={{ display: "flex", gap: 8 }}>
           {Object.entries(AVAIL_LABELS).map(([v, l]) => {
             const active = e.my_availability === v;

@@ -42,7 +42,7 @@ export function DateBadge({ date, color = "var(--hero-sky)", ink = "var(--hero-i
 }
 
 /** Pastille de comptage colorée (présents/absents/sans réponse) — aplat plein */
-export function CountChip({ value, tint, icon: Icon, ringColor = "var(--surface)" }) {
+export function CountChip({ value, tint, icon: Icon, ringColor = "var(--surface)", size = "md" }) {
   const iconColors = {
     green: "var(--status-present-icon)",
     orange: "var(--status-absent-icon)",
@@ -50,18 +50,19 @@ export function CountChip({ value, tint, icon: Icon, ringColor = "var(--surface)
     gray: "var(--status-noresponse-icon)",
   };
   const badgeColor = iconColors[tint] ?? "var(--status-noresponse-icon)";
+  const dims = size === "sm" ? { chip: 28, badge: 14, icon: 8, font: "0.78rem" } : { chip: 38, badge: 18, icon: 10, font: "1rem" };
   return (
     <span style={{ position: "relative", display: "inline-flex" }}>
       <span className="num" style={{
-        display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 38, height: 38,
-        borderRadius: "var(--radius-md)", background: "var(--surface-soft)", color: "var(--text)", fontWeight: 700, fontSize: "1rem", padding: "0 10px",
+        display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: dims.chip, height: dims.chip,
+        borderRadius: "var(--radius-md)", background: "var(--surface-soft)", color: "var(--text)", fontWeight: 700, fontSize: dims.font, padding: "0 8px",
       }}>{value}</span>
       {Icon && (
         <span style={{
-          position: "absolute", bottom: -4, right: -4, width: 18, height: 18, borderRadius: "50%",
+          position: "absolute", bottom: -3, right: -3, width: dims.badge, height: dims.badge, borderRadius: "50%",
           background: badgeColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
           boxShadow: `0 0 0 2px ${ringColor}`,
-        }}><Icon size={10} /></span>
+        }}><Icon size={dims.icon} /></span>
       )}
     </span>
   );

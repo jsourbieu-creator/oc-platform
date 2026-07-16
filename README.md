@@ -195,6 +195,16 @@ via phpMyAdmin.
   desktop, sans avoir à passer par le menu "Plus" ou la sidebar.
 - Migration : `0017_messages_attachments_edit_delete.sql`.
 
+## Itération du 16/07 (suite 2) — hero épuré, plus de libellés "QUI EST LÀ" / "MA PRÉSENCE"
+
+- **Suppression des deux titres** dans le hero — les avatars de présents, les
+  puces de comptage et les boutons Présent/Absent/Blessé se comprennent
+  d'eux-mêmes par leur position et leurs icônes, sans avoir besoin de les
+  annoncer par du texte.
+- **Puces de comptage réduites** : nouveau prop `size="sm"` sur `CountChip`
+  (28px au lieu de 38px, badge d'icône à 14px) — utilisé dans le hero, la
+  taille normale reste disponible pour les autres contextes.
+
 ## Itération du 16/07 (suite) — statuts de présence : fond neutre partout, icônes colorées porteuses de sens
 
 Après plusieurs allers-retours (4 teintes saturées → tout en bleu → retour à
