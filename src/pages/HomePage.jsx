@@ -178,13 +178,13 @@ export function HomePage({ gotoConversation }) {
       />
 
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
-        <div className="kpi solid-coral">
-          <Trophy size={18} style={{ opacity: 0.55, marginBottom: 8 }} />
+        <div className="kpi">
+          <Trophy size={18} style={{ opacity: 0.7, marginBottom: 8, color: "var(--electric-blue)" }} />
           <b>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
           <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
         </div>
-        <div className="kpi solid-lime">
-          <Activity size={18} style={{ opacity: 0.55, marginBottom: 8 }} />
+        <div className="kpi">
+          <Activity size={18} style={{ opacity: 0.7, marginBottom: 8, color: "var(--electric-blue)" }} />
           <b>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
           <span>Ma présence</span>
         </div>
@@ -550,15 +550,10 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         <ThreeDots size={17} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 6 }}>
-          <CountChip value={presentCount} tint="green" />
-          <CountChip value={absentCount} tint="orange" />
-          <CountChip value={injuredCount} tint="violet" />
-          <CountChip value={noResponseCount} tint="gray" />
-        </div>
-        <AvatarStack people={confirmedPeople} />
+      <div className="subtle" style={{ marginTop: 12, fontSize: "0.85rem" }}>
+        <strong style={{ color: "var(--text)" }}>{presentCount}</strong> présent{presentCount > 1 ? "s" : ""} · <strong style={{ color: "var(--text)" }}>{absentCount}</strong> absent{absentCount > 1 ? "s" : ""} · <strong style={{ color: "var(--text)" }}>{injuredCount}</strong> blessé{injuredCount > 1 ? "s" : ""} · <strong style={{ color: "var(--text)" }}>{noResponseCount}</strong> sans réponse
       </div>
+      {confirmedPeople.length > 0 && <div style={{ marginTop: 8 }}><AvatarStack people={confirmedPeople} /></div>}
 
       {!cancelled && !isPast(e.starts_at) && (
         <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
@@ -567,7 +562,10 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
             return (
               <button
                 key={v} className="btn btn-sm" style={{
-                  flex: "1 1 80px", background: active ? AVAIL_FILL[v] : `color-mix(in srgb, ${AVAIL_FILL[v]} 20%, transparent)`, color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                  flex: "1 1 80px",
+                  background: active ? AVAIL_FILL[v] : "transparent",
+                  color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                  border: active ? "none" : "1.5px solid var(--line)",
                 }}
                 onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
               >{l}</button>
@@ -679,7 +677,10 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
                 return (
                   <button
                     key={v} className="btn btn-sm" style={{
-                      flex: "1 1 80px", background: active ? AVAIL_FILL[v] : `color-mix(in srgb, ${AVAIL_FILL[v]} 18%, transparent)`, color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                      flex: "1 1 80px",
+                      background: active ? AVAIL_FILL[v] : "transparent",
+                      color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                      border: active ? "none" : "1.5px solid var(--line)",
                     }}
                     onClick={() => setMyAvailability(v)}
                   >{l}</button>
@@ -958,7 +959,9 @@ function ParticipantsTab({ event: e, manage }) {
                       <button
                         key={v} className="btn btn-sm" style={{
                           width: "auto", padding: "5px 8px", fontSize: "0.68rem",
-                          background: p.status === v ? AVAIL_FILL[v] : `color-mix(in srgb, ${AVAIL_FILL[v]} 20%, transparent)`, color: p.status === v ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                          background: p.status === v ? AVAIL_FILL[v] : "transparent",
+                          color: p.status === v ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                          border: p.status === v ? "none" : "1.5px solid var(--line)",
                         }}
                         onClick={() => setFor(p.club_member_id, v)}
                       >{l[0]}</button>

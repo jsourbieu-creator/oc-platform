@@ -12,25 +12,25 @@ export const AVAIL_LABELS = {
   injured: "Blessé",
 };
 
-/** Couleur de texte à l'état INACTIF (fond translucide sombre) — teinte vive, lisible sur fond sombre */
+/** Couleur de texte à l'état INACTIF — gris neutre pour tous les statuts (nouvelle charte calme) */
 export const AVAIL_COLORS = {
-  present: "var(--status-present)",
-  absent: "var(--status-absent)",
-  injured: "var(--status-injured)",
+  present: "var(--text-dim)",
+  absent: "var(--text-dim)",
+  injured: "var(--text-dim)",
 };
 
-/** Couleur de remplissage quand le statut est actif — identique aux puces de comptage */
+/** Couleur de remplissage quand le statut est actif — un seul accent bleu, quel que soit le choix */
 export const AVAIL_FILL = {
-  present: "var(--status-present)",
-  absent: "var(--status-absent)",
-  injured: "var(--status-injured)",
+  present: "var(--electric-blue)",
+  absent: "var(--electric-blue)",
+  injured: "var(--electric-blue)",
 };
 
-/** Couleur de texte sur le remplissage (encre sombre assortie à chaque teinte claire) */
+/** Couleur de texte sur le remplissage bleu (encre sombre) */
 export const AVAIL_INK = {
-  present: "var(--status-present-ink)",
-  absent: "var(--status-absent-ink)",
-  injured: "var(--status-injured-ink)",
+  present: "#052430",
+  absent: "#052430",
+  injured: "#052430",
 };
 
 export const CONV_LABELS = {
