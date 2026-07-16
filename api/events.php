@@ -219,6 +219,14 @@ switch ($action) {
             trim($in['notes'] ?? '') ?: null,
             $id, $clubId,
         ]);
+
+        // Les convocations n'ont de sens que pour un match : si l'événement redevient
+        // un entraînement (ou autre), on nettoie, sinon "Tu es convoqué" persisterait.
+        if ($type !== 'match') {
+            $stmt = db()->prepare('DELETE FROM convocations WHERE event_id = ?');
+            $stmt->execute([$id]);
+        }
+
         log_action((int) $me['id'], 'update_event', "#$id $title");
         json_out(['ok' => true]);
         break;
