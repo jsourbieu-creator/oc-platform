@@ -23,7 +23,7 @@
 
   /* Hero « prochaine séance » — bloc pastel clair + encre marine assortie,
      même logique que les tuiles KPI (jamais de blanc sur du saturé). */
-  --hero-sky:#8FD3EE; --hero-sky-soft:#A9DEF2; --hero-ink:#0B3A52;
+  --hero-sky:#4FC1F0; --hero-sky-soft:#7ED0F5; --hero-ink:#04303B;
   --kpi-coral:#F2795A; --kpi-coral-ink:#4A1707;
 
   --radius-xs:8px; --radius-sm:13px; --radius-md:18px; --radius-lg:26px; --radius-xl:32px; --radius-2xl:40px; --radius-full:999px;
@@ -116,7 +116,7 @@
 
   /* Hero « prochaine séance » — bloc pastel clair + encre marine, même logique
      que les tuiles KPI (jamais de blanc sur du saturé). */
-  --hero-sky:#8FD3EE; --hero-sky-soft:#A9DEF2; --hero-ink:#0B3A52;
+  --hero-sky:#4FC1F0; --hero-sky-soft:#7ED0F5; --hero-ink:#04303B;
   --kpi-coral:#F2795A; --kpi-coral-ink:#4A1707;
 }
 
@@ -495,13 +495,13 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 .kpi.solid-lime span, .kpi.solid-coral span, .kpi.solid-sky span, .kpi.solid-amber span{ color:inherit; opacity:.68; }
 
 .event-card-ds{
-  background:#4FC1F0;
-  color:#04303B; border-radius:var(--radius-xl); padding:22px; box-shadow:var(--shadow-md);
+  background:var(--hero-sky);
+  color:var(--hero-ink); border-radius:var(--radius-xl); padding:22px; box-shadow:var(--shadow-md);
   position:relative; overflow:hidden;
 }
 .event-card-ds .tower-deco{
-  position:absolute; right:-18px; top:-16px; width:165px; height:auto;
-  opacity:.15; pointer-events:none; z-index:0;
+  position:absolute; right:-22px; top:-18px; width:200px; height:auto;
+  opacity:.20; color:#fff; pointer-events:none; z-index:0;
 }
 .event-card-ds .tower-deco svg{ width:100%; height:auto; display:block; }
 .event-card-ds.orange{ background:var(--kpi-coral); color:var(--kpi-coral-ink); }

@@ -368,7 +368,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
 
         {e.opponent && <div style={{ marginTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>vs {e.opponent}</div>}
         {e.my_convocation && (
-          <span style={{ display: "inline-block", marginTop: 10, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.22)", fontSize: "0.72rem", fontWeight: 800 }}>
+          <span style={{ display: "inline-block", marginTop: 10, padding: "4px 10px", borderRadius: 999, background: "#fff", color: "var(--hero-ink)", fontSize: "0.68rem", fontWeight: 800 }}>
             ✓ Tu es convoqué
           </span>
         )}
