@@ -9,6 +9,7 @@ import {
 } from "@/lib/events";
 import { fmtScore } from "@/lib/ballondor";
 import { DateBadge, AvatarStack, StatTile, CountChip, Avatar, ScoreSlider, ScoreBar } from "@/components/ui";
+import towerSvg from "@/assets/tour-blason.svg?raw";
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
 
@@ -342,6 +343,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
 
   return (
     <div className={`event-card-ds${isMatch ? " royal" : ""}`} style={{ marginBottom: 16 }}>
+      <div className="tower-deco" dangerouslySetInnerHTML={{ __html: towerSvg }} />
       <div onClick={onOpen} style={{ cursor: "pointer" }}>
         <div style={{ marginBottom: 6 }}>
           <span className="kicker">
