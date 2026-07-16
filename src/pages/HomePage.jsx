@@ -410,8 +410,8 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
                 style={{
                   flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
                   fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
-                  background: active ? AVAIL_FILL[v] : "rgba(11,58,82,0.10)",
-                  color: active ? AVAIL_INK[v] : "var(--hero-ink)",
+                  background: active ? AVAIL_FILL[v] : "rgba(255,255,255,0.16)",
+                  color: active ? AVAIL_INK[v] : "currentColor",
                   transform: active ? "scale(1.02)" : "none",
                   transition: ".18s var(--ease-spring)",
                 }}
