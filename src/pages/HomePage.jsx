@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, CONV_LABELS,
+  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK,
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
 import { fmtScore } from "@/lib/ballondor";
@@ -805,7 +805,7 @@ function InfosTab({ event: e, reload, manage, members }) {
         <CommentEditor event={e} reload={reload} />
       )}
 
-      {manage && e.type === "match" && !cancelled && <ConvocationManager event={e} reload={reload} members={members} />}
+      {manage && e.type === "match" && !cancelled && <ConvocationManager event={e} reload={reload} />}
 
       {manage && !cancelled && <PresenceCorrector event={e} reload={reload} />}
     </div>
@@ -994,13 +994,17 @@ function CommentEditor({ event: e, reload }) {
     </div>
   );
 }
-function ConvocationManager({ event: e, reload, members }) {
+/** Convocation d'un match : parmi les joueurs ayant répondu "présent", on choisit
+ * au maximum 1 gardien + 8 joueurs de champ (effectif limité en futsal). */
+function ConvocationManager({ event: e, reload }) {
   const { token, activeClubId } = useAuth();
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(new Set());
-  const [convList, setConvList] = useState(null);
+  const [goalkeeperId, setGoalkeeperId] = useState(null);
+  const [fieldIds, setFieldIds] = useState(new Set());
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const candidates = e.present_names ?? [];
 
   const openManager = async () => {
     setOpen((v) => !v);
@@ -1008,27 +1012,37 @@ function ConvocationManager({ event: e, reload, members }) {
     setError("");
     try {
       const c = await api("events.php", "convocation_list", { club_id: activeClubId, event_id: e.id }, token);
-      setConvList(c.convocations);
-      setSelected(new Set(c.convocations.map((x) => x.club_member_id)));
+      const gk = c.convocations.find((x) => x.role === "goalkeeper");
+      setGoalkeeperId(gk ? gk.club_member_id : null);
+      setFieldIds(new Set(c.convocations.filter((x) => x.role !== "goalkeeper").map((x) => x.club_member_id)));
     } catch (e2) { setError(e2.message); }
   };
 
-  const toggleMember = (id) => {
-    const s = new Set(selected);
-    s.has(id) ? s.delete(id) : s.add(id);
-    setSelected(s);
+  const pickGoalkeeper = (id) => {
+    setGoalkeeperId((prev) => (prev === id ? null : id));
+    setFieldIds((prev) => { const s = new Set(prev); s.delete(id); return s; });
+  };
+
+  const toggleField = (id) => {
+    if (id === goalkeeperId) return;
+    setFieldIds((prev) => {
+      const s = new Set(prev);
+      if (s.has(id)) s.delete(id);
+      else { if (s.size >= 8) return prev; s.add(id); }
+      return s;
+    });
   };
 
   const save = async () => {
     setError(""); setBusy(true);
     try {
-      await api("events.php", "convoke_set", { club_id: activeClubId, event_id: e.id, member_ids: [...selected] }, token);
+      await api("events.php", "convoke_set", { club_id: activeClubId, event_id: e.id, goalkeeper_id: goalkeeperId, field_ids: [...fieldIds] }, token);
       setOpen(false);
       reload();
     } catch (e2) { setError(e2.message); } finally { setBusy(false); }
   };
 
-  const statusOf = (memberId) => convList?.find((c) => c.club_member_id === memberId)?.status;
+  const total = (goalkeeperId ? 1 : 0) + fieldIds.size;
 
   return (
     <div style={{ marginBottom: 14 }}>
@@ -1038,21 +1052,43 @@ function ConvocationManager({ event: e, reload, members }) {
       {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
       {open && (
         <div style={{ width: "100%", marginTop: 10 }}>
-          <p className="subtle" style={{ marginTop: 0 }}>Sélectionne les joueurs convoqués pour ce match (effectif limité).</p>
-          {!members && <div className="spinner" />}
-          {members?.map((m) => (
-            <label key={m.id} className="list-row" style={{ padding: "6px 0", cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggleMember(m.id)} style={{ width: "auto" }} />
-                {m.first_name} {m.last_name}
-              </span>
-              {statusOf(m.id) && <span className={`badge ${statusOf(m.id) === "confirmed" ? "badge-info" : "badge-neutral"}`}>{CONV_LABELS[statusOf(m.id)]}</span>}
-            </label>
-          ))}
-          {members && (
-            <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }} disabled={busy} onClick={save}>
-              {busy ? "Enregistrement…" : `Convoquer ${selected.size} joueur${selected.size > 1 ? "s" : ""}`}
-            </button>
+          {candidates.length === 0 && (
+            <p className="subtle" style={{ marginTop: 0 }}>Personne n'a encore répondu présent à ce match — la convocation ne peut se faire que parmi les présents.</p>
+          )}
+          {candidates.length > 0 && (
+            <>
+              <p className="subtle" style={{ marginTop: 0 }}>
+                Parmi les présents : 1 gardien + 8 joueurs de champ maximum ({total}/9).
+              </p>
+
+              <div className="label-title" style={{ fontSize: "0.78rem", marginBottom: 4 }}>Gardien</div>
+              {candidates.map((m) => (
+                <label key={m.club_member_id} className="list-row" style={{ padding: "6px 0", cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input type="radio" name={`gk-${e.id}`} checked={goalkeeperId === m.club_member_id} onChange={() => pickGoalkeeper(m.club_member_id)} style={{ width: "auto" }} />
+                    <Avatar name={m.name} userId={m.user_id} avatarUrl={m.avatar_url} size={24} />{m.name}
+                  </span>
+                </label>
+              ))}
+
+              <div className="label-title" style={{ fontSize: "0.78rem", marginTop: 12, marginBottom: 4 }}>Joueurs de champ ({fieldIds.size}/8)</div>
+              {candidates.filter((m) => m.club_member_id !== goalkeeperId).map((m) => (
+                <label key={m.club_member_id} className="list-row" style={{ padding: "6px 0", cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex", opacity: !fieldIds.has(m.club_member_id) && fieldIds.size >= 8 ? 0.4 : 1 }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input
+                      type="checkbox" checked={fieldIds.has(m.club_member_id)}
+                      disabled={!fieldIds.has(m.club_member_id) && fieldIds.size >= 8}
+                      onChange={() => toggleField(m.club_member_id)} style={{ width: "auto" }}
+                    />
+                    <Avatar name={m.name} userId={m.user_id} avatarUrl={m.avatar_url} size={24} />{m.name}
+                  </span>
+                </label>
+              ))}
+
+              <button className="btn btn-primary btn-sm" style={{ marginTop: 10 }} disabled={busy || total === 0} onClick={save}>
+                {busy ? "Enregistrement…" : `Convoquer ${total} joueur${total > 1 ? "s" : ""}`}
+              </button>
+            </>
           )}
         </div>
       )}

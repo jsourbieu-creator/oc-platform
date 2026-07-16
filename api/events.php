@@ -376,15 +376,26 @@ switch ($action) {
             json_error('Les convocations ne concernent que les matchs (effectif limité). Pour un entraînement, la disponibilité déclarée suffit.');
         }
 
-        $memberIds = array_values(array_unique(array_map('intval', (array) ($in['member_ids'] ?? []))));
+        $goalkeeperId = !empty($in['goalkeeper_id']) ? (int) $in['goalkeeper_id'] : null;
+        $fieldIds = array_values(array_unique(array_map('intval', (array) ($in['field_ids'] ?? []))));
+        $fieldIds = array_values(array_diff($fieldIds, $goalkeeperId ? [$goalkeeperId] : []));
 
-        // Tous les IDs doivent être des membres actifs du club (isolation)
+        if (count($fieldIds) > 8) json_error('Maximum 8 joueurs de champ pour une convocation.');
+
+        $memberIds = $goalkeeperId ? array_merge([$goalkeeperId], $fieldIds) : $fieldIds;
+
+        // Tous les IDs doivent être des membres actifs du club ET avoir déclaré
+        // "présent" à cette séance (la convocation se fait parmi les présents).
         if ($memberIds) {
             $ph = implode(',', array_fill(0, count($memberIds), '?'));
-            $stmt = db()->prepare("SELECT COUNT(*) FROM club_members WHERE id IN ($ph) AND club_id = ? AND status = 'active'");
-            $stmt->execute([...$memberIds, $clubId]);
+            $stmt = db()->prepare("
+                SELECT COUNT(*) FROM club_members cm
+                JOIN event_availabilities ea ON ea.club_member_id = cm.id AND ea.event_id = ? AND ea.status = 'present'
+                WHERE cm.id IN ($ph) AND cm.club_id = ? AND cm.status = 'active'
+            ");
+            $stmt->execute([$eventId, ...$memberIds, $clubId]);
             if ((int) $stmt->fetchColumn() !== count($memberIds)) {
-                json_error('Certains membres sont introuvables ou inactifs dans ce club.');
+                json_error('Seuls les membres ayant répondu "présent" à cette séance peuvent être convoqués.');
             }
         }
 
@@ -400,8 +411,9 @@ switch ($action) {
                 $ph = implode(',', array_fill(0, count($memberIds), '?'));
                 $stmt = $pdo->prepare("DELETE FROM convocations WHERE event_id = ? AND club_member_id NOT IN ($ph)");
                 $stmt->execute([$eventId, ...$memberIds]);
-                $stmt = $pdo->prepare('INSERT IGNORE INTO convocations (event_id, club_member_id) VALUES (?,?)');
-                foreach ($memberIds as $mid) $stmt->execute([$eventId, $mid]);
+                $stmt = $pdo->prepare('INSERT INTO convocations (event_id, club_member_id, role) VALUES (?,?,?) ON DUPLICATE KEY UPDATE role = VALUES(role)');
+                if ($goalkeeperId) $stmt->execute([$eventId, $goalkeeperId, 'goalkeeper']);
+                foreach ($fieldIds as $mid) $stmt->execute([$eventId, $mid, 'field']);
             } else {
                 $stmt = $pdo->prepare('DELETE FROM convocations WHERE event_id = ?');
                 $stmt->execute([$eventId]);
@@ -429,12 +441,12 @@ switch ($action) {
         event_in_club_or_404($eventId, $clubId);
 
         $stmt = db()->prepare('
-            SELECT c.club_member_id, c.status, c.responded_at, u.first_name, u.last_name
+            SELECT c.club_member_id, c.role, c.status, c.responded_at, u.first_name, u.last_name
             FROM convocations c
             JOIN club_members cm ON cm.id = c.club_member_id
             JOIN users u ON u.id = cm.user_id
             WHERE c.event_id = ?
-            ORDER BY FIELD(c.status, "confirmed", "pending", "declined"), u.last_name
+            ORDER BY FIELD(c.role, "goalkeeper", "field"), FIELD(c.status, "confirmed", "pending", "declined"), u.last_name
         ');
         $stmt->execute([$eventId]);
         json_out(['convocations' => $stmt->fetchAll()]);
