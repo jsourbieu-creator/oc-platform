@@ -338,10 +338,10 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
   const d = new Date(e.starts_at.replace(" ", "T"));
   const dayNum = d.getDate();
   const monthShort = MONTH_NAMES[d.getMonth()].slice(0, 4);
-  const isCoral = e.type === "match";
+  const isMatch = e.type === "match";
 
   return (
-    <div className={`event-card-ds${isCoral ? " orange" : ""}`} style={{ marginBottom: 16 }}>
+    <div className={`event-card-ds${isMatch ? " royal" : ""}`} style={{ marginBottom: 16 }}>
       <div onClick={onOpen} style={{ cursor: "pointer" }}>
         <div style={{ marginBottom: 6 }}>
           <span className="kicker">
@@ -365,6 +365,11 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
         </div>
 
         {e.opponent && <div style={{ marginTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>vs {e.opponent}</div>}
+        {e.my_convocation && (
+          <span style={{ display: "inline-block", marginTop: 10, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.22)", fontSize: "0.72rem", fontWeight: 800 }}>
+            ✓ Tu es convoqué
+          </span>
+        )}
         {e.team_name && (
           <span style={{ display: "inline-block", marginTop: 12, padding: "5px 11px", borderRadius: 999, background: "rgba(11,58,82,0.12)", fontSize: "0.72rem", fontWeight: 800 }}>
             {e.team_name}
@@ -502,7 +507,6 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   const injuredCount = e.avail_counts?.injured ?? 0;
   const totalMembers = members?.length ?? 0;
   const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
-  const confirmedCount = e.conv_counts?.confirmed ?? 0;
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
   const confirmedPeople = e.confirmed_names ?? [];
   const [convBusy, setConvBusy] = useState(false);
@@ -577,7 +581,10 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
       </div>
 
       {e.type === "match" && convokedTotal > 0 && (
-        <div className="subtle" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}><ClipboardCheck size={13} />{confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""} à la convocation</div>
+        <div className="subtle" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <ClipboardCheck size={13} />{convokedTotal} joueur{convokedTotal > 1 ? "s" : ""} convoqué{convokedTotal > 1 ? "s" : ""}
+          {e.my_convocation && <span className="badge badge-info">Tu es convoqué ✓</span>}
+        </div>
       )}
 
       <div style={{ textAlign: "center", marginTop: 6 }}>

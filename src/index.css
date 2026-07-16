@@ -510,5 +510,6 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
   border-radius:50%; left:-50px; bottom:-70px;
 }
 .event-card-ds.orange{ background:linear-gradient(150deg, #FFB49B 0%, var(--kpi-coral) 100%); color:var(--kpi-coral-ink); }
+.event-card-ds.royal{ background:linear-gradient(150deg, #7C93F5 0%, #3852D6 100%); color:#fff; }
 .event-card-ds .kicker{ font-size:10px; font-weight:900; letter-spacing:.11em; text-transform:uppercase; opacity:.68; position:relative; z-index:1; }
 .event-card-ds h3{ font-size:28px; margin:9px 0; letter-spacing:-.035em; position:relative; z-index:1; }

@@ -1,7 +1,7 @@
 import { Flag, Activity, Balloon } from "react-bootstrap-icons";
 
 export const EVENT_TYPES = {
-  match: { label: "Match", icon: Flag, color: "var(--oc-orange-700)" },
+  match: { label: "Match", icon: Flag, color: "#3852D6" },
   training: { label: "Entraînement", icon: Activity, color: "var(--hero-sky)" },
   club_event: { label: "Événement club", icon: Balloon, color: "var(--hero-sky)" },
 };

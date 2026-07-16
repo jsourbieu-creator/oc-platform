@@ -2,7 +2,7 @@ import { PinAngleFill, ChatDots, Fire } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { CONV_LABELS, EVENT_TYPES, fmtTime, isPast } from "@/lib/events";
+import { EVENT_TYPES, fmtTime, isPast } from "@/lib/events";
 import { DateBadge } from "@/components/ui";
 
 const ROLE_LABELS = {
@@ -234,7 +234,8 @@ function Comments({ postId, myMemberId, moderate }) {
   );
 }
 
-/** Convocations aux matchs à confirmer/décliner — fusionné dans le Vestiaire */
+/** Convocations aux matchs — purement informatif, aucune confirmation requise
+ * du joueur : dès que le super admin convoque, c'est acté. */
 function MyConvocations() {
   const { token, activeClubId } = useAuth();
   const [events, setEvents] = useState(null);
@@ -248,14 +249,6 @@ function MyConvocations() {
   }, [activeClubId, token]);
 
   useEffect(load, [load]);
-
-  const respond = async (eventId, status) => {
-    setError("");
-    try {
-      await api("events.php", "convocation_respond", { club_id: activeClubId, event_id: eventId, status }, token);
-      load();
-    } catch (e2) { setError(e2.message); }
-  };
 
   const upcoming = (events ?? []).filter((e) => e.my_convocation && e.status !== "cancelled" && !isPast(e.starts_at));
 
@@ -275,13 +268,9 @@ function MyConvocations() {
             <DateBadge date={e.starts_at} color={(EVENT_TYPES[e.type] ?? EVENT_TYPES.match).color} />
             <div className="event-row-body">
               <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><T size={15} />{e.title}</strong>
-              <span className={`badge ${e.my_convocation === "confirmed" ? "badge-info" : "badge-neutral"}`} style={{ marginLeft: 8 }}>{CONV_LABELS[e.my_convocation]}</span>
+              <span className="badge badge-info" style={{ marginLeft: 8 }}>Convoqué ✓</span>
               <div className="subtle">
                 {fmtTime(e.starts_at)}{e.meet_at ? ` — RDV ${fmtTime(e.meet_at)}` : ""}{e.location ? ` — ${e.location}` : ""}
-              </div>
-              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                <button className={`btn btn-sm ${e.my_convocation === "confirmed" ? "btn-primary" : "btn-secondary"}`} onClick={() => respond(e.id, "confirmed")}>Je confirme</button>
-                <button className={`btn btn-sm ${e.my_convocation === "declined" ? "btn-danger" : "btn-secondary"}`} onClick={() => respond(e.id, "declined")}>Je décline</button>
               </div>
             </div>
           </div>
