@@ -389,10 +389,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
             Qui est là
           </div>
           {(e.present_names?.length ?? 0) > 0 ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <AvatarStack people={e.present_names} />
-              <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>{e.avail_counts?.present ?? 0} présent{(e.avail_counts?.present ?? 0) > 1 ? "s" : ""}</span>
-            </div>
+            <AvatarStack people={e.present_names} />
           ) : (
             <span style={{ fontSize: "0.82rem", opacity: 0.65 }}>Sois le premier à répondre</span>
           )}
