@@ -156,6 +156,246 @@ via phpMyAdmin.
   convocations, taux de participation aux votes, joueur le plus
   régulier/assidu, meilleure progression — à l'échelle de la saison.
 
+## Charte de couleurs validée (15/07, après proposition visuelle)
+
+- **Hero « prochaine séance »** : bloc pastel bleu ciel clair
+  (`--hero-sky`/`--hero-sky-soft`) avec texte en encre marine
+  (`--hero-ink`), plus deux formes internes floutées (un halo clair en haut
+  à droite, une ombre discrète en bas à gauche) pour donner du volume sans
+  jamais utiliser de bordure. Le match bascule sur un dégradé corail
+  (`--kpi-coral`) avec la même logique encre foncée.
+- **Tuiles KPI** : Ballon d'Or en corail (`--kpi-coral` / `--kpi-coral-ink`),
+  Ma présence en lime, À venir en bleu électrique — toutes en aplat plein,
+  jamais de blanc sur fond saturé, toujours la encre assortie à la teinte.
+- **Statuts de présence** repris à l'identique du hero pour la cohérence :
+  présent = lime, absent = rouge-corail, blessé = violet — chacun avec sa
+  propre encre foncée pour le texte.
+- Cette palette a été proposée visuellement (nuancier interactif) avant
+  implémentation et validée telle quelle.
+
+## Itération design/fonctionnalité du 15/07 — messagerie enrichie
+
+- **Pièces jointes** : images, vidéos courtes et documents (PDF/Word/Excel)
+  peuvent être joints à un message, via l'infrastructure de stockage déjà
+  en place pour Documents/Médias (`files.php`, kind `message` — n'importe
+  quel membre du club peut y uploader, contrairement aux kinds
+  `document`/`media` qui restent réservés aux rôles habilités). Les images
+  et vidéos s'affichent directement dans la bulle (tap pour télécharger),
+  les autres fichiers en chip avec nom + taille. Les GIF passent par un
+  simple upload de fichier `.gif` (pas d'intégration Giphy/Tenor — ça
+  demanderait une clé d'API tierce qu'on n'a pas configurée).
+- **Modifier / supprimer un message** : menu ⋮ sur ses propres messages.
+  Modifier édite le contenu et marque « · modifié ». Supprimer fait une
+  suppression douce (`deleted_at`) — le message devient « Message
+  supprimé » en italique, sa pièce jointe est effacée du disque pour
+  libérer la place. Un modérateur (`moderate_content`) peut aussi
+  supprimer n'importe quel message.
+- **Accès direct aux messages** : icône 💬 avec pastille de non-lus ajoutée
+  dans la barre du haut, juste à côté de la cloche — visible sur mobile et
+  desktop, sans avoir à passer par le menu "Plus" ou la sidebar.
+- Migration : `0017_messages_attachments_edit_delete.sql`.
+
+## Itération du 16/07 (suite 2) — hero épuré, plus de libellés "QUI EST LÀ" / "MA PRÉSENCE"
+
+- **Suppression des deux titres** dans le hero — les avatars de présents, les
+  puces de comptage et les boutons Présent/Absent/Blessé se comprennent
+  d'eux-mêmes par leur position et leurs icônes, sans avoir besoin de les
+  annoncer par du texte.
+- **Puces de comptage réduites** : nouveau prop `size="sm"` sur `CountChip`
+  (28px au lieu de 38px, badge d'icône à 14px) — utilisé dans le hero, la
+  taille normale reste disponible pour les autres contextes.
+
+## Itération du 16/07 (suite) — statuts de présence : fond neutre partout, icônes colorées porteuses de sens
+
+Après plusieurs allers-retours (4 teintes saturées → tout en bleu → retour à
+de vraies couleurs), la solution retenue règle le problème à la racine :
+
+- **Puces de comptage** : fond neutre uniforme (blanc sur le hero, gris sombre
+  discret sur les cartes de liste — jamais la même teinte que le fond
+  derrière, donc plus jamais invisible), avec un petit **badge d'icône
+  coloré** en coin qui porte le vrai code couleur : vert (présent), rouge
+  (absent), orange (blessé — jamais d'or), gris (sans réponse). L'anneau du
+  badge s'adapte à la couleur du fond derrière (bleu poudré, bleu roi ou
+  carte neutre) pour bien se détacher.
+- **Boutons Présent/Absent/Blessé** (hero, carte de liste, modale, correction
+  admin) : même logique — actif = fond blanc + icône colorée + encre marine,
+  inactif = fond translucide/contour discret + icône et texte atténués à
+  75-80%. Un seul repère visuel (le blanc) indique "sélectionné", peu
+  importe lequel des trois c'est.
+- Le badge de statut dans la liste des participants suit la même palette
+  d'icônes (auparavant gris uniforme par erreur, invisible sémantiquement).
+
+## Itération du 16/07 — palette des statuts apaisée + icônes
+
+- **Fini l'effet guirlande de Noël** sur les pastilles de comptage et les
+  boutons Présent/Absent/Blessé : au lieu de 4 teintes saturées différentes
+  (lime, rouge-rose, violet, gris), la palette se resserre autour de
+  l'identité bleue déjà présente partout ailleurs — présent en bleu, absent
+  en rouge calmé, blessé en ambre, sans réponse en gris neutre.
+- **Icônes ajoutées** dans les boutons Présent/Absent/Blessé (coche, croix,
+  pansement) sur les trois emplacements où ils apparaissent (hero, carte de
+  liste, modale de détail), plus la petite icône de statut dans la liste des
+  participants (le "!" de blessé devient un vrai pansement, cohérent avec
+  les coche/croix déjà en place pour présent/absent).
+
+## Reconstruction du 15/07 — Ballon d'Or repensé en 3 blocs (Séances / Mon profil / Le groupe)
+
+Après une première tentative en 5 onglets jugée "trop brouillon", la page a
+été repensée autour de **moments d'usage** plutôt que de fonctionnalités :
+
+- **Séances** (l'onglet "action") : si une séance attend un vote, une grande
+  carte "Tu as une séance à noter" apparaît en premier (tap → flux de vote
+  dédié à cette séance, avec retour). En dessous : séances à venir avec le
+  rappel "vote après la séance", puis l'historique séance par séance
+  (auto-évaluation vs moyenne reçue). `events.php:list` renvoie désormais
+  `my_vote_submitted` par séance pour repérer les votes en attente sans
+  requête supplémentaire.
+- **Mon profil** (l'onglet "où j'en suis") : score, jauge d'éligibilité avec
+  discours en clair ("si tu fais X séances de plus..."), explication
+  dépliable des coefficients avec les vrais réglages du club, mon ressenti
+  de la saison, et mes trophées personnels uniquement.
+- **Le groupe** (l'onglet "curiosité") : classement officiel + provisoire
+  complets, stats collectives, records du groupe, galerie complète des
+  trophées de la saison.
+- Sélecteur de saison partagé par "Mon profil" et "Le groupe" (pas
+  "Séances", qui reste centré sur l'instant présent).
+
+## Itération majeure du 15/07 — Ballon d'Or devient un vrai hub (Votes fusionné avec Classements/Stats/Trophées)
+
+- **La page Votes devient "Ballon d'Or"**, avec 5 onglets : **Voter** (inchangé),
+  **Séances** (historique perso + rappel sur les séances à venir : "vote après
+  la séance"), **Classement** (position + jauge d'éligibilité + explication en
+  clair des coefficients avec les vrais chiffres réglés par le club +
+  classement officiel et provisoire complets), **Statistiques** (collectives
+  + individuelles, tuiles colorées), **Trophées** (galerie complète de la
+  saison).
+- **Sélecteur de saison** commun à ces 4 onglets (au lieu de forcer la saison
+  active) — permet par exemple de garder une saison de test isolée pour
+  essayer le système sans polluer la vraie saison.
+- **Discours explicatif pour le classement provisoire** : "Actuellement, ta
+  note est de X. Si tu fais Y entraînements supplémentaires, tu seras
+  éligible au classement officiel et à la remise des trophées, avant la fin
+  de la saison le [date]." — plus un bloc dépliable expliquant le seuil de
+  fiabilité, le coefficient de présence (avec les bornes réelles) et les
+  conditions d'éligibilité (séances minimum + taux de présence minimum).
+- Aucune nouvelle route API — tout réutilise `my_perception`,
+  `season_rankings`, `season_settings_get`, `season_team_stats`,
+  `season_trophies`, déjà en place. Les pages Statistiques/Classements/
+  Trophées séparées restent dans le menu pour l'instant (pas supprimées),
+  Votes/Ballon d'Or devient simplement le point d'entrée central voulu.
+
+## Itération du 15/07 — page Votes enrichie (Séances / Classement)
+
+- **Onglets sur la page Votes** : "Voter" (inchangé), **"Séances"** (historique
+  personnel séance par séance — auto-évaluation vs moyenne reçue du groupe,
+  avec l'écart coloré et le ressenti global de la saison, réutilise
+  `my_perception`), **"Classement"** (ta position actuelle — score, rang
+  officiel ou nombre de séances avant de l'être, top 3 du club, bouton vers
+  le classement complet — réutilise `season_rankings`, aucune nouvelle
+  route API nécessaire).
+- Objectif : savoir où on en est (séances jouées, écart de perception,
+  position au classement) sans quitter la page Votes.
+
+## Itération design du 15/07 (suite 5) — liste de conversations façon Messenger/WhatsApp
+
+- **Liste des messages repensée** : fini le bloc en carte fermée — avatar
+  plus grand (50px, comme un vrai avatar de contact), lignes plein bord
+  séparées par un simple filet fin (pas de carte), nom en gras + heure sur
+  la même ligne, aperçu du dernier message en dessous avec pastille de
+  non-lus ronde à droite quand pertinent — la disposition classique d'un
+  inbox de messagerie plutôt qu'une liste de fiches.
+- Les bulles de message (fil de discussion) gardent leur avatar par auteur
+  ajouté à l'itération précédente ; ce changement-ci concerne uniquement
+  l'écran de liste des conversations.
+
+## Itération design du 15/07 (suite 4) — Bootstrap Icons + Vestiaire renommé Annonces
+
+- **Changement de bibliothèque d'icônes** : Phosphor → **Bootstrap Icons**
+  (`react-bootstrap-icons`), choisi après comparatif visuel — traits plus
+  nets, plus lisibles en petite taille. Toutes les icônes de l'app migrées
+  (nav, événements, statuts, trophées…), avec des équivalents sémantiques
+  choisis à la main pour les icônes sport absentes du set (match → drapeau,
+  entraînement → activité, événement club → ballon de fête).
+- **"Vestiaire" renommé "Annonces"**, icône mégaphone — plus clair sur ce
+  que fait vraiment cette section (le fil d'annonces du club). La clé
+  technique interne (`view: "vestiaire"`, fichier `VestiairePage.jsx`)
+  n'a pas changé, seul le libellé visible et l'icône ont bougé.
+- Bonus : le bundle JS a rétréci d'environ 60 Ko grâce au tree-shaking plus
+  efficace de Bootstrap Icons par rapport à Phosphor.
+
+## Itération design du 15/07 (suite 3) — nettoyage complet de l'ancien bleu + fix lisibilité navbar
+
+- **Tous les résidus de l'ancien bleu saturé** (`--oc-blue-deep`,
+  `--oc-sky-600`, `--electric-blue`) remplacés par le bleu ciel du hero
+  (`--hero-sky` + `--hero-ink`) : couleur des types d'événement
+  (entraînement/événement club), case sélectionnée du calendrier mensuel,
+  bouton rond "+ Ajouter", tuile KPI bleue, icônes décoratives (épingle du
+  Vestiaire, écran "rejoindre un club").
+- **Fix de lisibilité navbar mobile** : le label actif héritait de l'encre
+  marine (foncée) — invisible sur la barre sombre. Corrigé en séparant les
+  deux : le **label** reste clair (bleu ciel) sur la barre sombre, seule
+  l'**icône** passe en encre marine sur son propre rond clair.
+- Les boutons "primaire" classiques (Enregistrer, Créer un compte…) gardent
+  pour l'instant le bleu plus saturé — à repasser en pastel si demandé.
+
+## Itération design du 15/07 (suite 2) — cohérence charte, hero cliquable, navbar avec labels
+
+- **Boutons de présence du hero** : le bouton actif utilise maintenant la
+  vraie couleur du statut en fond (`AVAIL_FILL`) au lieu d'un blanc
+  générique — même logique que partout ailleurs (badges, pastilles,
+  tuiles KPI).
+- **Hero cliquable vers le détail complet** : taper la zone titre/date du
+  hero rouvre la liste en vue "À venir" et ouvre directement la fiche
+  complète de la prochaine séance (mêmes onglets Infos/Participants que
+  depuis la liste), au lieu de simplement pointer une case du calendrier.
+- **Message d'état vide reformulé** : "Personne n'a encore répondu" devient
+  "Sois le premier à répondre".
+- **Navbar mobile** : les labels texte sont revenus sous les icônes (en
+  Bricolage Grotesque) — l'icône seule ne suffisait pas à la clarté. Le
+  pointeur rond bleu ciel de l'onglet actif est conservé.
+- **Sidebar desktop** : l'onglet actif passe du dégradé bleu profond au
+  même bleu ciel clair que le hero, texte en encre marine assortie, et
+  toute la sidebar passe en Bricolage Grotesque pour matcher la
+  typographie du reste de l'app.
+
+## Itération design du 15/07 (suite) — navbar icônes seules, hero en un seul bloc
+
+- **Navbar mobile** : icônes seules (Phosphor), plus de label texte visible ;
+  l'onglet actif reçoit un **pointeur rond bleu ciel** (`--hero-sky`) derrière
+  l'icône au lieu de la pilule allongée précédente — direction confirmée par
+  les captures de référence (icônes seules, indicateur rond).
+- **Hero "prochaine séance" fusionné** : la bande de séparation entre le
+  titre/date et "Qui est là"/"Ma présence" (fond légèrement teinté + bordure
+  invisible par négatif de marge) a été supprimée — c'est maintenant un
+  bloc visuel continu, seule la respiration verticale sépare les sections.
+  Le titre de la séance est aussi passé de 24px à 28px.
+- **KPI recentrées sur 2 tuiles utiles** : Ballon d'Or (corail) et Ma
+  présence (lime). La tuile "À venir" (un simple total de 46, qui ne disait
+  rien à l'utilisateur) a été retirée.
+
+## Itération design du 15/07 — retrait du statut Incertain, zéro bordure, hero actionnable
+
+- **Statut "Incertain" retiré** : décision produit — un 4ᵉ statut obligeait à
+  relancer les gens jusqu'à la dernière minute. Retour à 3 statuts nets :
+  Présent / Absent / Blessé. Migration `0016_availability_remove_maybe.sql`
+  (bascule les rares réponses "Incertain" déjà enregistrées en "Absent").
+- **Nouvelles couleurs de statut**, bien distinctes de l'orange déjà utilisé
+  ailleurs (KPI, hero) : présent en lime, absent en rouge-corail, blessé en
+  violet (`--status-present/absent/injured` + `-ink`).
+- **Zéro bordure sur tout le site** : sidebar, topbar, listes, avatars,
+  cercle décoratif du hero, contour "aujourd'hui" du calendrier — toutes les
+  bordures littérales ont été remplacées par de l'espacement ou des ombres
+  douces (`box-shadow`), jamais un trait.
+- **Hero "prochaine séance" repensé** : halo dégradé (au lieu du cercle à
+  bordure), et surtout **actionnable directement** — "Qui est là" (avatars +
+  compteur) et les 3 boutons Présent/Absent/Blessé sont dans la même carte,
+  sans avoir à ouvrir autre chose. Objectif : ouvrir l'app, voir la prochaine
+  séance, qui vient, et changer sa présence en un tap.
+- **Salutation d'accueil** : phrase du jour piochée dans un pool d'une
+  vingtaine de tournures foot (Cantona, clin d'œil Mourinho/Joga Bonito,
+  ton grandiloquent façon président de club) — une phrase par jour, stable
+  toute la journée, pas de flicker au rechargement.
+
 ## Passe design (post-refonte TeamPulse)
 
 - **Icônes** : tous les emojis d'interface remplacés par `lucide-react`

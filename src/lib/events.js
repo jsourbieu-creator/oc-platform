@@ -1,39 +1,49 @@
-import { Goal, Volleyball, PartyPopper } from "lucide-react";
+import { Flag, Activity, Balloon, Check, X, Bandaid } from "react-bootstrap-icons";
 
 export const EVENT_TYPES = {
-  match: { label: "Match", icon: Goal, color: "var(--gold-500)" },
-  training: { label: "Entraînement", icon: Volleyball, color: "var(--oc-blue-deep)" },
-  club_event: { label: "Événement club", icon: PartyPopper, color: "var(--oc-blue-bright)" },
+  match: { label: "Match", icon: Flag, color: "#3852D6" },
+  training: { label: "Entraînement", icon: Activity, color: "var(--hero-sky)" },
+  club_event: { label: "Événement club", icon: Balloon, color: "var(--hero-sky)" },
 };
 
 export const AVAIL_LABELS = {
   present: "Présent",
-  maybe: "Incertain",
   absent: "Absent",
   injured: "Blessé",
 };
 
+export const AVAIL_ICONS = {
+  present: Check,
+  absent: X,
+  injured: Bandaid,
+};
+
+/** Couleur de texte à l'état INACTIF — gris neutre pour tous les statuts (nouvelle charte calme) */
 export const AVAIL_COLORS = {
-  present: "var(--status-present-ink)",
-  maybe: "var(--status-maybe-ink)",
-  absent: "var(--status-absent-ink)",
-  injured: "var(--status-injured-ink)",
+  present: "var(--text-dim)",
+  absent: "var(--text-dim)",
+  injured: "var(--text-dim)",
 };
 
-/** Couleur de remplissage quand le statut est actif — identique aux puces de comptage */
+/** Couleur de remplissage quand le statut est actif — blanc partout, jamais de collision avec le fond */
 export const AVAIL_FILL = {
-  present: "var(--status-present)",
-  maybe: "var(--status-maybe)",
-  absent: "var(--status-absent)",
-  injured: "var(--status-injured)",
+  present: "#fff",
+  absent: "#fff",
+  injured: "#fff",
 };
 
-/** Couleur de texte sur le remplissage (encre sombre assortie à chaque teinte claire) */
+/** Couleur de texte sur le remplissage blanc — encre marine, cohérente quel que soit le statut */
 export const AVAIL_INK = {
-  present: "var(--status-present-ink)",
-  maybe: "var(--status-maybe-ink)",
-  absent: "var(--status-absent-ink)",
-  injured: "var(--status-injured-ink)",
+  present: "#0A2340",
+  absent: "#0A2340",
+  injured: "#0A2340",
+};
+
+/** Couleur de l'icône quand le statut est ACTIF — c'est elle qui porte le code couleur, pas le fond */
+export const AVAIL_ICON_COLORS = {
+  present: "#3AA65C",
+  absent: "#D9534F",
+  injured: "#E8672E",
 };
 
 export const CONV_LABELS = {
@@ -119,7 +129,7 @@ export function initials(firstName, lastName) {
   return `${(firstName?.[0] ?? "").toUpperCase()}${(lastName?.[0] ?? "").toUpperCase()}` || "?";
 }
 
-const AVATAR_PALETTE = ["#196496", "#12B4F2", "#3D9ECD", "#5F8A1E", "#4A5A68", "#FF7A1A"];
+const AVATAR_PALETTE = ["#2E93C4", "#E8603D", "#8B7CF6", "#1FA88A", "#D9A62E", "#D4587B"];
 
 /** Couleur déterministe (même nom → même couleur) pour un avatar */
 export function avatarColor(name) {

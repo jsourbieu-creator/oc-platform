@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/ui";
 
 const SEASON_STATUS = { draft: "Brouillon", active: "Active", closed: "Clôturée" };
+const SEASON_STATUS_COLOR = { draft: "var(--oc-amber-700)", active: "var(--lime-600)", closed: "var(--text-dim)" };
 const canManage = (role) => role === "super_admin" || role === "admin";
 
 export function TeamsPage() {
@@ -12,17 +13,13 @@ export function TeamsPage() {
 
   const [seasons, setSeasons] = useState(null);
   const [teams, setTeams] = useState(null);
-  const [members, setMembers] = useState([]);
   const [error, setError] = useState("");
 
   const load = useCallback(() => {
     if (!activeClubId) return;
     api("seasons.php", "list", { club_id: activeClubId }, token).then((d) => setSeasons(d.seasons)).catch((e) => setError(e.message));
     api("teams.php", "list", { club_id: activeClubId }, token).then((d) => setTeams(d.teams)).catch((e) => setError(e.message));
-    if (manage) {
-      api("members.php", "list", { club_id: activeClubId }, token).then((d) => setMembers(d.members.filter((m) => m.status === "active"))).catch(() => {});
-    }
-  }, [activeClubId, token, manage]);
+  }, [activeClubId, token]);
 
   useEffect(load, [load]);
 
@@ -31,7 +28,7 @@ export function TeamsPage() {
       <h1 className="page-title" style={{ marginBottom: 18 }}>Équipes & saisons</h1>
       {error && <div className="error-box">{error}</div>}
       <SeasonsBlock seasons={seasons} manage={manage} reload={load} />
-      <TeamsBlock teams={teams} seasons={seasons} members={members} manage={manage} reload={load} />
+      <TeamsBlock teams={teams} seasons={seasons} manage={manage} reload={load} />
     </div>
   );
 }
@@ -76,7 +73,7 @@ function SeasonsBlock({ seasons, manage, reload }) {
       {error && <div className="error-box">{error}</div>}
 
       {showForm && (
-        <form onSubmit={create} style={{ marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
+        <form onSubmit={create} style={{ marginBottom: 18, paddingBottom: 4 }}>
           <div className="field"><label>Nom</label><input type="text" required placeholder="2026-2027" value={name} onChange={(e) => setName(e.target.value)} /></div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div className="field"><label>Début</label><input type="date" required value={start} onChange={(e) => setStart(e.target.value)} /></div>
@@ -89,27 +86,35 @@ function SeasonsBlock({ seasons, manage, reload }) {
       {seasons === null && <div className="spinner" />}
       {seasons?.length === 0 && <div className="subtle">Aucune saison. {manage ? "Crée la première pour pouvoir créer des équipes." : ""}</div>}
       {seasons?.map((s) => (
-        <div key={s.id} className="list-row">
+        <div key={s.id} className="list-row" style={{ flexWrap: "wrap", gap: 10 }}>
           <div>
             <strong>{s.name}</strong>
             <div className="subtle">{s.start_date} → {s.end_date}</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {manage ? (
-              <select value={s.status} onChange={(e) => setStatus(s.id, e.target.value)} style={{ width: "auto", padding: "6px 8px", fontSize: "0.8rem" }}>
-                {Object.entries(SEASON_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
-            ) : (
-              <span className={`badge ${s.status === "active" ? "badge-info" : "badge-neutral"}`}>{SEASON_STATUS[s.status]}</span>
-            )}
-          </div>
+          {manage ? (
+            <div className="segmented">
+              {Object.entries(SEASON_STATUS).map(([v, l]) => (
+                <button
+                  key={v}
+                  type="button"
+                  className={s.status === v ? "active" : ""}
+                  onClick={() => v !== s.status && setStatus(s.id, v)}
+                  style={s.status === v ? { color: SEASON_STATUS_COLOR[v], background: "var(--surface)" } : undefined}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span className={`badge ${s.status === "active" ? "badge-info" : "badge-neutral"}`}>{SEASON_STATUS[s.status]}</span>
+          )}
         </div>
       ))}
     </div>
   );
 }
 
-function TeamsBlock({ teams, seasons, members, manage }) {
+function TeamsBlock({ teams, seasons, manage }) {
   const activeSeason = seasons?.find((s) => s.status === "active");
   const team = teams?.[0];
 
@@ -126,17 +131,16 @@ function TeamsBlock({ teams, seasons, members, manage }) {
       {team && (
         <div>
           <div className="subtle" style={{ marginBottom: 10 }}>{activeSeason?.name ?? seasons?.find((s) => s.id === team.season_id)?.name}</div>
-          <Roster team={team} members={members} manage={manage} />
+          <Roster team={team} manage={manage} />
         </div>
       )}
     </div>
   );
 }
 
-function Roster({ team, members, manage }) {
+function Roster({ team, manage }) {
   const { token, activeClubId } = useAuth();
   const [roster, setRoster] = useState(null);
-  const [addId, setAddId] = useState("");
   const [error, setError] = useState("");
 
   const load = useCallback(() => {
@@ -146,72 +150,49 @@ function Roster({ team, members, manage }) {
 
   useEffect(load, [load]);
 
-  const add = async () => {
-    if (!addId) return;
-    setError("");
-    try {
-      await api("teams.php", "roster_add", { club_id: activeClubId, team_id: team.id, club_member_id: Number(addId) }, token);
-      setAddId(""); load();
-    } catch (e2) { setError(e2.message); }
-  };
-
-  const remove = async (rowId) => {
-    setError("");
-    try {
-      await api("teams.php", "roster_remove", { club_id: activeClubId, team_id: team.id, team_member_id: rowId }, token);
-      load();
-    } catch (e2) { setError(e2.message); }
-  };
-
-  const toggleFlag = async (row, flag) => {
+  const toggleGoalkeeper = async (row) => {
     setError("");
     try {
       await api("teams.php", "roster_set_flags", {
         club_id: activeClubId, team_id: team.id, team_member_id: row.id,
-        is_captain: flag === "captain" ? !Number(row.is_captain) : Number(row.is_captain),
-        is_goalkeeper: flag === "goalkeeper" ? !Number(row.is_goalkeeper) : Number(row.is_goalkeeper),
+        is_captain: 0,
+        is_goalkeeper: !Number(row.is_goalkeeper),
       }, token);
       load();
     } catch (e2) { setError(e2.message); }
   };
 
-  const inRoster = new Set(roster?.map((r) => r.club_member_id));
-  const addable = members.filter((m) => !inRoster.has(m.id));
-
   return (
     <div style={{ padding: "6px 0 14px 14px", borderLeft: "3px solid var(--border)", marginLeft: 4, marginBottom: 8 }}>
       {error && <div className="error-box">{error}</div>}
       {roster === null && <div className="spinner" />}
-      {roster?.length === 0 && <div className="subtle" style={{ marginBottom: 8 }}>Effectif vide.</div>}
+      {roster?.length === 0 && <div className="subtle" style={{ marginBottom: 8 }}>Aucun membre actif pour le moment.</div>}
       {roster?.map((r) => (
         <div key={r.id} className="list-row" style={{ padding: "7px 0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Avatar name={`${r.first_name} ${r.last_name}`} userId={r.user_id} avatarUrl={r.avatar_url} size={30} />
             <span>
               {r.first_name} {r.last_name}
-              {Number(r.is_captain) === 1 && <span className="badge badge-info" style={{ marginLeft: 8 }}>Capitaine</span>}
-              {Number(r.is_goalkeeper) === 1 && <span className="badge badge-neutral" style={{ marginLeft: 6 }}>Gardien</span>}
+              {Number(r.is_goalkeeper) === 1 && <span className="badge badge-neutral" style={{ marginLeft: 8 }}>Gardien</span>}
             </span>
           </div>
           {manage && (
-            <div style={{ display: "flex", gap: 6 }}>
-              <button className="btn btn-ghost btn-sm" onClick={() => toggleFlag(r, "captain")}>C</button>
-              <button className="btn btn-ghost btn-sm" onClick={() => toggleFlag(r, "goalkeeper")}>G</button>
-              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger-600)" }} onClick={() => remove(r.id)}>Retirer</button>
-            </div>
+            <button
+              className="btn btn-sm"
+              style={{
+                background: Number(r.is_goalkeeper) ? "color-mix(in srgb, var(--electric-blue) 18%, transparent)" : "var(--surface-soft)",
+                color: Number(r.is_goalkeeper) ? "var(--electric-blue)" : "var(--text-dim)",
+              }}
+              onClick={() => toggleGoalkeeper(r)}
+            >
+              Gardien
+            </button>
           )}
         </div>
       ))}
-
-      {manage && (
-        <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
-          <select value={addId} onChange={(e) => setAddId(e.target.value)} style={{ flex: 1 }}>
-            <option value="">Ajouter un membre…</option>
-            {addable.map((m) => <option key={m.id} value={m.id}>{m.first_name} {m.last_name}</option>)}
-          </select>
-          <button className="btn btn-secondary btn-sm" onClick={add} disabled={!addId}>Ajouter</button>
-        </div>
-      )}
+      <p className="subtle" style={{ marginTop: 10, marginBottom: 0 }}>
+        Tous les membres actifs du club font automatiquement partie de l'effectif.
+      </p>
     </div>
   );
 }

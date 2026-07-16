@@ -130,17 +130,29 @@ switch ($action) {
 
         $afterId = (int) ($in['after_id'] ?? 0);
         $stmt = db()->prepare('
-            SELECT m.id, m.author_member_id, m.content, m.created_at,
-                   u.first_name, u.last_name
+            SELECT m.id, m.author_member_id, m.content, m.created_at, m.edited_at, m.deleted_at,
+                   u.id AS user_id, u.first_name, u.last_name, u.avatar_url,
+                   cf.id AS attachment_id, cf.original_filename AS attachment_name,
+                   cf.mime_type AS attachment_mime, cf.size_bytes AS attachment_size
             FROM messages m
             LEFT JOIN club_members cm ON cm.id = m.author_member_id
             LEFT JOIN users u ON u.id = cm.user_id
+            LEFT JOIN club_files cf ON cf.id = m.attachment_file_id
             WHERE m.conversation_id = ? AND m.id > ?
             ORDER BY m.id ASC
             LIMIT 200
         ');
         $stmt->execute([$convId, $afterId]);
         $messages = $stmt->fetchAll();
+
+        // Un message supprimé n'expose ni son texte ni sa pièce jointe (tombstone)
+        foreach ($messages as &$msg) {
+            if ($msg['deleted_at']) {
+                $msg['content'] = '';
+                $msg['attachment_id'] = $msg['attachment_name'] = $msg['attachment_mime'] = $msg['attachment_size'] = null;
+            }
+        }
+        unset($msg);
 
         if ($messages) {
             $maxId = (int) end($messages)['id'];
@@ -160,11 +172,18 @@ switch ($action) {
         my_conversation_or_404($convId, $clubId, $myMemberId);
 
         $content = trim($in['content'] ?? '');
-        if ($content === '') json_error('Message vide.');
+        $attachmentFileId = (int) ($in['attachment_file_id'] ?? 0) ?: null;
+        if ($content === '' && !$attachmentFileId) json_error('Message vide.');
         if (mb_strlen($content) > 4000) json_error('Message trop long (4000 caractères max).');
 
-        $stmt = db()->prepare('INSERT INTO messages (conversation_id, author_member_id, content) VALUES (?,?,?)');
-        $stmt->execute([$convId, $myMemberId, $content]);
+        if ($attachmentFileId) {
+            $stmt = db()->prepare("SELECT 1 FROM club_files WHERE id = ? AND club_id = ? AND kind = 'message' AND uploaded_by = ?");
+            $stmt->execute([$attachmentFileId, $clubId, (int) $me['id']]);
+            if (!$stmt->fetchColumn()) json_error('Pièce jointe introuvable.', 404);
+        }
+
+        $stmt = db()->prepare('INSERT INTO messages (conversation_id, author_member_id, content, attachment_file_id) VALUES (?,?,?,?)');
+        $stmt->execute([$convId, $myMemberId, $content, $attachmentFileId]);
         $id = (int) db()->lastInsertId();
 
         // L'expéditeur a évidemment lu son propre message
@@ -184,6 +203,66 @@ switch ($action) {
         }
 
         json_out(['ok' => true, 'id' => $id]);
+        break;
+
+    case 'message_edit':
+        $me = current_user();
+        $clubId = (int) ($in['club_id'] ?? 0);
+        require_club_member((int) $me['id'], $clubId);
+        $myMemberId = my_member_id_msg((int) $me['id'], $clubId);
+
+        $msgId = (int) ($in['message_id'] ?? 0);
+        $stmt = db()->prepare('
+            SELECT m.* FROM messages m
+            JOIN conversation_participants cp ON cp.conversation_id = m.conversation_id AND cp.club_member_id = ?
+            WHERE m.id = ?
+        ');
+        $stmt->execute([$myMemberId, $msgId]);
+        $msg = $stmt->fetch();
+        if (!$msg) json_error('Message introuvable.', 404);
+        if ($msg['deleted_at']) json_error('Ce message a été supprimé.');
+        if ((int) $msg['author_member_id'] !== $myMemberId) json_error('Tu ne peux modifier que tes propres messages.', 403);
+
+        $content = trim($in['content'] ?? '');
+        if ($content === '' && !$msg['attachment_file_id']) json_error('Message vide.');
+        if (mb_strlen($content) > 4000) json_error('Message trop long (4000 caractères max).');
+
+        $stmt = db()->prepare('UPDATE messages SET content = ?, edited_at = NOW() WHERE id = ?');
+        $stmt->execute([$content, $msgId]);
+        json_out(['ok' => true]);
+        break;
+
+    case 'message_delete':
+        $me = current_user();
+        $clubId = (int) ($in['club_id'] ?? 0);
+        require_club_member((int) $me['id'], $clubId);
+        $myMemberId = my_member_id_msg((int) $me['id'], $clubId);
+
+        $msgId = (int) ($in['message_id'] ?? 0);
+        $stmt = db()->prepare('
+            SELECT m.*, cf.stored_filename FROM messages m
+            JOIN conversation_participants cp ON cp.conversation_id = m.conversation_id AND cp.club_member_id = ?
+            LEFT JOIN club_files cf ON cf.id = m.attachment_file_id
+            WHERE m.id = ?
+        ');
+        $stmt->execute([$myMemberId, $msgId]);
+        $msg = $stmt->fetch();
+        if (!$msg) json_error('Message introuvable.', 404);
+        if ($msg['deleted_at']) json_out(['ok' => true]); // déjà supprimé, idempotent
+        if ((int) $msg['author_member_id'] !== $myMemberId && !has_permission((int) $me['id'], $clubId, 'moderate_content')) {
+            json_error('Tu ne peux supprimer que tes propres messages.', 403);
+        }
+
+        // Libère le stockage : supprime le fichier physique et sa fiche club_files
+        if ($msg['attachment_file_id'] && $msg['stored_filename']) {
+            $path = rtrim(UPLOADS_DIR, '/') . "/club_{$clubId}/message/{$msg['stored_filename']}";
+            if (is_file($path)) @unlink($path);
+            db()->prepare('DELETE FROM club_files WHERE id = ?')->execute([(int) $msg['attachment_file_id']]);
+        }
+
+        $stmt = db()->prepare("UPDATE messages SET content = '', attachment_file_id = NULL, deleted_at = NOW() WHERE id = ?");
+        $stmt->execute([$msgId]);
+        json_out(['ok' => true]);
         break;
 
     case 'unread_total':

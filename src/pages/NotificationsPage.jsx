@@ -1,18 +1,19 @@
-import { Newspaper, MessageCircle, ClipboardList, TriangleAlert, UserPlus, UserCheck, Star, Bell, CalendarClock, Trophy } from "lucide-react";
+import { Megaphone, ChatDots, ClipboardCheck, ExclamationTriangle, PersonPlus, PersonCheck, Star, Bell, CalendarEvent, Trophy } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 const TYPE_ICONS = {
-  new_post: Newspaper,
-  new_comment: MessageCircle,
-  new_message: MessageCircle,
-  convocation: ClipboardList,
-  event_cancelled: TriangleAlert,
-  event_updated: CalendarClock,
-  join_request: UserPlus,
-  join_approved: UserCheck,
+  new_post: Megaphone,
+  new_comment: ChatDots,
+  new_message: ChatDots,
+  convocation: ClipboardCheck,
+  event_cancelled: ExclamationTriangle,
+  event_updated: CalendarEvent,
+  join_request: PersonPlus,
+  join_approved: PersonCheck,
   rate_request: Star,
+  availability_change: PersonCheck,
   vote_open: Star,
   vote_closed: Trophy,
 };
@@ -36,6 +37,16 @@ export function NotificationsPage({ goto }) {
   }, [activeClubId, token]);
 
   useEffect(load, [load]);
+
+  // Ouvrir la page = les avoir vues : on les marque lues automatiquement,
+  // sinon le badge de la cloche ne redescendait jamais (personne ne clique
+  // sur "Tout marquer lu" explicitement en pratique).
+  useEffect(() => {
+    if (!activeClubId || !notifications) return;
+    if (!notifications.some((n) => !n.read_at)) return;
+    api("notifications.php", "mark_all_read", { club_id: activeClubId }, token).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeClubId, notifications]);
 
   const markAllRead = async () => {
     setError("");

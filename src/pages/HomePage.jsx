@@ -1,17 +1,44 @@
 import { createPortal } from "react-dom";
-import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Star, Shield, RotateCcw, X, ClipboardList, Clock, Goal, UsersRound, Ellipsis, MessageCircle, Search, Check } from "lucide-react";
+import { Calendar3, CaretLeft, CaretRight, GeoAlt, Star, Shield, ArrowCounterclockwise, X, ClipboardCheck, Clock, Flag, People, ThreeDots, ChatDots, Search, Check, Trophy, Activity, PlusLg, Bandaid } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, CONV_LABELS,
+  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, AVAIL_ICONS, AVAIL_ICON_COLORS,
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
-import { REAL_STATUS_LABELS, fmtScore } from "@/lib/ballondor";
-import { DateBadge, AvatarStack, StatTile, CountChip, Avatar } from "@/components/ui";
-import blason from "@/assets/blason.svg";
+import { fmtScore } from "@/lib/ballondor";
+import { DateBadge, AvatarStack, StatTile, CountChip, Avatar, ScoreSlider, ScoreBar } from "@/components/ui";
+import towerSvg from "@/assets/tour-blason.svg?raw";
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
+
+/**
+ * Salutation qui change chaque jour — courte, familière, ton vestiaire entre
+ * potes plutôt que grandiloquent. Une phrase par jour (stable, pas de
+ * flicker au rechargement).
+ */
+function greeting(firstName) {
+  const n = firstName || "champion";
+  const phrases = [
+    (n) => `Bonjour ${n}`,
+    (n) => `Chaud pour un foot, ${n} ?`,
+    (n) => `Salut ${n}, prêt ?`,
+    (n) => `${n}, on chauffe ?`,
+    (n) => `Alors ${n}, en forme ?`,
+    (n) => `Hello ${n}`,
+    (n) => `${n}, la forme ?`,
+    (n) => `On y va, ${n} ?`,
+    (n) => `Re ${n}`,
+    (n) => `${n}, prêt à jouer ?`,
+    (n) => `Yo ${n}`,
+    (n) => `${n}, ça sent le but`,
+    (n) => `Debout ${n}, on joue`,
+    (n) => `${n}, direction le gymnase`,
+  ];
+  const dayIndex = Math.floor(Date.now() / 86400000);
+  return phrases[dayIndex % phrases.length](n);
+}
 
 export function HomePage({ gotoConversation }) {
   const { user, token, activeClubId, memberships, activeRole } = useAuth();
@@ -129,14 +156,11 @@ export function HomePage({ gotoConversation }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 10 }}>
-        <div style={{ minWidth: 0 }}>
-          <div className="eyebrow" style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
-            {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
-          </div>
-          <h1 className="page-title" style={{ marginTop: 2 }}>Salut {user?.first_name}</h1>
+      <div style={{ marginBottom: 18 }}>
+        <div className="eyebrow" style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-dim)" }}>
+          {club?.club_name}{activeSeason ? ` · ${activeSeason.name}` : ""}
         </div>
-        <img src={blason} alt="Blason OC" style={{ width: 46, height: 46, flexShrink: 0 }} />
+        <h1 className="page-title" style={{ marginTop: 2 }}>{greeting(user?.first_name)}</h1>
       </div>
 
       <NextSessionCard
@@ -144,8 +168,9 @@ export function HomePage({ gotoConversation }) {
         loading={nextEvent === undefined}
         hasSeason={seasons !== null && seasons.length > 0}
         manage={manage}
+        members={members}
         onCreate={() => setForm({ ...EMPTY_FORM })}
-        onOpen={() => { if (nextEvent) { setScope("month"); setGridMonth(new Date(nextEvent.starts_at.replace(" ", "T"))); setSelectedDay(nextEvent.starts_at.slice(0, 10)); } }}
+        onOpen={() => { if (nextEvent) { setScope("upcoming"); setSelectedDay(null); setOpenId(nextEvent.id); } }}
         onSetAvailability={async (eventId, status) => {
           setError("");
           try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: eventId, status }, token); load(); }
@@ -155,16 +180,14 @@ export function HomePage({ gotoConversation }) {
 
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
         <div className="kpi">
-          <b style={{ color: "var(--oc-sky-700)" }}>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
+          <Trophy size={18} style={{ opacity: 0.7, marginBottom: 8, color: "var(--hero-sky)" }} />
+          <b>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
           <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
         </div>
         <div className="kpi">
-          <b style={{ color: "var(--oc-sky-700)" }}>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
+          <Activity size={18} style={{ opacity: 0.7, marginBottom: 8, color: "var(--hero-sky)" }} />
+          <b>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
           <span>Ma présence</span>
-        </div>
-        <div className="kpi">
-          <b style={{ color: "var(--oc-sky-700)" }}>{events === null ? "…" : (events.filter((e) => !isPast(e.starts_at) && e.status !== "cancelled").length)}</b>
-          <span>À venir</span>
         </div>
       </div>
 
@@ -183,19 +206,19 @@ export function HomePage({ gotoConversation }) {
             background: showPast ? "var(--oc-sky-100)" : "var(--surface)", color: showPast ? "var(--oc-sky-700)" : "var(--muted)",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}
-        ><RotateCcw size={17} /></button>
+        ><ArrowCounterclockwise size={17} /></button>
         {manage && (
           <button
             title={form ? "Annuler" : "Ajouter une séance"}
             onClick={() => setForm(form ? null : { ...EMPTY_FORM })}
             style={{
               width: 42, height: 42, borderRadius: "50%", border: "none", cursor: "pointer",
-              background: form ? "var(--oc-red-50)" : "var(--oc-sky-600)", color: form ? "var(--oc-red-700)" : "#fff",
+              background: form ? "var(--oc-red-50)" : "var(--hero-sky)", color: form ? "var(--oc-red-700)" : "var(--hero-ink)",
               display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              boxShadow: form ? "none" : "0 8px 18px rgba(24,143,192,.3)", fontSize: "1.3rem", fontWeight: 700,
+              boxShadow: "var(--shadow-xs)",
               transition: ".2s var(--ease-spring)",
             }}
-          >{form ? <X size={18} /> : "+"}</button>
+          >{form ? <X size={18} /> : <PlusLg size={18} />}</button>
         )}
       </div>
 
@@ -284,14 +307,14 @@ export function HomePage({ gotoConversation }) {
 
 const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
-function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpen, onSetAvailability }) {
+function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCreate, onOpen, onSetAvailability }) {
   if (loading) return <div className="card" style={{ marginBottom: 16, height: 150 }}><div className="spinner" /></div>;
 
   if (!e) {
     if (!hasSeason) {
       return (
         <div className="card" style={{ marginBottom: 16, textAlign: "center", padding: "28px 20px" }}>
-          <CalendarDays size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
+          <Calendar3 size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
           <div style={{ fontWeight: 800 }}>Bienvenue sur la plateforme !</div>
           <div className="subtle" style={{ marginTop: 2, marginBottom: manage ? 14 : 0 }}>
             {manage
@@ -303,7 +326,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
     }
     return (
       <div className="card" style={{ marginBottom: 16, textAlign: "center", padding: "28px 20px" }}>
-        <CalendarDays size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
+        <Calendar3 size={26} style={{ color: "var(--text-dim)", marginBottom: 8 }} />
         <div style={{ fontWeight: 800 }}>Aucune séance à venir</div>
         <div className="subtle" style={{ marginTop: 2, marginBottom: manage ? 14 : 0 }}>
           {manage ? "Ajoute un entraînement ou un match pour lancer la saison." : "Le calendrier est vide pour le moment."}
@@ -314,16 +337,16 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
   }
 
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
-  const Icon = t.icon;
   const d = new Date(e.starts_at.replace(" ", "T"));
   const dayNum = d.getDate();
   const monthShort = MONTH_NAMES[d.getMonth()].slice(0, 4);
-  const isCoral = e.type === "match";
+  const isMatch = e.type === "match";
 
   return (
-    <div className={`event-card-ds${isCoral ? " orange" : ""}`} style={{ marginBottom: 16 }}>
+    <div className={`event-card-ds${isMatch ? " royal" : ""}`} style={{ marginBottom: 16 }}>
+      <div className="tower-deco" dangerouslySetInnerHTML={{ __html: towerSvg }} />
       <div onClick={onOpen} style={{ cursor: "pointer" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+        <div style={{ marginBottom: 6 }}>
           <span className="kicker">
           Prochaine séance
           {(() => {
@@ -333,48 +356,77 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
             return ` · Dans ${days} jours`;
           })()}
         </span>
-          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 14, background: "rgba(255,255,255,0.18)" }}>
-            <Icon size={20} color="#fff" />
-          </span>
         </div>
 
         <h3>{e.title}</h3>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", color: "rgba(255,255,255,0.9)", fontSize: "0.9rem", fontWeight: 600 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", opacity: 0.82, fontSize: "0.9rem", fontWeight: 600 }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <CalendarDays size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
+            <Calendar3 size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
           </span>
-          {e.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin size={15} /> {e.location}</span>}
+          {e.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><GeoAlt size={15} /> {e.location}</span>}
         </div>
 
         {e.opponent && <div style={{ marginTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>vs {e.opponent}</div>}
+        {e.my_convocation && (
+          <span style={{ display: "inline-block", marginTop: 10, padding: "4px 10px", borderRadius: 999, background: "#fff", color: "var(--hero-ink)", fontSize: "0.68rem", fontWeight: 800 }}>
+            ✓ Tu es convoqué
+          </span>
+        )}
         {e.team_name && (
-          <span style={{ display: "inline-block", marginTop: 12, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.18)", fontSize: "0.72rem", fontWeight: 800 }}>
+          <span style={{ display: "inline-block", marginTop: 12, padding: "5px 11px", borderRadius: 999, background: "rgba(11,58,82,0.12)", fontSize: "0.72rem", fontWeight: 800 }}>
             {e.team_name}
           </span>
         )}
       </div>
 
-      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.2)" }}>
-        <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginBottom: 8 }}>
-          Ma présence
+      <div style={{ marginTop: 20, position: "relative", zIndex: 1 }}>
+        <div
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", marginBottom: 10 }}
+          onClick={onOpen} role="button"
+        >
+          {(e.present_names?.length ?? 0) > 0 ? (
+            <AvatarStack people={e.present_names} />
+          ) : (
+            <span style={{ fontSize: "0.82rem", opacity: 0.65 }}>Sois le premier à répondre</span>
+          )}
         </div>
+
+        {(() => {
+          const presentCount = e.avail_counts?.present ?? 0;
+          const absentCount = e.avail_counts?.absent ?? 0;
+          const injuredCount = e.avail_counts?.injured ?? 0;
+          const totalMembers = members?.length ?? 0;
+          const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
+          return (
+            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+              <CountChip value={presentCount} tint="green" icon={Check} ringColor={t.color} size="sm" />
+              <CountChip value={absentCount} tint="orange" icon={X} ringColor={t.color} size="sm" />
+              <CountChip value={injuredCount} tint="coral" icon={Bandaid} ringColor={t.color} size="sm" />
+              <CountChip value={noResponseCount} tint="gray" icon={Clock} ringColor={t.color} size="sm" />
+            </div>
+          );
+        })()}
+
         <div style={{ display: "flex", gap: 8 }}>
           {Object.entries(AVAIL_LABELS).map(([v, l]) => {
             const active = e.my_availability === v;
+            const Icon = AVAIL_ICONS[v];
             return (
               <button
                 key={v}
                 onClick={() => onSetAvailability(e.id, v)}
                 style={{
                   flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
-                  fontSize: "0.8rem", fontWeight: 800, fontFamily: "inherit",
-                  background: active ? "#fff" : "rgba(255,255,255,0.14)",
-                  color: active ? ({ present: "var(--oc-green-700)", maybe: "var(--status-maybe-ink)", absent: "var(--oc-red-700)", injured: "var(--oc-amber-700)" }[v] ?? "#172128") : "rgba(255,255,255,0.92)",
+                  fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  background: active ? "#fff" : "rgba(255,255,255,0.16)",
+                  color: active ? "var(--hero-ink)" : "currentColor",
+                  opacity: active ? 1 : 0.75,
                   transform: active ? "scale(1.02)" : "none",
                   transition: ".18s var(--ease-spring)",
                 }}
-              >{l}</button>
+              ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} style={active ? {} : { opacity: 0.7 }} />{l}</button>
             );
           })}
         </div>
@@ -413,9 +465,9 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
   return (
     <div className="card" style={{ marginBottom: 14, padding: 14 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <button className="btn btn-ghost btn-sm" onClick={onPrev} aria-label="Mois précédent"><ChevronLeft size={18} /></button>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1.05rem" }}>{MONTH_NAMES[m]} {year}</div>
-        <button className="btn btn-ghost btn-sm" onClick={onNext} aria-label="Mois suivant"><ChevronRight size={18} /></button>
+        <button className="btn btn-ghost btn-sm" onClick={onPrev} aria-label="Mois précédent"><CaretLeft size={18} /></button>
+        <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 700, fontSize: "1.05rem" }}>{MONTH_NAMES[m]} {year}</div>
+        <button className="btn btn-ghost btn-sm" onClick={onNext} aria-label="Mois suivant"><CaretRight size={18} /></button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
@@ -426,6 +478,9 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
           if (!c) return <div key={`e${i}`} />;
           const active = selectedDay === c.iso;
           const types = [...new Set(c.events.map((e) => e.type))];
+          const myStatus = c.events.find((e) => e.my_availability)?.my_availability;
+          const respondedBg = myStatus ? AVAIL_FILL[myStatus] : null;
+          const respondedInk = myStatus ? AVAIL_INK[myStatus] : null;
           return (
             <div
               key={c.iso}
@@ -433,10 +488,10 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
               style={{
                 aspectRatio: "1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
                 borderRadius: 14, cursor: c.events.length ? "pointer" : "default",
-                background: active ? "var(--oc-sky-600)" : c.events.length ? "var(--oc-sky-50)" : "var(--oc-bluegray-50)",
-                color: active ? "#fff" : c.events.length ? "var(--oc-sky-700)" : "var(--text)",
+                background: active ? "var(--hero-sky)" : respondedBg ?? (c.events.length ? "var(--oc-sky-50)" : "var(--oc-bluegray-50)"),
+                color: active ? "var(--hero-ink)" : respondedInk ?? (c.events.length ? "var(--oc-sky-700)" : "var(--text)"),
                 fontWeight: 800,
-                outline: c.isToday && !active ? "2px solid var(--oc-sky-500)" : "none", outlineOffset: -2,
+                boxShadow: c.isToday && !active ? "inset 0 0 0 100px var(--oc-sky-50)" : "none",
                 transition: "background .12s ease",
               }}
             >
@@ -444,7 +499,7 @@ function MonthGrid({ events, month, onPrev, onNext, selectedDay, onSelect }) {
               {types.length > 0 && (
                 <span style={{ display: "flex", gap: 2 }}>
                   {types.slice(0, 3).map((t) => (
-                    <span key={t} style={{ width: 5, height: 5, borderRadius: "50%", background: active ? "#fff" : (EVENT_TYPES[t] ?? EVENT_TYPES.match).color }} />
+                    <span key={t} style={{ width: 5, height: 5, borderRadius: "50%", background: active || respondedBg ? "currentColor" : (EVENT_TYPES[t] ?? EVENT_TYPES.match).color, opacity: active || respondedBg ? 0.55 : 1 }} />
                   ))}
                 </span>
               )}
@@ -461,11 +516,10 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   const cancelled = e.status === "cancelled";
   const presentCount = e.avail_counts?.present ?? 0;
-  const maybeCount = e.avail_counts?.maybe ?? 0;
-  const absentCount = (e.avail_counts?.absent ?? 0) + (e.avail_counts?.injured ?? 0);
+  const absentCount = e.avail_counts?.absent ?? 0;
+  const injuredCount = e.avail_counts?.injured ?? 0;
   const totalMembers = members?.length ?? 0;
-  const noResponseCount = Math.max(0, totalMembers - presentCount - maybeCount - absentCount);
-  const confirmedCount = e.conv_counts?.confirmed ?? 0;
+  const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
   const confirmedPeople = e.confirmed_names ?? [];
   const [convBusy, setConvBusy] = useState(false);
@@ -486,12 +540,17 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   };
 
   return (
-    <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1, position: "relative" }}>
-      <div style={{ cursor: "pointer", display: "flex", gap: 12 }} onClick={toggle}>
-        <DateBadge date={e.starts_at} color={cancelled ? "var(--neutral-400)" : t.color} />
+    <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1, position: "relative", overflow: "hidden" }}>
+      {!cancelled && <div className="tower-deco-list" dangerouslySetInnerHTML={{ __html: towerSvg }} />}
+      <div style={{ cursor: "pointer", display: "flex", gap: 12, position: "relative", zIndex: 1 }}>
+        <DateBadge
+          date={e.starts_at}
+          color={cancelled ? "var(--neutral-400)" : t.color}
+          ink={!cancelled && e.type === "match" ? "#fff" : "var(--hero-ink)"}
+        />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><t.icon size={15} />{e.title}</strong>
+            <strong>{e.title}</strong>
             {cancelled && <span className="badge badge-neutral">Annulé</span>}
             {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
           </div>
@@ -500,43 +559,65 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
             {e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
           </div>
         </div>
-        <Ellipsis size={17} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
+        <ThreeDots size={17} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 6 }}>
-          <CountChip value={presentCount} tint="green" />
-          <CountChip value={maybeCount} tint="amber" />
-          <CountChip value={absentCount} tint="orange" />
-          <CountChip value={noResponseCount} tint="gray" />
-        </div>
-        <AvatarStack people={confirmedPeople} />
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <CountChip value={presentCount} tint="green" icon={Check} />
+        <CountChip value={absentCount} tint="orange" icon={X} />
+        <CountChip value={injuredCount} tint="coral" icon={Bandaid} />
+        <CountChip value={noResponseCount} tint="gray" icon={Clock} />
       </div>
+      {confirmedPeople.length > 0 && <div style={{ marginTop: 8 }}><AvatarStack people={confirmedPeople} /></div>}
 
       {!cancelled && !isPast(e.starts_at) && (
         <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
           {Object.entries(AVAIL_LABELS).map(([v, l]) => {
             const active = e.my_availability === v;
+            const Icon = AVAIL_ICONS[v];
             return (
               <button
                 key={v} className="btn btn-sm" style={{
-                  flex: "1 1 80px", background: active ? AVAIL_FILL[v] : `color-mix(in srgb, ${AVAIL_FILL[v]} 20%, transparent)`, color: active ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                  flex: "1 1 80px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  background: active ? "#fff" : "transparent",
+                  color: active ? "#0A2340" : "var(--text-dim)",
+                  opacity: active ? 1 : 0.8,
+                  border: active ? "none" : "1.5px solid var(--line)",
                 }}
                 onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
-              >{l}</button>
+              ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} />{l}</button>
             );
           })}
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+      {!cancelled && e.my_availability === "present" && hasEndedClient(e) && !e.my_vote_submitted && (
+        <div
+          onClick={toggle}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer",
+            marginTop: 12, padding: "10px 14px", borderRadius: "var(--radius-md)",
+            background: "color-mix(in srgb, var(--hero-sky) 16%, transparent)",
+          }}
+        >
+          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--hero-sky)" }}>
+            🗳️ Tu n'as pas encore voté pour cette séance
+          </span>
+          <span className="btn btn-primary btn-sm" style={{ width: "auto", padding: "6px 14px" }}>Voter</span>
+        </div>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
         <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={openConversation} disabled={convBusy}>
-          <MessageCircle size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
+          <ChatDots size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
         </button>
       </div>
 
       {e.type === "match" && convokedTotal > 0 && (
-        <div className="subtle" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}><ClipboardList size={13} />{confirmedCount}/{convokedTotal} confirmé{confirmedCount > 1 ? "s" : ""} à la convocation</div>
+        <div className="subtle" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <ClipboardCheck size={13} />{convokedTotal} joueur{convokedTotal > 1 ? "s" : ""} convoqué{convokedTotal > 1 ? "s" : ""}
+          {e.my_convocation && <span className="badge badge-info">Tu es convoqué ✓</span>}
+        </div>
       )}
 
       <div style={{ textAlign: "center", marginTop: 6 }}>
@@ -563,9 +644,19 @@ function MenuItem({ children, onClick, color }) {
 
 /** Modal plein écran façon TeamPulse : en-tête + onglets Informations/Participants */
 function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStatus, onDelete }) {
-  const [tab, setTab] = useState("infos");
+  const { token, activeClubId } = useAuth();
+  const [tab, setTab] = useState(() => (hasEndedClient(e) && e.my_availability === "present" ? "vote" : "participants"));
   const [menuOpen, setMenuOpen] = useState(false);
   const cancelled = e.status === "cancelled";
+  const canRespond = !cancelled && !isPast(e.starts_at);
+  const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
+
+  const setMyAvailability = async (status) => {
+    try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
+    catch (_) { /* affiché en détail si besoin */ }
+  };
+
+  const ended = hasEndedClient(e);
 
   return createPortal(
     <div className="event-modal-overlay" onClick={onClose}>
@@ -578,7 +669,7 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
           </div>
           {manage ? (
             <div style={{ position: "relative", flexShrink: 0 }}>
-              <button className="event-modal-close" onClick={() => setMenuOpen((v) => !v)}><Ellipsis size={17} /></button>
+              <button className="event-modal-close" onClick={() => setMenuOpen((v) => !v)}><ThreeDots size={17} /></button>
               {menuOpen && (
                 <div style={{
                   position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "none",
@@ -595,16 +686,148 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
           ) : <div style={{ width: 34 }} />}
         </div>
 
+        {canRespond && (
+          <div style={{ marginBottom: 18 }}>
+            <div className="label-title" style={{ marginBottom: 8 }}>Ma présence</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+                const active = e.my_availability === v;
+                const Icon = AVAIL_ICONS[v];
+                return (
+                  <button
+                    key={v} className="btn btn-sm" style={{
+                      flex: "1 1 80px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                      background: active ? "#fff" : "transparent",
+                      color: active ? "#0A2340" : "var(--text-dim)",
+                      opacity: active ? 1 : 0.8,
+                      border: active ? "none" : "1.5px solid var(--line)",
+                    }}
+                    onClick={() => setMyAvailability(v)}
+                  ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} />{l}</button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="tab-switch">
-          <div className={`tab-switch-item ${tab === "infos" ? "active" : ""}`} onClick={() => setTab("infos")}>Informations</div>
-          <div className={`tab-switch-item ${tab === "participants" ? "active" : ""}`} onClick={() => setTab("participants")}>Participants</div>
+          <div className={`tab-switch-item ${tab === "participants" ? "active" : ""}`} onClick={() => setTab("participants")}>Qui est là</div>
+          {!cancelled && ended && <div className={`tab-switch-item ${tab === "vote" ? "active" : ""}`} onClick={() => setTab("vote")}>Voter</div>}
+          <div className={`tab-switch-item ${tab === "infos" ? "active" : ""}`} onClick={() => setTab("infos")}>Détails</div>
         </div>
 
         {tab === "infos" && <InfosTab event={e} reload={reload} manage={manage} members={members} />}
         {tab === "participants" && <ParticipantsTab event={e} manage={manage} />}
+        {tab === "vote" && !cancelled && ended && <VoteTab event={e} />}
       </div>
     </div>
   , document.body);
+}
+
+/** Même règle que côté API : terminé à ends_at, sinon 2h après starts_at. */
+function hasEndedClient(e) {
+  const end = e.ends_at ? new Date(e.ends_at.replace(" ", "T")) : new Date(new Date(e.starts_at.replace(" ", "T")).getTime() + 2 * 3600 * 1000);
+  return end < new Date();
+}
+
+/** Vote pour cette séance précise, directement depuis la modale (même logique que la page Votes globale). */
+function VoteTab({ event: e }) {
+  const { token, activeClubId } = useAuth();
+  const [status, setStatus] = useState(null);
+  const [scores, setScores] = useState({});
+  const [selfScore, setSelfScore] = useState("");
+  const [step, setStep] = useState("vote");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const loadStatus = useCallback(() => {
+    setError(""); setStep("vote"); setScores({}); setSelfScore("");
+    api("evaluations.php", "vote_my_status", { club_id: activeClubId, event_id: e.id }, token)
+      .then(setStatus).catch((err) => setError(err.message));
+  }, [activeClubId, e.id, token]);
+
+  useEffect(loadStatus, [loadStatus]);
+
+  const allFilled = status?.ratees.length > 0 && status.ratees.every((r) => scores[r.club_member_id] != null) && selfScore;
+  const totalToFill = (status?.ratees.length ?? 0) + 1;
+  const filledCount = (status ? status.ratees.filter((r) => scores[r.club_member_id] != null).length : 0) + (selfScore ? 1 : 0);
+
+  const submit = async () => {
+    setSubmitting(true); setError("");
+    try {
+      await api("evaluations.php", "vote_submit", {
+        club_id: activeClubId,
+        event_id: e.id,
+        scores: Object.entries(scores).map(([ratee_member_id, score]) => ({ ratee_member_id: Number(ratee_member_id), score: Number(score) })),
+        self_score: Number(selfScore),
+      }, token);
+      loadStatus();
+    } catch (err) { setError(err.message); } finally { setSubmitting(false); }
+  };
+
+  if (status === null) return <div className="spinner" />;
+
+  return (
+    <div>
+      {error && <div className="error-box">{error}</div>}
+
+      {!status.eligible && (
+        <p className="subtle">Tu n'étais pas présent à cette séance — rien à voter.</p>
+      )}
+
+      {status.eligible && status.submitted && (
+        <div>
+          <div className="label-title">Ton vote (validé) 🎉</div>
+          {status.my_scores?.map((s) => (
+            <ScoreBar key={s.ratee_member_id} label={s.name} value={s.score} />
+          ))}
+          <ScoreBar label="Mon auto-évaluation" value={status.my_self_score} highlight />
+          <p className="subtle" style={{ marginTop: 10 }}>Ton vote est définitif et ne peut plus être modifié.</p>
+        </div>
+      )}
+
+      {status.eligible && !status.submitted && step === "vote" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <div className="label-title" style={{ marginBottom: 0 }}>Note tes coéquipiers présents</div>
+            <span className="subtle" style={{ fontWeight: 700 }}>{filledCount}/{totalToFill}</span>
+          </div>
+          <div style={{ height: 6, background: "var(--surface-soft)", borderRadius: 999, overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ height: "100%", width: `${(filledCount / totalToFill) * 100}%`, background: "var(--lime-600)", transition: "width .2s ease", borderRadius: 999 }} />
+          </div>
+          {status.ratees.map((r) => (
+            <ScoreSlider
+              key={r.club_member_id}
+              label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}</>}
+              value={scores[r.club_member_id] ?? null}
+              touched={scores[r.club_member_id] != null}
+              onChange={(v) => setScores((s) => ({ ...s, [r.club_member_id]: v }))}
+            />
+          ))}
+          <div style={{ marginTop: 18 }}>
+            <div className="label-title">Et toi, t'en penses quoi de ta séance ?</div>
+            <ScoreSlider label="Mon auto-évaluation" value={selfScore || null} touched={!!selfScore} onChange={setSelfScore} />
+          </div>
+          <button className="btn btn-primary" disabled={!allFilled} onClick={() => setStep("confirm")} style={{ marginTop: 8 }}>Vérifier avant validation</button>
+        </div>
+      )}
+
+      {status.eligible && !status.submitted && step === "confirm" && (
+        <div>
+          <div className="label-title">Récapitulatif — vérifie avant de valider</div>
+          {status.ratees.map((r) => (
+            <ScoreBar key={r.club_member_id} label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={22} />{r.name}</>} value={scores[r.club_member_id]} />
+          ))}
+          <ScoreBar label="Toi (auto-évaluation)" value={selfScore} highlight />
+          <p className="subtle" style={{ margin: "12px 0" }}>Une fois validé, tu ne pourras plus modifier ce vote.</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn btn-secondary" onClick={() => setStep("vote")}>Revenir</button>
+            <button className="btn btn-primary" disabled={submitting} onClick={submit}>{submitting ? "Validation…" : "Valider définitivement"}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function fmtDateBadgeLabel(e) {
@@ -628,14 +851,64 @@ function InfosTab({ event: e, reload, manage, members }) {
         <CommentEditor event={e} reload={reload} />
       )}
 
-      {manage && e.type === "match" && !cancelled && <ConvocationManager event={e} reload={reload} members={members} />}
+      {manage && e.type === "match" && !cancelled && <ConvocationManager event={e} reload={reload} />}
 
-      {manage && !cancelled && <PresenceValidator event={e} members={members} />}
+      {manage && !cancelled && <PresenceCorrector event={e} reload={reload} />}
+    </div>
+  );
+}
+
+/** Un admin peut corriger un joueur qui a dit "présent" mais qui ne s'est pas
+ * présenté (ou qui s'est blessé) — repasse simplement sa disponibilité
+ * déclarée à absent/blessé, ce qui le retire aussi du vote automatiquement. */
+function PresenceCorrector({ event: e, reload }) {
+  const { token, activeClubId } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+  const [error, setError] = useState("");
+
+  const present = e.present_names ?? [];
+
+  const correct = async (member, status) => {
+    setBusyId(member.club_member_id); setError("");
+    try {
+      await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, target_member_id: member.club_member_id, status }, token);
+      reload();
+    } catch (err) { setError(err.message); } finally { setBusyId(null); }
+  };
+
+  if (!present.length) return null;
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <button className="btn btn-secondary btn-sm" onClick={() => setOpen((v) => !v)}>
+        <People size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer" : "Corriger une présence"}
+      </button>
+      {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
+      {open && (
+        <div className="card" style={{ marginTop: 10, boxShadow: "none" }}>
+          <p className="subtle" style={{ marginTop: 0 }}>
+            Un joueur a dit présent mais n'est pas venu, ou s'est blessé ? Corrige ici — il sera retiré du vote de cette séance.
+          </p>
+          {present.map((m) => (
+            <div key={m.club_member_id} className="list-row">
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Avatar name={m.name} userId={m.user_id} avatarUrl={m.avatar_url} size={26} />{m.name}
+              </span>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button className="btn btn-sm" style={{ background: "color-mix(in srgb, var(--status-absent) 20%, transparent)", color: "var(--status-absent)" }} disabled={busyId === m.club_member_id} onClick={() => correct(m, "absent")}>Absent</button>
+                <button className="btn btn-sm" style={{ background: "color-mix(in srgb, var(--oc-bluegray-500) 20%, transparent)", color: "var(--oc-bluegray-500)" }} disabled={busyId === m.club_member_id} onClick={() => correct(m, "injured")}>Blessé</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function ParticipantsTab({ event: e, manage }) {
+  const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   const { token, activeClubId } = useAuth();
   const [list, setList] = useState(null);
   const [search, setSearch] = useState("");
@@ -666,7 +939,6 @@ function ParticipantsTab({ event: e, manage }) {
 
   const SECTIONS = [
     { key: "present", label: "Présents" },
-    { key: "maybe", label: "Incertains" },
     { key: "injured", label: "Blessés" },
     { key: "absent", label: "Absents" },
     { key: null, label: "En attente" },
@@ -708,18 +980,19 @@ function ParticipantsTab({ event: e, manage }) {
                       <button
                         key={v} className="btn btn-sm" style={{
                           width: "auto", padding: "5px 8px", fontSize: "0.68rem",
-                          background: p.status === v ? AVAIL_FILL[v] : `color-mix(in srgb, ${AVAIL_FILL[v]} 20%, transparent)`, color: p.status === v ? AVAIL_INK[v] : AVAIL_COLORS[v],
+                          background: p.status === v ? "#fff" : "transparent",
+                          color: p.status === v ? AVAIL_ICON_COLORS[v] : "var(--text-dim)",
+                          border: p.status === v ? "none" : "1.5px solid var(--line)",
                         }}
                         onClick={() => setFor(p.club_member_id, v)}
                       >{l[0]}</button>
                     ))}
                   </div>
                 ) : (
-                  <div className="participant-status-icon" style={{ background: sec.key ? AVAIL_COLORS[sec.key] : "var(--neutral-400)" }}>
+                  <div className="participant-status-icon" style={{ background: sec.key ? AVAIL_ICON_COLORS[sec.key] : "var(--status-noresponse-icon)" }}>
                     {sec.key === "present" && <Check size={14} />}
-                    {sec.key === "maybe" && <span style={{ fontSize: 12, fontWeight: 800 }}>?</span>}
                     {sec.key === "absent" && <X size={14} />}
-                    {sec.key === "injured" && <span style={{ fontSize: 12 }}>!</span>}
+                    {sec.key === "injured" && <Bandaid size={12} />}
                     {!sec.key && <Clock size={14} />}
                   </div>
                 )}
@@ -770,13 +1043,17 @@ function CommentEditor({ event: e, reload }) {
     </div>
   );
 }
-function ConvocationManager({ event: e, reload, members }) {
+/** Convocation d'un match : parmi les joueurs ayant répondu "présent", on choisit
+ * au maximum 1 gardien + 8 joueurs de champ (effectif limité en futsal). */
+function ConvocationManager({ event: e, reload }) {
   const { token, activeClubId } = useAuth();
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(new Set());
-  const [convList, setConvList] = useState(null);
+  const [goalkeeperId, setGoalkeeperId] = useState(null);
+  const [fieldIds, setFieldIds] = useState(new Set());
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const candidates = e.present_names ?? [];
 
   const openManager = async () => {
     setOpen((v) => !v);
@@ -784,180 +1061,82 @@ function ConvocationManager({ event: e, reload, members }) {
     setError("");
     try {
       const c = await api("events.php", "convocation_list", { club_id: activeClubId, event_id: e.id }, token);
-      setConvList(c.convocations);
-      setSelected(new Set(c.convocations.map((x) => x.club_member_id)));
+      const gk = c.convocations.find((x) => x.role === "goalkeeper");
+      setGoalkeeperId(gk ? gk.club_member_id : null);
+      setFieldIds(new Set(c.convocations.filter((x) => x.role !== "goalkeeper").map((x) => x.club_member_id)));
     } catch (e2) { setError(e2.message); }
   };
 
-  const toggleMember = (id) => {
-    const s = new Set(selected);
-    s.has(id) ? s.delete(id) : s.add(id);
-    setSelected(s);
+  const pickGoalkeeper = (id) => {
+    setGoalkeeperId((prev) => (prev === id ? null : id));
+    setFieldIds((prev) => { const s = new Set(prev); s.delete(id); return s; });
+  };
+
+  const toggleField = (id) => {
+    if (id === goalkeeperId) return;
+    setFieldIds((prev) => {
+      const s = new Set(prev);
+      if (s.has(id)) s.delete(id);
+      else { if (s.size >= 8) return prev; s.add(id); }
+      return s;
+    });
   };
 
   const save = async () => {
     setError(""); setBusy(true);
     try {
-      await api("events.php", "convoke_set", { club_id: activeClubId, event_id: e.id, member_ids: [...selected] }, token);
+      await api("events.php", "convoke_set", { club_id: activeClubId, event_id: e.id, goalkeeper_id: goalkeeperId, field_ids: [...fieldIds] }, token);
       setOpen(false);
       reload();
     } catch (e2) { setError(e2.message); } finally { setBusy(false); }
   };
 
-  const statusOf = (memberId) => convList?.find((c) => c.club_member_id === memberId)?.status;
+  const total = (goalkeeperId ? 1 : 0) + fieldIds.size;
 
   return (
     <div style={{ marginBottom: 14 }}>
       <button className="btn btn-secondary btn-sm" onClick={openManager}>
-        <Goal size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les convocations" : "Gérer les convocations (match)"}
+        <Flag size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les convocations" : "Gérer les convocations (match)"}
       </button>
       {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
       {open && (
         <div style={{ width: "100%", marginTop: 10 }}>
-          <p className="subtle" style={{ marginTop: 0 }}>Sélectionne les joueurs convoqués pour ce match (effectif limité).</p>
-          {!members && <div className="spinner" />}
-          {members?.map((m) => (
-            <label key={m.id} className="list-row" style={{ padding: "6px 0", cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggleMember(m.id)} style={{ width: "auto" }} />
-                {m.first_name} {m.last_name}
-              </span>
-              {statusOf(m.id) && <span className={`badge ${statusOf(m.id) === "confirmed" ? "badge-info" : "badge-neutral"}`}>{CONV_LABELS[statusOf(m.id)]}</span>}
-            </label>
-          ))}
-          {members && (
-            <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }} disabled={busy} onClick={save}>
-              {busy ? "Enregistrement…" : `Convoquer ${selected.size} joueur${selected.size > 1 ? "s" : ""}`}
-            </button>
+          {candidates.length === 0 && (
+            <p className="subtle" style={{ marginTop: 0 }}>Personne n'a encore répondu présent à ce match — la convocation ne peut se faire que parmi les présents.</p>
           )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Validation de la présence réelle + session de vote — scoping automatique à cette séance */
-function PresenceValidator({ event: e, members }) {
-  const { token, activeClubId } = useAuth();
-  const [candidates, setCandidates] = useState(null);
-  const [statuses, setStatuses] = useState({});
-  const [addMemberId, setAddMemberId] = useState("");
-  const [session, setSession] = useState(null);
-  const [open, setOpen] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  const loadCandidates = useCallback(() => {
-    setError(""); setNotice("");
-    api("evaluations.php", "attendance_candidates", { club_id: activeClubId, event_id: e.id }, token)
-      .then((d) => {
-        setCandidates(d.candidates);
-        const map = {};
-        d.candidates.forEach((c) => { if (c.real_status) map[c.club_member_id] = c.real_status; });
-        setStatuses(map);
-      }).catch((err) => setError(err.message));
-    api("evaluations.php", "vote_session_status", { club_id: activeClubId, event_id: e.id }, token)
-      .then(setSession).catch(() => setSession(null));
-  }, [activeClubId, e.id, token]);
-
-  const toggleOpen = () => { setOpen((v) => !v); if (!open && candidates === null) loadCandidates(); };
-
-  const setStatus = (mid, status) => setStatuses((s) => ({ ...s, [mid]: status }));
-
-  const addMember = () => {
-    if (!addMemberId || !candidates) return;
-    const m = members?.find((x) => x.id === Number(addMemberId));
-    if (!m || candidates.some((c) => c.club_member_id === m.id)) return;
-    setCandidates([...candidates, { club_member_id: m.id, name: `${m.first_name} ${m.last_name}`, real_status: null }]);
-    setAddMemberId("");
-  };
-
-  const save = async () => {
-    const rows = Object.entries(statuses).map(([mid, real_status]) => ({ club_member_id: Number(mid), real_status }));
-    if (!rows.length) return;
-    setSaving(true); setError(""); setNotice("");
-    try {
-      await api("evaluations.php", "attendance_set", { club_id: activeClubId, event_id: e.id, attendances: rows }, token);
-      setNotice("Présences enregistrées.");
-      loadCandidates();
-    } catch (err) { setError(err.message); } finally { setSaving(false); }
-  };
-
-  const presentCount = Object.values(statuses).filter((s) => s === "present").length;
-
-  const openVotes = async () => {
-    setError(""); setNotice("");
-    try { await api("evaluations.php", "vote_session_open", { club_id: activeClubId, event_id: e.id }, token); loadCandidates(); }
-    catch (err) { setError(err.message); }
-  };
-  const closeVotes = async () => {
-    setError(""); setNotice("");
-    try { await api("evaluations.php", "vote_session_close", { club_id: activeClubId, event_id: e.id }, token); loadCandidates(); }
-    catch (err) { setError(err.message); }
-  };
-
-  const availableToAdd = useMemo(
-    () => (members ?? []).filter((m) => !candidates?.some((c) => c.club_member_id === m.id)),
-    [members, candidates]
-  );
-
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <button className="btn btn-secondary btn-sm" onClick={toggleOpen}>
-        <UsersRound size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />{open ? "Fermer les présences réelles" : "Présences réelles & votes"}
-      </button>
-      {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
-      {notice && <div className="info-box" style={{ marginTop: 8 }}>{notice}</div>}
-
-      {open && (
-        <div style={{ marginTop: 10 }}>
-          {candidates === null && <div className="spinner" />}
-          {candidates !== null && (
+          {candidates.length > 0 && (
             <>
-              <div className="label-title">Qui était réellement présent ({presentCount})</div>
-              {candidates.length === 0 && <p className="subtle">Personne pour l'instant — ajoute des joueurs manuellement ci-dessous.</p>}
-              {candidates.map((c) => (
-                <div key={c.club_member_id} className="list-row" style={{ flexWrap: "wrap" }}>
-                  <strong>{c.name}</strong>
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                    {Object.entries(REAL_STATUS_LABELS).map(([v, l]) => (
-                      <button key={v} className={`btn btn-sm ${statuses[c.club_member_id] === v ? "btn-primary" : "btn-secondary"}`} onClick={() => setStatus(c.club_member_id, v)}>{l}</button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                <select style={{ flex: 1, minWidth: 160 }} value={addMemberId} onChange={(e2) => setAddMemberId(e2.target.value)}>
-                  <option value="">+ Ajouter un membre…</option>
-                  {availableToAdd.map((m) => <option key={m.id} value={m.id}>{m.first_name} {m.last_name}</option>)}
-                </select>
-                <button className="btn btn-secondary" style={{ width: "auto" }} onClick={addMember} disabled={!addMemberId}>Ajouter</button>
-              </div>
-              <button className="btn btn-primary" style={{ marginTop: 10 }} onClick={save} disabled={saving}>
-                {saving ? "Enregistrement…" : "Enregistrer les présences"}
-              </button>
+              <p className="subtle" style={{ marginTop: 0 }}>
+                Parmi les présents : 1 gardien + 8 joueurs de champ maximum ({total}/9).
+              </p>
 
-              {presentCount > 0 && (
-                <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
-                  <div className="label-title">Session de vote</div>
-                  {!session?.session && (
-                    <>
-                      <p className="subtle">Les votes ne sont pas encore ouverts.</p>
-                      <button className="btn btn-primary btn-sm" onClick={openVotes}>Ouvrir les votes</button>
-                    </>
-                  )}
-                  {session?.session?.status === "open" && (
-                    <>
-                      <p className="subtle">{session.submitted_count} / {session.present_count} ont validé leur vote.</p>
-                      <button className="btn btn-danger btn-sm" onClick={closeVotes}>Clôturer les votes</button>
-                    </>
-                  )}
-                  {session?.session?.status === "closed" && (
-                    <p className="subtle" style={{ margin: 0 }}>Votes clôturés — {session.submitted_count} / {session.present_count} avaient voté.</p>
-                  )}
-                </div>
-              )}
+              <div className="label-title" style={{ fontSize: "0.78rem", marginBottom: 4 }}>Gardien</div>
+              {candidates.map((m) => (
+                <label key={m.club_member_id} className="list-row" style={{ padding: "6px 0", cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input type="radio" name={`gk-${e.id}`} checked={goalkeeperId === m.club_member_id} onChange={() => pickGoalkeeper(m.club_member_id)} style={{ width: "auto" }} />
+                    <Avatar name={m.name} userId={m.user_id} avatarUrl={m.avatar_url} size={24} />{m.name}
+                  </span>
+                </label>
+              ))}
+
+              <div className="label-title" style={{ fontSize: "0.78rem", marginTop: 12, marginBottom: 4 }}>Joueurs de champ ({fieldIds.size}/8)</div>
+              {candidates.filter((m) => m.club_member_id !== goalkeeperId).map((m) => (
+                <label key={m.club_member_id} className="list-row" style={{ padding: "6px 0", cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex", opacity: !fieldIds.has(m.club_member_id) && fieldIds.size >= 8 ? 0.4 : 1 }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input
+                      type="checkbox" checked={fieldIds.has(m.club_member_id)}
+                      disabled={!fieldIds.has(m.club_member_id) && fieldIds.size >= 8}
+                      onChange={() => toggleField(m.club_member_id)} style={{ width: "auto" }}
+                    />
+                    <Avatar name={m.name} userId={m.user_id} avatarUrl={m.avatar_url} size={24} />{m.name}
+                  </span>
+                </label>
+              ))}
+
+              <button className="btn btn-primary btn-sm" style={{ marginTop: 10 }} disabled={busy || total === 0} onClick={save}>
+                {busy ? "Enregistrement…" : `Convoquer ${total} joueur${total > 1 ? "s" : ""}`}
+              </button>
             </>
           )}
         </div>
@@ -965,3 +1144,4 @@ function PresenceValidator({ event: e, members }) {
     </div>
   );
 }
+

@@ -2,138 +2,357 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { EVENT_TYPES, fmtDate, fmtTime } from "@/lib/events";
-import { SCORE_OPTIONS, fmtScore } from "@/lib/ballondor";
-import { Avatar } from "@/components/ui";
+import { fmtScore } from "@/lib/ballondor";
+import { Avatar, ScoreSlider, ScoreBar, StatTile, SeasonPicker } from "@/components/ui";
+import {
+  Trophy, People, Star, Activity, ClipboardCheck, GraphUpArrow, Bullseye,
+  Fire, Rulers, EmojiFrown, EmojiSmile, Award, InfoCircle, ChevronLeft,
+  GraphDown,
+} from "react-bootstrap-icons";
+
+const PODIUM_COLORS = ["var(--gold-500)", "var(--silver-400)", "var(--bronze-500)"];
+const TROPHY_ICONS = {
+  ballon_dor: Trophy, most_regular: Rulers, most_assiduous: Fire,
+  best_progression: GraphUpArrow, closest_perception: Bullseye,
+  most_severe_self: EmojiFrown, most_overrated_self: EmojiSmile,
+  best_raw_average: Star, most_irregular: GraphDown,
+};
+/** Liste canonique de tous les trophées possibles — affichés en tuile même
+ * quand ils n'ont pas encore été décernés (grisée + condition manquante). */
+const TROPHY_DEFS = [
+  { code: "ballon_dor", label: "Ballon d'Or", icon: Trophy, requirement: "Le joueur avec le meilleur score sur toute la saison, une fois classé officiellement (voir Comment le score est calculé)." },
+  { code: "most_regular", label: "Joueur le plus régulier", icon: Rulers, requirement: "\"Régulier\" = ses notes de séance ne montent ni ne descendent beaucoup d'une fois sur l'autre — ni pic, ni trou d'air, du sérieux à chaque fois. Condition : au moins 5 séances jouées et notées." },
+  { code: "most_assiduous", label: "Joueur le plus assidu", icon: Fire, requirement: "\"Assidu\" = celui qui vient le plus souvent aux séances où il est attendu (le meilleur taux de présence). Condition : au moins une présence enregistrée." },
+  { code: "best_progression", label: "Meilleure progression", icon: GraphUpArrow, requirement: "Celui qui s'est le plus amélioré : ses notes de la 2e moitié de saison sont bien meilleures que celles de la 1ère moitié. Condition : au moins 4 séances notées." },
+  { code: "closest_perception", label: "Ressenti le plus proche du groupe", icon: Bullseye, requirement: "Celui dont l'auto-évaluation colle le mieux à la note que le groupe lui donne réellement — il se connaît bien. Condition : au moins une auto-évaluation." },
+  { code: "best_raw_average", label: "Meilleure moyenne brute", icon: Star, requirement: "La moyenne des notes reçues telle quelle, sans les ajustements de présence/régularité qui s'appliquent au score officiel — un peu le \"talent pur\"." },
+  { code: "most_severe_self", label: "Le plus sévère avec lui-même", icon: EmojiFrown, requirement: "Celui qui se note beaucoup plus mal que ce que le groupe pense de lui — trophée humoristique désactivé pour cette saison.", humorous: true },
+  { code: "most_overrated_self", label: "Celui qui se voit un peu trop beau", icon: EmojiSmile, requirement: "Celui qui se note beaucoup mieux que ce que le groupe pense de lui — trophée humoristique désactivé pour cette saison.", humorous: true },
+  { code: "most_irregular", label: "Montagnes russes", icon: GraphDown, requirement: "L'opposé du plus régulier : des séances excellentes, d'autres ratées, un vrai grand huit — trophée humoristique désactivé pour cette saison.", humorous: true },
+];
+
+/** Positions/délais des particules — fixes (pas de Math.random à chaque render), pour un scintillement organique. */
+const INK_DOTS = [
+  { top: "15%", left: "4%", size: 3, delay: "0s", dur: "1.5s" },
+  { top: "70%", left: "6%", size: 2, delay: ".4s", dur: "1.8s" },
+  { top: "40%", left: "12%", size: 3, delay: ".9s", dur: "1.6s" },
+  { top: "10%", left: "18%", size: 2, delay: "1.2s", dur: "2s" },
+  { top: "80%", left: "20%", size: 3, delay: ".2s", dur: "1.7s" },
+  { top: "55%", left: "26%", size: 2, delay: "1.5s", dur: "1.9s" },
+  { top: "25%", left: "32%", size: 3, delay: ".6s", dur: "1.6s" },
+  { top: "65%", left: "36%", size: 2, delay: "1s", dur: "2.1s" },
+  { top: "12%", left: "42%", size: 3, delay: ".3s", dur: "1.8s" },
+  { top: "48%", left: "46%", size: 2, delay: "1.4s", dur: "1.6s" },
+  { top: "78%", left: "50%", size: 3, delay: ".7s", dur: "1.9s" },
+  { top: "22%", left: "54%", size: 2, delay: "1.7s", dur: "1.7s" },
+  { top: "60%", left: "58%", size: 3, delay: ".1s", dur: "2s" },
+  { top: "35%", left: "63%", size: 2, delay: ".9s", dur: "1.6s" },
+  { top: "15%", left: "68%", size: 3, delay: "1.3s", dur: "1.8s" },
+  { top: "72%", left: "70%", size: 2, delay: ".5s", dur: "2.1s" },
+  { top: "45%", left: "74%", size: 3, delay: "1.6s", dur: "1.7s" },
+  { top: "20%", left: "79%", size: 2, delay: ".2s", dur: "1.9s" },
+  { top: "62%", left: "83%", size: 3, delay: "1.1s", dur: "1.6s" },
+  { top: "8%", left: "87%", size: 2, delay: ".8s", dur: "2s" },
+  { top: "50%", left: "90%", size: 3, delay: "1.4s", dur: "1.8s" },
+  { top: "80%", left: "93%", size: 2, delay: ".4s", dur: "1.7s" },
+  { top: "30%", left: "96%", size: 3, delay: "1s", dur: "1.9s" },
+  { top: "58%", left: "1%", size: 2, delay: "1.6s", dur: "1.6s" },
+];
+
+/** Effet "encre invisible" façon iMessage : plein de petites particules qui
+ * scintillent, sans fond coloré — personne ne peut la révéler, le vrai nom
+ * du vainqueur n'apparaît qu'à la cérémonie de fin de saison en vrai. */
+function TrophyWinnerReveal() {
+  return (
+    <div style={{ marginTop: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: "0.76rem", fontWeight: 700, color: "var(--text-dim)", flexShrink: 0 }}>Vainqueur :</span>
+        <div className="invisible-ink" aria-hidden="true">
+          {INK_DOTS.map((d, i) => (
+            <span
+              key={i} className="invisible-ink-dot"
+              style={{ top: d.top, left: d.left, width: d.size, height: d.size, animationDelay: d.delay, animationDuration: d.dur }}
+            />
+          ))}
+        </div>
+      </div>
+      <p className="subtle" style={{ fontSize: "0.72rem", margin: "4px 0 0" }}>Sera dévoilé à la cérémonie de fin de saison.</p>
+    </div>
+  );
+}
+
+/** Formate la valeur d'un trophée avec une unité claire — évite d'afficher un chiffre nu sans contexte. */
+function fmtTrophyValue(t) {
+  const v = t.value;
+  if (typeof v !== "number") return v; // déjà une chaîne formatée côté API (ex: "92%", "+1.2")
+  if (t.code === "ballon_dor" || t.code === "best_raw_average") return `${fmtScore(v)}/10`;
+  if (t.code === "closest_perception") return `${fmtScore(v)} pt${v >= 1.5 ? "s" : ""} d'écart`;
+  if (t.code === "most_severe_self") return `${fmtScore(Math.abs(v))} pt${Math.abs(v) >= 1.5 ? "s" : ""} en dessous de ce que pense le groupe`;
+  return fmtScore(v);
+}
+
+/** Une séance est terminée à ends_at si connu, sinon 2h après starts_at — même règle que côté API. */
+function hasEnded(e) {
+  const end = e.ends_at ? new Date(e.ends_at.replace(" ", "T")) : new Date(new Date(e.starts_at.replace(" ", "T")).getTime() + 2 * 3600 * 1000);
+  return end < new Date();
+}
 
 export function VotePage() {
-  const { token, activeClubId } = useAuth();
+  const { user, token, activeClubId } = useAuth();
+  const [tab, setTab] = useState("seances"); // seances | profil | groupe
+
+  // ── Saison choisie, partagée par "Mon profil" et "Le groupe" ──
+  const [seasons, setSeasons] = useState(null);
+  const [seasonId, setSeasonId] = useState(null);
+  const season = seasons?.find((s) => s.id === seasonId);
+
+  useEffect(() => {
+    if (!activeClubId) return;
+    api("seasons.php", "list", { club_id: activeClubId }, token).then((d) => {
+      setSeasons(d.seasons);
+      const active = d.seasons.find((s) => s.status === "active") ?? d.seasons[0];
+      if (active && !seasonId) setSeasonId(active.id);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeClubId, token]);
+
+  // ── Données de la saison choisie ──
+  const [myMemberId, setMyMemberId] = useState(null);
+  const [perception, setPerception] = useState(null);
+  const [rankings, setRankings] = useState(null);
+  const [settings, setSettings] = useState(null);
+  const [teamStats, setTeamStats] = useState(null);
+  const [trophies, setTrophies] = useState(null);
+
+  useEffect(() => {
+    if (!activeClubId || !seasonId) return;
+    api("members.php", "list", { club_id: activeClubId }, token).then((m) => {
+      setMyMemberId(m.members.find((x) => x.user_id === user?.id)?.id ?? null);
+    }).catch(() => {});
+    api("evaluations.php", "my_perception", { club_id: activeClubId, season_id: seasonId }, token).then(setPerception).catch(() => setPerception(null));
+    api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: seasonId }, token).then(setRankings).catch(() => setRankings(null));
+    api("evaluations.php", "season_settings_get", { club_id: activeClubId, season_id: seasonId }, token).then((d) => setSettings(d.settings)).catch(() => setSettings(null));
+    api("evaluations.php", "season_team_stats", { club_id: activeClubId, season_id: seasonId }, token).then(setTeamStats).catch(() => setTeamStats(null));
+    api("evaluations.php", "season_trophies", { club_id: activeClubId, season_id: seasonId }, token).then(setTrophies).catch(() => setTrophies(null));
+  }, [activeClubId, seasonId, token, user?.id]);
+
+  const myRanking = rankings === null ? undefined
+    : (myMemberId ? [...rankings.official, ...rankings.provisional].find((p) => p.club_member_id === myMemberId) : null) ?? null;
+  const myFullName = user ? `${user.first_name} ${user.last_name}`.trim() : null;
+  const myTrophies = trophies?.trophies?.filter((t) => t.player === myFullName) ?? [];
+
+  // ── Tous les événements (utilisés par l'onglet Séances) ──
   const [events, setEvents] = useState(null);
-  const [selectedEventId, setSelectedEventId] = useState(null);
+  const reloadEvents = useCallback(() => {
+    if (!activeClubId) return;
+    api("events.php", "list", { club_id: activeClubId }, token).then((d) => setEvents(d.events)).catch(() => {});
+  }, [activeClubId, token]);
+  useEffect(reloadEvents, [reloadEvents]);
+
+  return (
+    <div>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Ballon d'Or</h1>
+
+      <div className="segmented" style={{ marginBottom: 16 }}>
+        {[["seances", "Séances"], ["profil", "Mon profil"], ["groupe", "Le groupe"]].map(([v, l]) => (
+          <button key={v} className={tab === v ? "active" : ""} onClick={() => setTab(v)}>{l}</button>
+        ))}
+      </div>
+
+      {tab === "seances" && <SeancesTab events={events} reloadEvents={reloadEvents} season={season} perception={perception} />}
+
+      {tab !== "seances" && (
+        <>
+          {seasons?.length > 0 && (
+            <div className="card" style={{ marginBottom: 16 }}>
+              <label className="label-title" style={{ marginBottom: 8, display: "block" }}>Saison</label>
+              <SeasonPicker seasons={seasons} value={seasonId} onChange={setSeasonId} />
+            </div>
+          )}
+          {tab === "profil" && (
+            <ProfilTab season={season} myRanking={myRanking} settings={settings} perception={perception} myTrophies={myTrophies} />
+          )}
+          {tab === "groupe" && (
+            <GroupeTab season={season} rankings={rankings} teamStats={teamStats} trophies={trophies} />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SÉANCES — l'onglet "action" : voter, séances à venir, historique.
+// ═══════════════════════════════════════════════════════════════
+
+function SeancesTab({ events, reloadEvents, season, perception }) {
+  const [votingEventId, setVotingEventId] = useState(null);
+
+  if (events === null) return <div className="spinner" />;
+
+  const ended = events.filter((e) => e.status !== "cancelled" && hasEnded(e));
+  const pending = ended.filter((e) => e.my_availability === "present" && !e.my_vote_submitted)
+    .sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at));
+  const upcoming = events.filter((e) => e.status !== "cancelled" && !hasEnded(e))
+    .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+
+  if (votingEventId) {
+    const event = events.find((e) => e.id === votingEventId);
+    return (
+      <VotingFlow
+        event={event}
+        onDone={() => { setVotingEventId(null); reloadEvents(); }}
+        onBack={() => setVotingEventId(null)}
+      />
+    );
+  }
+
+  return (
+    <div>
+      {pending.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          {pending.map((e) => {
+            const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
+            const Icon = t.icon;
+            return (
+              <div key={e.id} className="event-card-ds" style={{ marginBottom: 10, cursor: "pointer" }} onClick={() => setVotingEventId(e.id)}>
+                <div className="kicker" style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon size={13} />Tu as une séance à noter</div>
+                <h3>{e.title}</h3>
+                <div style={{ opacity: 0.85, fontSize: "0.9rem", marginBottom: 12 }}>{fmtDate(e.starts_at)} · {fmtTime(e.starts_at)}</div>
+                <button className="btn" style={{ background: "#fff", color: "var(--hero-ink)", width: "auto", padding: "9px 18px" }}>Noter cette séance</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {upcoming.length > 0 && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="label-title">Séances à venir</div>
+          {upcoming.map((e) => (
+            <div key={e.id} className="list-row">
+              <div>
+                <strong>{e.title}</strong>
+                <div className="subtle">{fmtDate(e.starts_at)} · {fmtTime(e.starts_at)}</div>
+              </div>
+              <span className="badge badge-neutral" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <InfoCircle size={12} /> Vote après la séance
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="card">
+        <div className="label-title">Historique {season ? `— ${season.name}` : ""}</div>
+        {perception === null && <div className="spinner" />}
+        {perception && perception.sessions.length === 0 && (
+          <p className="subtle" style={{ margin: 0 }}>Aucune séance notée pour l'instant.</p>
+        )}
+        {perception && [...perception.sessions].reverse().map((s) => {
+          const gapTone = Math.abs(s.gap) <= 0.25 ? "var(--lime-600)" : (s.gap > 0 ? "var(--oc-amber-500)" : "var(--oc-orange-500)");
+          const gapLabel = Math.abs(s.gap) <= 0.25 ? "proche du groupe" : (s.gap > 0 ? `surestimation +${s.gap.toFixed(1)}` : `sous-estimation ${s.gap.toFixed(1)}`);
+          return (
+            <div key={s.event_id} className="list-row" style={{ flexWrap: "wrap" }}>
+              <div style={{ minWidth: 0 }}>
+                <strong>{s.title}</strong>
+                <div className="subtle">{fmtDate(s.starts_at)}</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div className="num" style={{ fontWeight: 700 }}>{fmtScore(s.self_score)}</div>
+                  <div className="subtle" style={{ fontSize: "0.66rem" }}>toi</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div className="num" style={{ fontWeight: 700 }}>{fmtScore(s.received_avg)}</div>
+                  <div className="subtle" style={{ fontSize: "0.66rem" }}>groupe</div>
+                </div>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: gapTone, whiteSpace: "nowrap" }}>{gapLabel}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Flux de vote pour une séance donnée (repris tel quel, juste recentré sur un event fixe) ──
+function VotingFlow({ event, onDone, onBack }) {
+  const { token, activeClubId } = useAuth();
   const [status, setStatus] = useState(null);
   const [scores, setScores] = useState({});
   const [selfScore, setSelfScore] = useState("");
-  const [step, setStep] = useState("vote"); // vote | confirm
+  const [step, setStep] = useState("vote");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!activeClubId) return;
-    api("events.php", "list", { club_id: activeClubId }, token).then((d) => {
-      const sorted = [...d.events].filter((e) => e.status !== "cancelled")
-        .sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at));
-      setEvents(sorted);
-      if (sorted.length && !selectedEventId) setSelectedEventId(sorted[0].id);
-    }).catch((e) => setError(e.message));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeClubId, token]);
-
-  const loadStatus = useCallback(() => {
-    if (!activeClubId || !selectedEventId) return;
-    setError(""); setStep("vote"); setScores({}); setSelfScore("");
-    api("evaluations.php", "vote_my_status", { club_id: activeClubId, event_id: selectedEventId }, token)
+    if (!activeClubId || !event) return;
+    api("evaluations.php", "vote_my_status", { club_id: activeClubId, event_id: event.id }, token)
       .then(setStatus).catch((e) => setError(e.message));
-  }, [activeClubId, selectedEventId, token]);
+  }, [activeClubId, event, token]);
 
-  useEffect(loadStatus, [loadStatus]);
-
-  const allFilled = status?.ratees.length > 0 && status.ratees.every((r) => scores[r.club_member_id]) && selfScore;
+  const totalToFill = (status?.ratees.length ?? 0) + 1;
+  const filledCount = (status ? status.ratees.filter((r) => scores[r.club_member_id] != null).length : 0) + (selfScore ? 1 : 0);
+  const allFilled = status?.ratees.length > 0 && status.ratees.every((r) => scores[r.club_member_id] != null) && selfScore;
 
   const submit = async () => {
     setSubmitting(true); setError("");
     try {
       await api("evaluations.php", "vote_submit", {
         club_id: activeClubId,
-        event_id: selectedEventId,
+        event_id: event.id,
         scores: Object.entries(scores).map(([ratee_member_id, score]) => ({ ratee_member_id: Number(ratee_member_id), score: Number(score) })),
         self_score: Number(selfScore),
       }, token);
-      loadStatus();
-    } catch (e) { setError(e.message); } finally { setSubmitting(false); }
+      onDone();
+    } catch (e) { setError(e.message); setSubmitting(false); }
   };
+
+  if (!event) return null;
 
   return (
     <div>
-      <h1 className="page-title" style={{ marginBottom: 18 }}>Votes</h1>
+      <button className="btn btn-ghost btn-sm" style={{ width: "auto", marginBottom: 12 }} onClick={onBack}>
+        <ChevronLeft size={14} style={{ marginRight: 4, verticalAlign: "-2px" }} />Retour
+      </button>
       {error && <div className="error-box">{error}</div>}
-
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="field">
-          <label>Séance</label>
-          <select value={selectedEventId ?? ""} onChange={(e) => setSelectedEventId(Number(e.target.value))}>
-            {events?.map((e) => (
-              <option key={e.id} value={e.id}>
-                {(() => { const I = (EVENT_TYPES[e.type] ?? EVENT_TYPES.match).icon; return <I size={15} style={{ verticalAlign: "-2px", marginRight: 6 }} />; })()}{e.title} — {fmtDate(e.starts_at)} {fmtTime(e.starts_at)}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
       {status === null && <div className="spinner" />}
 
-      {status && !status.eligible && (
-        <div className="card"><p className="subtle" style={{ margin: 0 }}>Tu n'étais pas présent à cette séance (ou la présence n'a pas encore été validée) — rien à voter.</p></div>
-      )}
-
-      {status && status.eligible && status.session_status !== "open" && !status.submitted && (
-        <div className="card"><p className="subtle" style={{ margin: 0 }}>Les votes ne sont pas ouverts pour cette séance pour le moment.</p></div>
-      )}
-
-      {status && status.eligible && status.submitted && (
+      {status && step === "vote" && (
         <div className="card">
-          <div className="label-title">Ton vote (validé)</div>
-          {status.my_scores?.map((s) => (
-            <div key={s.ratee_member_id} className="list-row">
-              <span>Joueur #{s.ratee_member_id}</span>
-              <strong className="num">{fmtScore(s.score)}/10</strong>
-            </div>
-          ))}
-          <div className="list-row">
-            <span>Mon auto-évaluation</span>
-            <strong className="num">{fmtScore(status.my_self_score)}/10</strong>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <div className="label-title" style={{ marginBottom: 0 }}>{event.title} — note tes coéquipiers présents</div>
+            <span className="subtle" style={{ fontWeight: 700 }}>{filledCount}/{totalToFill}</span>
           </div>
-          <p className="subtle" style={{ marginTop: 10 }}>Ton vote est définitif et ne peut plus être modifié.</p>
-        </div>
-      )}
-
-      {status && status.eligible && status.session_status === "open" && !status.submitted && step === "vote" && (
-        <div className="card">
-          <div className="label-title">Note tes coéquipiers présents (1 à 10)</div>
+          <div style={{ height: 6, background: "var(--surface-soft)", borderRadius: 999, overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ height: "100%", width: `${(filledCount / totalToFill) * 100}%`, background: "var(--lime-600)", transition: "width .2s ease", borderRadius: 999 }} />
+          </div>
           {status.ratees.map((r) => (
-            <div key={r.club_member_id} className="field">
-              <label style={{ display: "flex", alignItems: "center", gap: 8, textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>
-                <Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}
-              </label>
-              <select value={scores[r.club_member_id] ?? ""} onChange={(e) => setScores((s) => ({ ...s, [r.club_member_id]: e.target.value }))}>
-                <option value="">— note —</option>
-                {SCORE_OPTIONS.map((v) => <option key={v} value={v}>{fmtScore(v)}/10</option>)}
-              </select>
-            </div>
+            <ScoreSlider
+              key={r.club_member_id}
+              label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={26} />{r.name}</>}
+              value={scores[r.club_member_id] ?? null}
+              touched={scores[r.club_member_id] != null}
+              onChange={(v) => setScores((s) => ({ ...s, [r.club_member_id]: v }))}
+            />
           ))}
-          <div className="field">
-            <label>Et toi ? Ton auto-évaluation</label>
-            <select value={selfScore} onChange={(e) => setSelfScore(e.target.value)}>
-              <option value="">— note —</option>
-              {SCORE_OPTIONS.map((v) => <option key={v} value={v}>{fmtScore(v)}/10</option>)}
-            </select>
+          <div style={{ marginTop: 18 }}>
+            <div className="label-title">Et toi, t'en penses quoi de ta séance ?</div>
+            <ScoreSlider label="Mon auto-évaluation" value={selfScore || null} touched={!!selfScore} onChange={setSelfScore} />
           </div>
-          <button className="btn btn-primary" disabled={!allFilled} onClick={() => setStep("confirm")}>Vérifier avant validation</button>
+          <button className="btn btn-primary" disabled={!allFilled} onClick={() => setStep("confirm")} style={{ marginTop: 8 }}>Vérifier avant validation</button>
         </div>
       )}
 
-      {status && status.eligible && status.session_status === "open" && !status.submitted && step === "confirm" && (
+      {status && step === "confirm" && (
         <div className="card">
           <div className="label-title">Récapitulatif — vérifie avant de valider</div>
           {status.ratees.map((r) => (
-            <div key={r.club_member_id} className="list-row">
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={24} />{r.name}</span>
-              <strong className="num">{fmtScore(scores[r.club_member_id])}/10</strong>
-            </div>
+            <ScoreBar key={r.club_member_id} label={<><Avatar name={r.name} userId={r.user_id} avatarUrl={r.avatar_url} size={22} />{r.name}</>} value={scores[r.club_member_id]} />
           ))}
-          <div className="list-row">
-            <span>Toi (auto-évaluation)</span>
-            <strong className="num">{fmtScore(selfScore)}/10</strong>
-          </div>
+          <ScoreBar label="Toi (auto-évaluation)" value={selfScore} highlight />
           <p className="subtle" style={{ margin: "12px 0" }}>Une fois validé, tu ne pourras plus modifier ce vote.</p>
           <div style={{ display: "flex", gap: 8 }}>
             <button className="btn btn-secondary" onClick={() => setStep("vote")}>Revenir</button>
@@ -144,3 +363,229 @@ export function VotePage() {
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════════════
+// MON PROFIL — où j'en suis : score, jauge, explication, ressenti, mes trophées.
+// ═══════════════════════════════════════════════════════════════
+
+function ProfilTab({ season, myRanking, settings, perception, myTrophies }) {
+  const [showHow, setShowHow] = useState(false);
+  if (!season) return <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune saison pour le moment.</p></div>;
+  if (myRanking === undefined) return <div className="spinner" />;
+
+  const minSessions = settings?.eligibility_min_sessions ?? 10;
+  const seasonEndLabel = season.end_date ? new Date(season.end_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "";
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="label-title">Ta position — {season.name}</div>
+        {myRanking ? (
+          <>
+            <div className="stat-tiles" style={{ marginBottom: 8 }}>
+              <StatTile icon={<Trophy size={18} />} value={fmtScore(myRanking.ballon_dor_score)} label="Score Ballon d'Or" tint="gold" solid />
+              <StatTile icon={<Activity size={18} />} value={`${myRanking.sessions_played}`} label="Séances jouées" tint="coral" solid />
+              <StatTile icon={<ClipboardCheck size={18} />} value={`${myRanking.attendance_rate}%`} label="Taux de présence" tint="lime" solid />
+            </div>
+            <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 14 }}>
+              <strong>Score</strong> = moyenne des notes reçues, ajustée par ta régularité et ta présence (détails ci-dessous).{" "}
+              <strong>Séances jouées</strong> = nombre de séances où tu as répondu "présent".{" "}
+              <strong>Taux de présence</strong> = séances jouées ÷ séances où tu étais attendu (hors blessures).
+            </p>
+
+            {myRanking.rank ? (
+              <div>
+                <p style={{ margin: 0, fontSize: "0.92rem" }}>
+                  Tu es <strong style={{ color: "var(--gold-500)" }}>{myRanking.rank}{myRanking.rank === 1 ? "er" : "e"}</strong> au classement officiel — régularité : <strong>{myRanking.regularity}</strong>.
+                </p>
+                <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 6, marginBottom: 0 }}>
+                  Le classement officiel trie tous les joueurs éligibles par score Ballon d'Or décroissant.
+                  La <strong>régularité</strong> ({myRanking.regularity}) mesure si tes notes de séance varient beaucoup ou peu d'une fois sur l'autre.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>Classement provisoire</span>
+                  <span className="subtle">{myRanking.sessions_played}/{minSessions} séances</span>
+                </div>
+                <div style={{ height: 8, background: "var(--surface-soft)", borderRadius: 999, overflow: "hidden", marginBottom: 10 }}>
+                  <div style={{ height: "100%", width: `${Math.min(100, (myRanking.sessions_played / minSessions) * 100)}%`, background: "var(--oc-amber-500)", borderRadius: 999 }} />
+                </div>
+                <p style={{ margin: 0, fontSize: "0.92rem" }}>
+                  Actuellement, ta note est de <strong>{fmtScore(myRanking.ballon_dor_score)}</strong>.
+                  Si tu fais <strong>{myRanking.sessions_until_eligible}</strong> entraînement{myRanking.sessions_until_eligible > 1 ? "s" : ""} supplémentaire{myRanking.sessions_until_eligible > 1 ? "s" : ""},
+                  tu seras éligible au classement officiel et à la remise des trophées{seasonEndLabel ? `, avant la fin de la saison le ${seasonEndLabel}` : ""}.
+                </p>
+                <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 6, marginBottom: 0 }}>
+                  "Provisoire" veut dire que ton score est bien calculé et visible, mais pas encore assez de séances jouées pour être comparé équitablement aux autres — la barre ci-dessus montre ta progression vers le seuil.
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="subtle" style={{ margin: 0 }}>Tu n'as pas encore de score sur cette saison — va dans "Séances" pour voter après ta prochaine présence.</p>
+        )}
+
+        {settings && (
+          <div style={{ marginTop: 14 }}>
+            <span onClick={() => setShowHow((v) => !v)} style={{ cursor: "pointer", fontSize: "0.82rem", fontWeight: 700, color: "var(--oc-sky-700)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <InfoCircle size={14} /> {showHow ? "Masquer" : "Comment le score est calculé ?"}
+            </span>
+            {showHow && (
+              <div style={{ marginTop: 10, fontSize: "0.85rem", lineHeight: 1.6, color: "var(--text-dim)" }}>
+                <p style={{ margin: "0 0 6px" }}>
+                  Ta note de séance vient de la moyenne des notes reçues de tes coéquipiers. Sur toute la saison,
+                  cette moyenne est légèrement tirée vers la moyenne du groupe tant que tu n'as pas encore joué
+                  beaucoup de séances (seuil de fiabilité : <strong>{settings.reliability_threshold}</strong> séances) —
+                  ça évite qu'une seule très bonne ou très mauvaise séance fausse tout ton score au début.
+                </p>
+                <p style={{ margin: "0 0 6px" }}>
+                  Ce score est ensuite multiplié par un <strong>coefficient de présence</strong>, qui va de{" "}
+                  <strong>{settings.attendance_coef_min}</strong> (peu présent) à{" "}
+                  <strong>{(settings.attendance_coef_min + settings.attendance_coef_range).toFixed(2)}</strong> (toujours présent) —
+                  un joueur excellent mais peu assidu ne peut donc pas devancer un joueur très régulier.
+                </p>
+                <p style={{ margin: 0 }}>
+                  Pour entrer dans le classement <strong>officiel</strong>, il faut avoir joué au moins{" "}
+                  <strong>{settings.eligibility_min_sessions}</strong> séances avec un taux de présence d'au moins{" "}
+                  <strong>{settings.eligibility_min_attendance_pct}%</strong>. En dessous, ton score reste affiché en
+                  classement provisoire, à titre indicatif.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {perception?.summary && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="label-title">Ton ressenti</div>
+          <p style={{ margin: 0, fontSize: "0.92rem" }}>{perception.summary.perception_level}</p>
+          <p className="subtle" style={{ marginTop: 4 }}>
+            Moyenne de tes auto-évaluations : <strong style={{ color: "var(--text)" }}>{fmtScore(perception.summary.avg_self)}</strong> — moyenne reçue du groupe : <strong style={{ color: "var(--text)" }}>{fmtScore(perception.summary.avg_received)}</strong>
+          </p>
+          <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 8, marginBottom: 0 }}>
+            À chaque séance, en plus de noter tes coéquipiers tu te notes aussi toi-même — cette auto-évaluation
+            ne compte jamais dans ton score officiel, elle sert uniquement à comparer ce que tu penses de toi
+            à ce que le groupe pense réellement de toi. Un grand écart (dans un sens ou l'autre) veut juste dire
+            que ta perception diffère de celle des autres, ni bien ni mal.
+          </p>
+        </div>
+      )}
+
+      <div className="card">
+        <div className="label-title" style={{ marginBottom: 4 }}>Mes trophées</div>
+        <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
+          Les trophées sont décernés au meilleur de chaque catégorie sur la saison, recalculés à chaque nouveau vote — grisés ici tant que tu ne le décroches pas toi-même. Remplir la condition ne suffit pas forcément : un seul joueur gagne chaque trophée, le meilleur de tous sur ce critère.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {TROPHY_DEFS.map((def) => {
+            const won = myTrophies.find((t) => t.code === def.code);
+            const Icon = def.icon;
+            return (
+              <div
+                key={def.code}
+                style={{
+                  opacity: won ? 1 : 0.5, background: won ? "var(--surface)" : "var(--surface-soft)",
+                  display: "flex", flexDirection: "column", gap: 6, borderRadius: "var(--radius-md)", padding: 14,
+                }}
+              >
+                <div className="icon-chip" style={{ background: won ? "var(--oc-yellow-100)" : "var(--surface-alt)", color: won ? "var(--gold-500)" : "var(--text-dim)" }}>
+                  <Icon size={18} />
+                </div>
+                <strong style={{ fontSize: "0.86rem" }}>{def.label}</strong>
+                <p className="subtle" style={{ margin: 0, fontSize: "0.74rem", lineHeight: 1.4 }}>{def.requirement}</p>
+                {won && <div className="num" style={{ marginTop: 4, fontWeight: 700, color: "var(--gold-500)" }}>{fmtTrophyValue(won)}</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LE GROUPE — classement complet, stats collectives, trophées du club.
+// ═══════════════════════════════════════════════════════════════
+
+function GroupeTab({ season, rankings, teamStats, trophies }) {
+  if (!season) return <div className="card"><p className="subtle" style={{ margin: 0 }}>Aucune saison pour le moment.</p></div>;
+  if (rankings === null || teamStats === null || trophies === null) return <div className="spinner" />;
+
+  const list = trophies?.trophies ?? [];
+
+  return (
+    <div>
+      {teamStats && (
+        <>
+          <div className="stat-tiles" style={{ marginBottom: 8 }}>
+            <StatTile icon={<Activity size={18} />} value={`${teamStats.sessions_with_votes}/${teamStats.total_sessions}`} label="Séances notées" tint="coral" solid />
+            <StatTile icon={<Star size={18} />} value={teamStats.group_average !== null ? `${fmtScore(teamStats.group_average)}/10` : "—/10"} label="Moyenne du groupe" tint="lime" solid />
+            <StatTile icon={<People size={18} />} value={`${teamStats.nb_ranked_players}/${teamStats.total_members}`} label="Joueurs classés" tint="blue" solid />
+          </div>
+          <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 16 }}>
+            <strong>Séances notées</strong> = séances de la saison qui ont déjà au moins un vote, sur le total programmé.{" "}
+            <strong>Moyenne du groupe</strong> = moyenne de toutes les notes reçues par tout le monde.{" "}
+            <strong>Joueurs classés</strong> = joueurs ayant au moins une note, sur l'effectif actif total.
+          </p>
+        </>
+      )}
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="label-title">Classement officiel</div>
+        <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
+          Trie les joueurs ayant atteint le seuil d'éligibilité (nombre de séances + taux de présence minimum), du meilleur score au moins bon.
+        </p>
+        {rankings.official.length === 0 && <p className="subtle" style={{ margin: 0 }}>Personne ne remplit encore les conditions d'éligibilité.</p>}
+        {rankings.official.map((p) => (
+          <div key={p.club_member_id} className="list-row" style={{ flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+              <span style={{
+                width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
+                background: p.rank <= 3 ? PODIUM_COLORS[p.rank - 1] : "var(--surface-alt)",
+                color: p.rank <= 3 ? "#fff" : "var(--text-dim)",
+                display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.8rem",
+              }}>{p.rank}</span>
+              <Avatar name={p.name} userId={p.user_id} avatarUrl={p.avatar_url} size={28} />
+              <strong>{p.name}</strong>
+              <span className="subtle">({p.sessions_played} séances, {p.attendance_rate}%)</span>
+            </div>
+            <strong className="num" style={{ color: "var(--oc-blue-600)", fontSize: "1.1rem" }}>{fmtScore(p.ballon_dor_score)}</strong>
+          </div>
+        ))}
+      </div>
+
+      <div className="label-title" style={{ marginBottom: 4 }}>Trophées de la saison</div>
+      <p className="subtle" style={{ fontSize: "0.78rem", lineHeight: 1.5, marginTop: 0, marginBottom: 10 }}>
+        Décernés au meilleur de chaque catégorie, recalculés à chaque nouveau vote — grisés tant que personne ne remplit la condition.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {TROPHY_DEFS.map((def) => {
+          const awarded = list.find((t) => t.code === def.code);
+          const Icon = def.icon;
+          return (
+            <div
+              key={def.code}
+              style={{
+                opacity: awarded ? 1 : 0.5, background: awarded ? "var(--surface)" : "var(--surface-soft)",
+                display: "flex", flexDirection: "column", gap: 6, borderRadius: "var(--radius-md)", padding: 14,
+              }}
+            >
+              <div className="icon-chip" style={{ background: awarded ? "var(--oc-yellow-100)" : "var(--surface-alt)", color: awarded ? "var(--gold-500)" : "var(--text-dim)" }}>
+                <Icon size={18} />
+              </div>
+              <strong style={{ fontSize: "0.88rem" }}>{def.label}</strong>
+              <p className="subtle" style={{ margin: 0, fontSize: "0.74rem", lineHeight: 1.4 }}>{def.requirement}</p>
+              {awarded && <TrophyWinnerReveal />}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Ligne de stat toujours visible : valeur normale, ou grisée + explication si pas encore de donnée. */
+

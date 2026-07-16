@@ -76,6 +76,23 @@ switch ($action) {
                 $confirmedNames[$r['event_id']][] = ['name' => trim("{$r['first_name']} {$r['last_name']}"), 'user_id' => $r['user_id'], 'avatar_url' => $r['avatar_url']];
             }
 
+            $stmt = db()->prepare("
+                SELECT ea.event_id, cm.id AS club_member_id, u.id AS user_id, u.first_name, u.last_name, u.avatar_url
+                FROM event_availabilities ea
+                JOIN club_members cm ON cm.id = ea.club_member_id
+                JOIN users u ON u.id = cm.user_id
+                WHERE ea.event_id IN ($ph) AND ea.status = 'present'
+            ");
+            $stmt->execute($ids);
+            $presentNames = [];
+            foreach ($stmt->fetchAll() as $r) {
+                $presentNames[$r['event_id']][] = ['name' => trim("{$r['first_name']} {$r['last_name']}"), 'club_member_id' => (int) $r['club_member_id'], 'user_id' => $r['user_id'], 'avatar_url' => $r['avatar_url']];
+            }
+
+            $stmt = db()->prepare("SELECT event_id FROM vote_submissions WHERE event_id IN ($ph) AND club_member_id = ?");
+            $stmt->execute([...$ids, $myMemberId]);
+            $myVoted = array_fill_keys(array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN)), true);
+
             foreach ($events as &$e) {
                 $e['avail_counts'] = $availCounts[$e['id']] ?? new stdClass();
                 $e['conv_counts'] = $convCounts[$e['id']] ?? new stdClass();
@@ -83,6 +100,8 @@ switch ($action) {
                 $e['my_comment'] = $myComment[$e['id']] ?? '';
                 $e['my_convocation'] = $myConv[$e['id']] ?? null;
                 $e['confirmed_names'] = $confirmedNames[$e['id']] ?? [];
+                $e['present_names'] = $presentNames[$e['id']] ?? [];
+                $e['my_vote_submitted'] = isset($myVoted[$e['id']]);
             }
             unset($e);
         }
@@ -200,6 +219,14 @@ switch ($action) {
             trim($in['notes'] ?? '') ?: null,
             $id, $clubId,
         ]);
+
+        // Les convocations n'ont de sens que pour un match : si l'événement redevient
+        // un entraînement (ou autre), on nettoie, sinon "Tu es convoqué" persisterait.
+        if ($type !== 'match') {
+            $stmt = db()->prepare('DELETE FROM convocations WHERE event_id = ?');
+            $stmt->execute([$id]);
+        }
+
         log_action((int) $me['id'], 'update_event', "#$id $title");
 
         $newLocation = trim($in['location'] ?? '') ?: null;
@@ -277,8 +304,12 @@ switch ($action) {
         }
 
         $status = $in['status'] ?? '';
-        if (!in_array($status, ['present', 'maybe', 'absent', 'injured'], true)) json_error('Réponse invalide.');
+        if (!in_array($status, ['present', 'absent', 'injured'], true)) json_error('Réponse invalide.');
         $comment = trim($in['comment'] ?? '');
+
+        $stmt = db()->prepare('SELECT status FROM event_availabilities WHERE event_id = ? AND club_member_id = ?');
+        $stmt->execute([$eventId, $targetMemberId]);
+        $previousStatus = $stmt->fetchColumn(); // false si jamais répondu
 
         $stmt = db()->prepare('
             INSERT INTO event_availabilities (event_id, club_member_id, status, comment)
@@ -286,6 +317,49 @@ switch ($action) {
             ON DUPLICATE KEY UPDATE status = VALUES(status), comment = VALUES(comment)
         ');
         $stmt->execute([$eventId, $targetMemberId, $status, $comment ?: null]);
+
+        // Si la présence est corrigée à absent/blessé, les votes déjà enregistrés pour
+        // cette séance et ce membre (donnés ou reçus) n'ont plus lieu d'être : ils
+        // fausseraient les statistiques (moyenne de groupe, classement...).
+        if ($status !== 'present') {
+            $stmt = db()->prepare('DELETE FROM evaluations WHERE event_id = ? AND (rater_member_id = ? OR ratee_member_id = ?)');
+            $stmt->execute([$eventId, $targetMemberId, $targetMemberId]);
+            $stmt = db()->prepare('DELETE FROM self_evaluations WHERE event_id = ? AND club_member_id = ?');
+            $stmt->execute([$eventId, $targetMemberId]);
+            $stmt = db()->prepare('DELETE FROM vote_submissions WHERE event_id = ? AND club_member_id = ?');
+            $stmt->execute([$eventId, $targetMemberId]);
+        }
+
+        // Notifie les admins/coachs de la réponse — alerte spécifique si c'est un
+        // changement de dernière minute (moins de 2h avant le début de la séance).
+        if ($previousStatus !== $status) {
+            $stmt = db()->prepare("
+                SELECT id FROM club_members
+                WHERE club_id = ? AND status = 'active' AND role IN ('super_admin', 'admin', 'coach') AND id != ?
+            ");
+            $stmt->execute([$clubId, $targetMemberId]);
+            $adminIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
+            if ($adminIds) {
+                $stmt = db()->prepare('SELECT u.first_name, u.last_name FROM club_members cm JOIN users u ON u.id = cm.user_id WHERE cm.id = ?');
+                $stmt->execute([$targetMemberId]);
+                $person = $stmt->fetch();
+                $name = $person ? trim("{$person['first_name']} {$person['last_name']}") : 'Un membre';
+
+                $labels = ['present' => 'présent', 'absent' => 'absent', 'injured' => 'blessé'];
+                $label = $labels[$status] ?? $status;
+
+                $secondsUntilStart = strtotime($event['starts_at']) - time();
+                $isLastMinuteChange = $previousStatus !== false && $secondsUntilStart > 0 && $secondsUntilStart <= 2 * 3600;
+
+                $text = $isLastMinuteChange
+                    ? "⚠️ $name change sa présence en $label pour « {$event['title']} » à moins de 2h du début !"
+                    : "$name a répondu $label pour « {$event['title']} ».";
+
+                notify_members($adminIds, 'availability_change', $text, 'home');
+            }
+        }
+
         json_out(['ok' => true]);
         break;
 
@@ -304,7 +378,7 @@ switch ($action) {
             JOIN users u ON u.id = cm.user_id
             LEFT JOIN event_availabilities ea ON ea.club_member_id = cm.id AND ea.event_id = ?
             WHERE cm.club_id = ? AND cm.status = "active"
-            ORDER BY FIELD(ea.status, "present", "maybe", "injured", "absent"), u.last_name
+            ORDER BY FIELD(ea.status, "present", "injured", "absent"), u.last_name
         ');
         $stmt->execute([$eventId, $clubId]);
         json_out(['availabilities' => $stmt->fetchAll()]);
@@ -324,15 +398,26 @@ switch ($action) {
             json_error('Les convocations ne concernent que les matchs (effectif limité). Pour un entraînement, la disponibilité déclarée suffit.');
         }
 
-        $memberIds = array_values(array_unique(array_map('intval', (array) ($in['member_ids'] ?? []))));
+        $goalkeeperId = !empty($in['goalkeeper_id']) ? (int) $in['goalkeeper_id'] : null;
+        $fieldIds = array_values(array_unique(array_map('intval', (array) ($in['field_ids'] ?? []))));
+        $fieldIds = array_values(array_diff($fieldIds, $goalkeeperId ? [$goalkeeperId] : []));
 
-        // Tous les IDs doivent être des membres actifs du club (isolation)
+        if (count($fieldIds) > 8) json_error('Maximum 8 joueurs de champ pour une convocation.');
+
+        $memberIds = $goalkeeperId ? array_merge([$goalkeeperId], $fieldIds) : $fieldIds;
+
+        // Tous les IDs doivent être des membres actifs du club ET avoir déclaré
+        // "présent" à cette séance (la convocation se fait parmi les présents).
         if ($memberIds) {
             $ph = implode(',', array_fill(0, count($memberIds), '?'));
-            $stmt = db()->prepare("SELECT COUNT(*) FROM club_members WHERE id IN ($ph) AND club_id = ? AND status = 'active'");
-            $stmt->execute([...$memberIds, $clubId]);
+            $stmt = db()->prepare("
+                SELECT COUNT(*) FROM club_members cm
+                JOIN event_availabilities ea ON ea.club_member_id = cm.id AND ea.event_id = ? AND ea.status = 'present'
+                WHERE cm.id IN ($ph) AND cm.club_id = ? AND cm.status = 'active'
+            ");
+            $stmt->execute([$eventId, ...$memberIds, $clubId]);
             if ((int) $stmt->fetchColumn() !== count($memberIds)) {
-                json_error('Certains membres sont introuvables ou inactifs dans ce club.');
+                json_error('Seuls les membres ayant répondu "présent" à cette séance peuvent être convoqués.');
             }
         }
 
@@ -348,8 +433,9 @@ switch ($action) {
                 $ph = implode(',', array_fill(0, count($memberIds), '?'));
                 $stmt = $pdo->prepare("DELETE FROM convocations WHERE event_id = ? AND club_member_id NOT IN ($ph)");
                 $stmt->execute([$eventId, ...$memberIds]);
-                $stmt = $pdo->prepare('INSERT IGNORE INTO convocations (event_id, club_member_id) VALUES (?,?)');
-                foreach ($memberIds as $mid) $stmt->execute([$eventId, $mid]);
+                $stmt = $pdo->prepare('INSERT INTO convocations (event_id, club_member_id, role) VALUES (?,?,?) ON DUPLICATE KEY UPDATE role = VALUES(role)');
+                if ($goalkeeperId) $stmt->execute([$eventId, $goalkeeperId, 'goalkeeper']);
+                foreach ($fieldIds as $mid) $stmt->execute([$eventId, $mid, 'field']);
             } else {
                 $stmt = $pdo->prepare('DELETE FROM convocations WHERE event_id = ?');
                 $stmt->execute([$eventId]);
@@ -377,12 +463,12 @@ switch ($action) {
         event_in_club_or_404($eventId, $clubId);
 
         $stmt = db()->prepare('
-            SELECT c.club_member_id, c.status, c.responded_at, u.first_name, u.last_name
+            SELECT c.club_member_id, c.role, c.status, c.responded_at, u.first_name, u.last_name
             FROM convocations c
             JOIN club_members cm ON cm.id = c.club_member_id
             JOIN users u ON u.id = cm.user_id
             WHERE c.event_id = ?
-            ORDER BY FIELD(c.status, "confirmed", "pending", "declined"), u.last_name
+            ORDER BY FIELD(c.role, "goalkeeper", "field"), FIELD(c.status, "confirmed", "pending", "declined"), u.last_name
         ');
         $stmt->execute([$eventId]);
         json_out(['convocations' => $stmt->fetchAll()]);

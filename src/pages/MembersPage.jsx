@@ -1,8 +1,8 @@
-import { Check } from "lucide-react";
+import { Check } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { Avatar } from "@/components/ui";
+import { Avatar, PillMenu } from "@/components/ui";
 
 const ROLE_LABELS = {
   super_admin: "Super admin",
@@ -11,7 +11,19 @@ const ROLE_LABELS = {
   board_member: "Bureau",
   player: "Joueur",
 };
+const ROLE_COLORS = {
+  super_admin: "var(--oc-orange-500)",
+  admin: "var(--electric-blue)",
+  coach: "var(--lime-600)",
+  board_member: "var(--oc-amber-700)",
+  player: "var(--text-dim)",
+};
 const STATUS_LABELS = { active: "Actif", invited: "En attente", suspended: "Suspendu", archived: "Archivé" };
+const STATUS_COLORS = {
+  active: "var(--lime-600)", invited: "var(--oc-amber-700)",
+  suspended: "var(--oc-orange-500)", archived: "var(--text-dim)",
+};
+const INVITE_ROLES = { player: "Joueur", coach: "Entraîneur", board_member: "Bureau", admin: "Administrateur" };
 const canManage = (role) => role === "super_admin" || role === "admin";
 
 export function MembersPage() {
@@ -69,12 +81,8 @@ export function MembersPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                 {manage && !isSelf ? (
                   <>
-                    <select value={m.role} onChange={(e) => setRole(m.id, e.target.value)} style={{ width: "auto", padding: "6px 8px", fontSize: "0.8rem" }}>
-                      {Object.entries(ROLE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
-                    <select value={m.status} onChange={(e) => setStatus(m.id, e.target.value)} style={{ width: "auto", padding: "6px 8px", fontSize: "0.8rem" }}>
-                      {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
+                    <PillMenu value={m.role} options={ROLE_LABELS} colors={ROLE_COLORS} onChange={(v) => setRole(m.id, v)} />
+                    <PillMenu value={m.status} options={STATUS_LABELS} colors={STATUS_COLORS} onChange={(v) => setStatus(m.id, v)} />
                   </>
                 ) : (
                   <>
@@ -146,21 +154,22 @@ function InvitationsBlock() {
       </p>
       {error && <div className="error-box">{error}</div>}
 
-      <form onSubmit={create} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end", marginBottom: lastCode || pending.length ? 14 : 0 }}>
-        <div className="field" style={{ marginBottom: 0, flex: "1 1 160px" }}>
+      <form onSubmit={create} style={{ marginBottom: lastCode || pending.length ? 14 : 0 }}>
+        <div className="field">
           <label>Rôle</label>
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="player">Joueur</option>
-            <option value="coach">Entraîneur</option>
-            <option value="board_member">Bureau</option>
-            {activeRole === "super_admin" && <option value="admin">Administrateur</option>}
-          </select>
+          <div className="segmented" style={{ display: "flex", flexWrap: "wrap", width: "100%" }}>
+            {Object.entries(INVITE_ROLES).filter(([v]) => v !== "admin" || activeRole === "super_admin").map(([v, l]) => (
+              <button key={v} type="button" className={role === v ? "active" : ""} style={{ flex: "1 1 45%" }} onClick={() => setRole(v)}>{l}</button>
+            ))}
+          </div>
         </div>
-        <div className="field" style={{ marginBottom: 0, flex: "2 1 200px" }}>
-          <label>E-mail (optionnel, pour mémoire)</label>
-          <input type="email" placeholder="prenom@exemple.fr" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div className="field" style={{ marginBottom: 0, flex: "1 1 200px" }}>
+            <label>E-mail (optionnel, pour mémoire)</label>
+            <input type="email" placeholder="prenom@exemple.fr" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <button className="btn btn-primary btn-sm" style={{ padding: "11px 18px", width: "auto" }} disabled={busy}>{busy ? "…" : "Générer un code"}</button>
         </div>
-        <button className="btn btn-primary btn-sm" style={{ padding: "11px 18px" }} disabled={busy}>{busy ? "…" : "Générer un code"}</button>
       </form>
 
       {lastCode && (

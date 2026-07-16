@@ -11,9 +11,6 @@ import { ProfilePage } from "@/pages/ProfilePage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { AdminPage } from "@/pages/AdminPage";
 import { VotePage } from "@/pages/VotePage";
-import { ClassementsPage } from "@/pages/ClassementsPage";
-import { TropheesPage } from "@/pages/TropheesPage";
-import { StatistiquesPage } from "@/pages/StatistiquesPage";
 import { DocumentsPage } from "@/pages/DocumentsPage";
 import { MediasPage } from "@/pages/MediasPage";
 import { VestiairePage } from "@/pages/VestiairePage";
@@ -66,10 +63,7 @@ function Root() {
       {dashView === "profil" && <ProfilePage />}
       {dashView === "parametres" && <SettingsPage goto={setDashView} />}
       {dashView === "administration" && <AdminPage />}
-      {dashView === "votes" && <VotePage />}
-      {dashView === "classements" && <ClassementsPage />}
-      {dashView === "trophees" && <TropheesPage />}
-      {dashView === "statistiques" && <StatistiquesPage />}
+      {dashView === "votes" && <VotePage goto={setDashView} />}
       {dashView === "documents" && <DocumentsPage />}
       {dashView === "medias" && <MediasPage />}
       {dashView === "vestiaire" && <VestiairePage />}
