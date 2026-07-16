@@ -168,6 +168,7 @@ export function HomePage({ gotoConversation }) {
         loading={nextEvent === undefined}
         hasSeason={seasons !== null && seasons.length > 0}
         manage={manage}
+        members={members}
         onCreate={() => setForm({ ...EMPTY_FORM })}
         onOpen={() => { if (nextEvent) { setScope("upcoming"); setSelectedDay(null); setOpenId(nextEvent.id); } }}
         onSetAvailability={async (eventId, status) => {
@@ -306,7 +307,7 @@ export function HomePage({ gotoConversation }) {
 
 const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
-function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpen, onSetAvailability }) {
+function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCreate, onOpen, onSetAvailability }) {
   if (loading) return <div className="card" style={{ marginBottom: 16, height: 150 }}><div className="spinner" /></div>;
 
   if (!e) {
@@ -396,6 +397,19 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, onCreate, onOpe
             <span style={{ fontSize: "0.82rem", opacity: 0.65 }}>Sois le premier à répondre</span>
           )}
         </div>
+
+        {(() => {
+          const presentCount = e.avail_counts?.present ?? 0;
+          const absentCount = e.avail_counts?.absent ?? 0;
+          const injuredCount = e.avail_counts?.injured ?? 0;
+          const totalMembers = members?.length ?? 0;
+          const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
+          return (
+            <div style={{ fontSize: "0.78rem", opacity: 0.75, marginTop: -6, marginBottom: 14, position: "relative", zIndex: 1 }}>
+              <strong>{presentCount}</strong> présent{presentCount > 1 ? "s" : ""} · <strong>{absentCount}</strong> absent{absentCount > 1 ? "s" : ""} · <strong>{injuredCount}</strong> blessé{injuredCount > 1 ? "s" : ""} · <strong>{noResponseCount}</strong> sans réponse
+            </div>
+          );
+        })()}
 
         <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.65, marginBottom: 8 }}>
           Ma présence
