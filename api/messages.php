@@ -171,6 +171,18 @@ switch ($action) {
         $stmt = db()->prepare('UPDATE conversation_participants SET last_read_message_id = GREATEST(last_read_message_id, ?) WHERE conversation_id = ? AND club_member_id = ?');
         $stmt->execute([$id, $convId, $myMemberId]);
 
+        $stmt = db()->prepare('SELECT club_member_id FROM conversation_participants WHERE conversation_id = ? AND club_member_id != ?');
+        $stmt->execute([$convId, $myMemberId]);
+        $others = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+        if ($others) {
+            $stmt = db()->prepare('SELECT u.first_name, u.last_name FROM club_members cm JOIN users u ON u.id = cm.user_id WHERE cm.id = ?');
+            $stmt->execute([$myMemberId]);
+            $author = $stmt->fetch();
+            $authorName = $author ? trim("{$author['first_name']} {$author['last_name']}") : 'Un membre';
+            $preview = mb_strlen($content) > 60 ? mb_substr($content, 0, 60) . '…' : $content;
+            notify_members($others, 'new_message', "$authorName : $preview", 'messages');
+        }
+
         json_out(['ok' => true, 'id' => $id]);
         break;
 

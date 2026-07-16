@@ -174,7 +174,7 @@ switch ($action) {
         require_permission((int) $me['id'], $clubId, 'manage_events');
 
         $id = (int) ($in['event_id'] ?? 0);
-        event_in_club_or_404($id, $clubId);
+        $before = event_in_club_or_404($id, $clubId);
 
         $type = $in['type'] ?? 'match';
         if (!in_array($type, ['match', 'training', 'club_event'], true)) json_error('Type invalide.');
@@ -201,6 +201,20 @@ switch ($action) {
             $id, $clubId,
         ]);
         log_action((int) $me['id'], 'update_event', "#$id $title");
+
+        $newLocation = trim($in['location'] ?? '') ?: null;
+        if ($before['starts_at'] !== $startsAt || $before['location'] !== $newLocation) {
+            $stmt = db()->prepare('
+                SELECT club_member_id FROM convocations WHERE event_id = ?
+                UNION SELECT club_member_id FROM event_availabilities WHERE event_id = ?
+            ');
+            $stmt->execute([$id, $id]);
+            $concerned = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+            if ($concerned) {
+                notify_members($concerned, 'event_updated', "Séance modifiée : $title — " . date('d/m à H\hi', strtotime($startsAt)) . ($newLocation ? " ($newLocation)" : ''), 'home');
+            }
+        }
+
         json_out(['ok' => true]);
         break;
 
@@ -223,7 +237,7 @@ switch ($action) {
             ');
             $stmt->execute([$id, $id]);
             $concerned = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
-            notify_members($concerned, 'event_cancelled', "Annulé : {$event['title']}", 'calendrier');
+            notify_members($concerned, 'event_cancelled', "Annulé : {$event['title']}", 'home');
         }
         log_action((int) $me['id'], 'event_set_status', "#$id → $status");
         json_out(['ok' => true]);
@@ -348,7 +362,7 @@ switch ($action) {
 
         $newlyConvoked = array_values(array_diff($memberIds, $already));
         if ($newlyConvoked) {
-            notify_members($newlyConvoked, 'convocation', "Tu es convoqué : {$event['title']}", 'convocations');
+            notify_members($newlyConvoked, 'convocation', "Tu es convoqué : {$event['title']}", 'vestiaire');
         }
         log_action((int) $me['id'], 'convoke_set', "événement #$eventId : " . count($memberIds) . ' convoqué(s)');
         json_out(['ok' => true]);

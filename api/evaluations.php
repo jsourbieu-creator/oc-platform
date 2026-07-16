@@ -325,6 +325,14 @@ switch ($action) {
         $stmt->execute([$eventId]);
         if (!$stmt->rowCount()) json_error('Aucune session de vote ouverte pour cette séance.', 404);
 
+        $stmt = db()->prepare('SELECT title FROM events WHERE id = ?');
+        $stmt->execute([$eventId]);
+        $eventTitle = $stmt->fetchColumn();
+        $stmt = db()->prepare("SELECT club_member_id FROM event_attendances WHERE event_id = ? AND real_status = 'present'");
+        $stmt->execute([$eventId]);
+        $presents = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+        notify_members($presents, 'vote_closed', "Résultats disponibles : $eventTitle", 'classements');
+
         log_action((int) $me['id'], 'vote_session_close', "événement #$eventId");
         json_out(['ok' => true]);
         break;

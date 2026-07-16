@@ -1,4 +1,4 @@
-import { Newspaper, MessageCircle, ClipboardList, TriangleAlert, UserPlus, UserCheck, Star, Bell } from "lucide-react";
+import { Newspaper, MessageCircle, ClipboardList, TriangleAlert, UserPlus, UserCheck, Star, Bell, CalendarClock, Trophy } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,11 +6,15 @@ import { useAuth } from "@/hooks/useAuth";
 const TYPE_ICONS = {
   new_post: Newspaper,
   new_comment: MessageCircle,
+  new_message: MessageCircle,
   convocation: ClipboardList,
   event_cancelled: TriangleAlert,
+  event_updated: CalendarClock,
   join_request: UserPlus,
   join_approved: UserCheck,
   rate_request: Star,
+  vote_open: Star,
+  vote_closed: Trophy,
 };
 
 function fmtDateTime(s) {
