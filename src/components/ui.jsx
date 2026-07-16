@@ -51,8 +51,8 @@ export function CountChip({ value, tint }) {
   }[tint];
   return (
     <span className="num" style={{
-      display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 30, height: 26,
-      borderRadius: "var(--radius-sm)", background: styles.bg, color: styles.fg, fontWeight: 700, fontSize: "0.85rem", padding: "0 8px",
+      display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 38, height: 38,
+      borderRadius: "var(--radius-md)", background: styles.bg, color: styles.fg, fontWeight: 700, fontSize: "1rem", padding: "0 10px",
     }}>{value}</span>
   );
 }

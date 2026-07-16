@@ -405,8 +405,11 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
           const totalMembers = members?.length ?? 0;
           const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
           return (
-            <div style={{ fontSize: "0.78rem", opacity: 0.75, marginTop: -6, marginBottom: 14, position: "relative", zIndex: 1 }}>
-              <strong>{presentCount}</strong> présent{presentCount > 1 ? "s" : ""} · <strong>{absentCount}</strong> absent{absentCount > 1 ? "s" : ""} · <strong>{injuredCount}</strong> blessé{injuredCount > 1 ? "s" : ""} · <strong>{noResponseCount}</strong> sans réponse
+            <div style={{ display: "flex", gap: 8, marginBottom: 14, position: "relative", zIndex: 1 }}>
+              <CountChip value={presentCount} tint="green" />
+              <CountChip value={absentCount} tint="orange" />
+              <CountChip value={injuredCount} tint="violet" />
+              <CountChip value={noResponseCount} tint="gray" />
             </div>
           );
         })()}
@@ -565,8 +568,11 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         <ThreeDots size={17} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
       </div>
 
-      <div className="subtle" style={{ marginTop: 12, fontSize: "0.85rem" }}>
-        <strong style={{ color: "var(--text)" }}>{presentCount}</strong> présent{presentCount > 1 ? "s" : ""} · <strong style={{ color: "var(--text)" }}>{absentCount}</strong> absent{absentCount > 1 ? "s" : ""} · <strong style={{ color: "var(--text)" }}>{injuredCount}</strong> blessé{injuredCount > 1 ? "s" : ""} · <strong style={{ color: "var(--text)" }}>{noResponseCount}</strong> sans réponse
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <CountChip value={presentCount} tint="green" />
+        <CountChip value={absentCount} tint="orange" />
+        <CountChip value={injuredCount} tint="violet" />
+        <CountChip value={noResponseCount} tint="gray" />
       </div>
       {confirmedPeople.length > 0 && <div style={{ marginTop: 8 }}><AvatarStack people={confirmedPeople} /></div>}
 
