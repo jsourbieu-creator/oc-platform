@@ -25,18 +25,25 @@ export const AVAIL_COLORS = {
   injured: "var(--text-dim)",
 };
 
-/** Couleur de remplissage quand le statut est actif — le bleu poudré du hero, pas le cyan électrique */
+/** Couleur de remplissage quand le statut est actif — blanc partout, jamais de collision avec le fond */
 export const AVAIL_FILL = {
-  present: "var(--hero-sky)",
-  absent: "var(--hero-sky)",
-  injured: "var(--hero-sky)",
+  present: "#fff",
+  absent: "#fff",
+  injured: "#fff",
 };
 
-/** Couleur de texte sur le remplissage bleu (encre sombre assortie) */
+/** Couleur de texte sur le remplissage blanc — encre marine, cohérente quel que soit le statut */
 export const AVAIL_INK = {
-  present: "var(--hero-ink)",
-  absent: "var(--hero-ink)",
-  injured: "var(--hero-ink)",
+  present: "#0A2340",
+  absent: "#0A2340",
+  injured: "#0A2340",
+};
+
+/** Couleur de l'icône quand le statut est ACTIF — c'est elle qui porte le code couleur, pas le fond */
+export const AVAIL_ICON_COLORS = {
+  present: "#3AA65C",
+  absent: "#D9534F",
+  injured: "#E8672E",
 };
 
 export const CONV_LABELS = {

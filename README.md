@@ -195,6 +195,26 @@ via phpMyAdmin.
   desktop, sans avoir à passer par le menu "Plus" ou la sidebar.
 - Migration : `0017_messages_attachments_edit_delete.sql`.
 
+## Itération du 16/07 (suite) — statuts de présence : fond neutre partout, icônes colorées porteuses de sens
+
+Après plusieurs allers-retours (4 teintes saturées → tout en bleu → retour à
+de vraies couleurs), la solution retenue règle le problème à la racine :
+
+- **Puces de comptage** : fond neutre uniforme (blanc sur le hero, gris sombre
+  discret sur les cartes de liste — jamais la même teinte que le fond
+  derrière, donc plus jamais invisible), avec un petit **badge d'icône
+  coloré** en coin qui porte le vrai code couleur : vert (présent), rouge
+  (absent), orange (blessé — jamais d'or), gris (sans réponse). L'anneau du
+  badge s'adapte à la couleur du fond derrière (bleu poudré, bleu roi ou
+  carte neutre) pour bien se détacher.
+- **Boutons Présent/Absent/Blessé** (hero, carte de liste, modale, correction
+  admin) : même logique — actif = fond blanc + icône colorée + encre marine,
+  inactif = fond translucide/contour discret + icône et texte atténués à
+  75-80%. Un seul repère visuel (le blanc) indique "sélectionné", peu
+  importe lequel des trois c'est.
+- Le badge de statut dans la liste des participants suit la même palette
+  d'icônes (auparavant gris uniforme par erreur, invisible sémantiquement).
+
 ## Itération du 16/07 — palette des statuts apaisée + icônes
 
 - **Fini l'effet guirlande de Noël** sur les pastilles de comptage et les

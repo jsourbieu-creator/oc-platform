@@ -15,9 +15,10 @@
   /* Couleurs de statut unifiées entre les puces de comptage et les boutons
      présent/absent/blessé — vives, mêmes teintes partout, bien distinctes
      de l'orange (KPI, hero) pour ne jamais se confondre. */
-  --status-present:#7FB8E0; --status-present-ink:#0A2340;
-  --status-absent:#E15A5A; --status-absent-ink:#4A0808;
-  --status-injured:#E0A83E; --status-injured-ink:#3D2A05;
+  --status-present:#fff; --status-present-ink:#0A2340; --status-present-icon:#3AA65C;
+  --status-absent:#fff; --status-absent-ink:#0A2340; --status-absent-icon:#D9534F;
+  --status-injured:#fff; --status-injured-ink:#0A2340; --status-injured-icon:#E8672E;
+  --status-noresponse-icon:#8A94A0;
   --lime-500:#D9EA55; --lime-600:#5F8A1E; --lime-100:rgba(217,234,85,0.25); --lime-ink:#33420C;
   --electric-blue:#12B4F2;
 
@@ -108,9 +109,10 @@
   --oc-bluegray-300:#3C4B58; --oc-bluegray-500:#8CA0AF; --oc-bluegray-700:#C7D3DC; --oc-bluegray-900:#F3F7FA;
 
   /* Statuts (présent/absent/blessé) — aplats vifs cohérents avec la charte */
-  --status-present:#7FB8E0; --status-present-ink:#0A2340;
-  --status-absent:#E15A5A; --status-absent-ink:#4A0808;
-  --status-injured:#E0A83E; --status-injured-ink:#3D2A05;
+  --status-present:#fff; --status-present-ink:#0A2340; --status-present-icon:#3AA65C;
+  --status-absent:#fff; --status-absent-ink:#0A2340; --status-absent-icon:#D9534F;
+  --status-injured:#fff; --status-injured-ink:#0A2340; --status-injured-icon:#E8672E;
+  --status-noresponse-icon:#8A94A0;
   --lime-500:#D9EA55; --lime-600:#8FCE1E; --lime-100:rgba(217,234,85,.2); --lime-ink:#33420C;
   --electric-blue:#2FD3F0;
 

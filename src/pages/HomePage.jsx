@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, AVAIL_ICONS,
+  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, AVAIL_ICONS, AVAIL_ICON_COLORS,
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
 import { fmtScore } from "@/lib/ballondor";
@@ -403,10 +403,10 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
           const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
           return (
             <div style={{ display: "flex", gap: 8, marginBottom: 14, position: "relative", zIndex: 1 }}>
-              <CountChip value={presentCount} tint="green" />
-              <CountChip value={absentCount} tint="orange" />
-              <CountChip value={injuredCount} tint="violet" />
-              <CountChip value={noResponseCount} tint="gray" />
+              <CountChip value={presentCount} tint="green" icon={Check} ringColor={t.color} />
+              <CountChip value={absentCount} tint="orange" icon={X} ringColor={t.color} />
+              <CountChip value={injuredCount} tint="coral" icon={Bandaid} ringColor={t.color} />
+              <CountChip value={noResponseCount} tint="gray" icon={Clock} ringColor={t.color} />
             </div>
           );
         })()}
@@ -428,10 +428,11 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                   background: active ? "#fff" : "rgba(255,255,255,0.16)",
                   color: active ? "var(--hero-ink)" : "currentColor",
+                  opacity: active ? 1 : 0.75,
                   transform: active ? "scale(1.02)" : "none",
                   transition: ".18s var(--ease-spring)",
                 }}
-              ><Icon size={13} />{l}</button>
+              ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} style={active ? {} : { opacity: 0.7 }} />{l}</button>
             );
           })}
         </div>
@@ -568,10 +569,10 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
       </div>
 
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-        <CountChip value={presentCount} tint="green" />
-        <CountChip value={absentCount} tint="orange" />
-        <CountChip value={injuredCount} tint="violet" />
-        <CountChip value={noResponseCount} tint="gray" />
+        <CountChip value={presentCount} tint="green" icon={Check} />
+        <CountChip value={absentCount} tint="orange" icon={X} />
+        <CountChip value={injuredCount} tint="coral" icon={Bandaid} />
+        <CountChip value={noResponseCount} tint="gray" icon={Clock} />
       </div>
       {confirmedPeople.length > 0 && <div style={{ marginTop: 8 }}><AvatarStack people={confirmedPeople} /></div>}
 
@@ -584,12 +585,13 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
               <button
                 key={v} className="btn btn-sm" style={{
                   flex: "1 1 80px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  background: active ? t.color : "transparent",
-                  color: active ? (e.type === "match" ? "#fff" : "var(--hero-ink)") : AVAIL_COLORS[v],
+                  background: active ? "#fff" : "transparent",
+                  color: active ? "#0A2340" : "var(--text-dim)",
+                  opacity: active ? 1 : 0.8,
                   border: active ? "none" : "1.5px solid var(--line)",
                 }}
                 onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
-              ><Icon size={13} />{l}</button>
+              ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} />{l}</button>
             );
           })}
         </div>
@@ -701,12 +703,13 @@ function EventModal({ event: e, onClose, reload, manage, members, onEdit, onStat
                   <button
                     key={v} className="btn btn-sm" style={{
                       flex: "1 1 80px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                      background: active ? t.color : "transparent",
-                      color: active ? (e.type === "match" ? "#fff" : "var(--hero-ink)") : AVAIL_COLORS[v],
+                      background: active ? "#fff" : "transparent",
+                      color: active ? "#0A2340" : "var(--text-dim)",
+                      opacity: active ? 1 : 0.8,
                       border: active ? "none" : "1.5px solid var(--line)",
                     }}
                     onClick={() => setMyAvailability(v)}
-                  ><Icon size={13} />{l}</button>
+                  ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} />{l}</button>
                 );
               })}
             </div>
@@ -983,8 +986,8 @@ function ParticipantsTab({ event: e, manage }) {
                       <button
                         key={v} className="btn btn-sm" style={{
                           width: "auto", padding: "5px 8px", fontSize: "0.68rem",
-                          background: p.status === v ? t.color : "transparent",
-                          color: p.status === v ? (e.type === "match" ? "#fff" : "var(--hero-ink)") : AVAIL_COLORS[v],
+                          background: p.status === v ? "#fff" : "transparent",
+                          color: p.status === v ? AVAIL_ICON_COLORS[v] : "var(--text-dim)",
                           border: p.status === v ? "none" : "1.5px solid var(--line)",
                         }}
                         onClick={() => setFor(p.club_member_id, v)}
@@ -992,7 +995,7 @@ function ParticipantsTab({ event: e, manage }) {
                     ))}
                   </div>
                 ) : (
-                  <div className="participant-status-icon" style={{ background: sec.key ? AVAIL_COLORS[sec.key] : "var(--neutral-400)" }}>
+                  <div className="participant-status-icon" style={{ background: sec.key ? AVAIL_ICON_COLORS[sec.key] : "var(--status-noresponse-icon)" }}>
                     {sec.key === "present" && <Check size={14} />}
                     {sec.key === "absent" && <X size={14} />}
                     {sec.key === "injured" && <Bandaid size={12} />}

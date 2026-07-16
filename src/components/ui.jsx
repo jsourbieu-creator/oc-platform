@@ -42,18 +42,28 @@ export function DateBadge({ date, color = "var(--hero-sky)", ink = "var(--hero-i
 }
 
 /** Pastille de comptage colorée (présents/absents/sans réponse) — aplat plein */
-export function CountChip({ value, tint }) {
-  const styles = {
-    green: { bg: "var(--status-present)", fg: "var(--status-present-ink)" },
-    orange: { bg: "var(--status-absent)", fg: "var(--status-absent-ink)" },
-    violet: { bg: "var(--status-injured)", fg: "var(--status-injured-ink)" },
-    gray: { bg: "var(--surface-soft)", fg: "var(--text-dim)" },
-  }[tint];
+export function CountChip({ value, tint, icon: Icon, ringColor = "var(--surface)" }) {
+  const iconColors = {
+    green: "var(--status-present-icon)",
+    orange: "var(--status-absent-icon)",
+    coral: "var(--status-injured-icon)",
+    gray: "var(--status-noresponse-icon)",
+  };
+  const badgeColor = iconColors[tint] ?? "var(--status-noresponse-icon)";
   return (
-    <span className="num" style={{
-      display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 38, height: 38,
-      borderRadius: "var(--radius-md)", background: styles.bg, color: styles.fg, fontWeight: 700, fontSize: "1rem", padding: "0 10px",
-    }}>{value}</span>
+    <span style={{ position: "relative", display: "inline-flex" }}>
+      <span className="num" style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 38, height: 38,
+        borderRadius: "var(--radius-md)", background: "var(--surface-soft)", color: "var(--text)", fontWeight: 700, fontSize: "1rem", padding: "0 10px",
+      }}>{value}</span>
+      {Icon && (
+        <span style={{
+          position: "absolute", bottom: -4, right: -4, width: 18, height: 18, borderRadius: "50%",
+          background: badgeColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: `0 0 0 2px ${ringColor}`,
+        }}><Icon size={10} /></span>
+      )}
+    </span>
   );
 }
 
