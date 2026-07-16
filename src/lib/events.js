@@ -19,18 +19,18 @@ export const AVAIL_COLORS = {
   injured: "var(--text-dim)",
 };
 
-/** Couleur de remplissage quand le statut est actif — un seul accent bleu, quel que soit le choix */
+/** Couleur de remplissage quand le statut est actif — le bleu poudré du hero, pas le cyan électrique */
 export const AVAIL_FILL = {
-  present: "var(--electric-blue)",
-  absent: "var(--electric-blue)",
-  injured: "var(--electric-blue)",
+  present: "var(--hero-sky)",
+  absent: "var(--hero-sky)",
+  injured: "var(--hero-sky)",
 };
 
-/** Couleur de texte sur le remplissage bleu (encre sombre) */
+/** Couleur de texte sur le remplissage bleu (encre sombre assortie) */
 export const AVAIL_INK = {
-  present: "#052430",
-  absent: "#052430",
-  injured: "#052430",
+  present: "var(--hero-ink)",
+  absent: "var(--hero-ink)",
+  injured: "var(--hero-ink)",
 };
 
 export const CONV_LABELS = {

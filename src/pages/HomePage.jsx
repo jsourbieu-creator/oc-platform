@@ -179,12 +179,12 @@ export function HomePage({ gotoConversation }) {
 
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
         <div className="kpi">
-          <Trophy size={18} style={{ opacity: 0.7, marginBottom: 8, color: "var(--electric-blue)" }} />
+          <Trophy size={18} style={{ opacity: 0.7, marginBottom: 8, color: "var(--hero-sky)" }} />
           <b>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
           <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
         </div>
         <div className="kpi">
-          <Activity size={18} style={{ opacity: 0.7, marginBottom: 8, color: "var(--electric-blue)" }} />
+          <Activity size={18} style={{ opacity: 0.7, marginBottom: 8, color: "var(--hero-sky)" }} />
           <b>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
           <span>Ma présence</span>
         </div>
@@ -580,10 +580,10 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
           style={{
             display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer",
             marginTop: 12, padding: "10px 14px", borderRadius: "var(--radius-md)",
-            background: "color-mix(in srgb, var(--electric-blue) 14%, transparent)",
+            background: "color-mix(in srgb, var(--hero-sky) 16%, transparent)",
           }}
         >
-          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--electric-blue)" }}>
+          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--hero-sky)" }}>
             🗳️ Tu n'as pas encore voté pour cette séance
           </span>
           <span className="btn btn-primary btn-sm" style={{ width: "auto", padding: "6px 14px" }}>Voter</span>
