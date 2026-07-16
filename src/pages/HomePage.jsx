@@ -576,6 +576,22 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         </div>
       )}
 
+      {!cancelled && e.my_availability === "present" && hasEndedClient(e) && !e.my_vote_submitted && (
+        <div
+          onClick={toggle}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer",
+            marginTop: 12, padding: "10px 14px", borderRadius: "var(--radius-md)",
+            background: "color-mix(in srgb, var(--electric-blue) 14%, transparent)",
+          }}
+        >
+          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--electric-blue)" }}>
+            🗳️ Tu n'as pas encore voté pour cette séance
+          </span>
+          <span className="btn btn-primary btn-sm" style={{ width: "auto", padding: "6px 14px" }}>Voter</span>
+        </div>
+      )}
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
         <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={openConversation} disabled={convBusy}>
           <ChatDots size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
