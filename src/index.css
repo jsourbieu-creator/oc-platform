@@ -23,7 +23,7 @@
 
   /* Hero « prochaine séance » — bloc pastel clair + encre marine assortie,
      même logique que les tuiles KPI (jamais de blanc sur du saturé). */
-  --hero-sky:#2E9EE8; --hero-sky-soft:#5CB4EE; --hero-ink:#052A45;
+  --hero-sky:#7FB8E0; --hero-sky-soft:#A2CCEA; --hero-ink:#0A2340;
   --kpi-coral:#F2795A; --kpi-coral-ink:#4A1707;
 
   --radius-xs:8px; --radius-sm:13px; --radius-md:18px; --radius-lg:26px; --radius-xl:32px; --radius-2xl:40px; --radius-full:999px;
@@ -116,7 +116,7 @@
 
   /* Hero « prochaine séance » — bloc pastel clair + encre marine, même logique
      que les tuiles KPI (jamais de blanc sur du saturé). */
-  --hero-sky:#2E9EE8; --hero-sky-soft:#5CB4EE; --hero-ink:#052A45;
+  --hero-sky:#7FB8E0; --hero-sky-soft:#A2CCEA; --hero-ink:#0A2340;
   --kpi-coral:#F2795A; --kpi-coral-ink:#4A1707;
 }
 
