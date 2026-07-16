@@ -500,7 +500,7 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
   position:relative; overflow:hidden;
 }
 .event-card-ds .tower-deco{
-  position:absolute; right:-22px; top:-18px; width:200px; height:auto;
+  position:absolute; right:-26px; top:-22px; width:240px; height:auto;
   opacity:.20; color:#fff; pointer-events:none; z-index:0;
 }
 .event-card-ds .tower-deco svg{ width:100%; height:auto; display:block; }
