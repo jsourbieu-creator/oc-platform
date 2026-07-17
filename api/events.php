@@ -463,7 +463,7 @@ switch ($action) {
         event_in_club_or_404($eventId, $clubId);
 
         $stmt = db()->prepare('
-            SELECT c.club_member_id, c.role, c.status, c.responded_at, u.first_name, u.last_name
+            SELECT c.club_member_id, c.role, c.status, c.responded_at, u.id AS user_id, u.first_name, u.last_name, u.avatar_url
             FROM convocations c
             JOIN club_members cm ON cm.id = c.club_member_id
             JOIN users u ON u.id = cm.user_id

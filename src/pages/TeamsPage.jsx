@@ -86,7 +86,7 @@ function SeasonsBlock({ seasons, manage, reload }) {
       {seasons === null && <div className="spinner" />}
       {seasons?.length === 0 && <div className="subtle">Aucune saison. {manage ? "Crée la première pour pouvoir créer des équipes." : ""}</div>}
       {seasons?.map((s) => (
-        <div key={s.id} className="list-row" style={{ flexWrap: "wrap", gap: 10 }}>
+        <div key={s.id} className="list-row" style={{ flexWrap: "wrap", gap: 10, opacity: s.status === "closed" ? 0.55 : 1 }}>
           <div>
             <strong>{s.name}</strong>
             <div className="subtle">{s.start_date} → {s.end_date}</div>

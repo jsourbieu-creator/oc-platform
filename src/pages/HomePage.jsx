@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, AVAIL_ICONS, AVAIL_ICON_COLORS,
+  EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, AVAIL_ICONS, AVAIL_ICON_COLORS, CONV_LABELS,
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
 import { fmtScore } from "@/lib/ballondor";
@@ -532,13 +532,13 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   };
 
   return (
-    <div className="card" style={{ marginBottom: 10, padding: 0, opacity: cancelled ? 0.6 : 1, position: "relative", overflow: "hidden" }}>
+    <div className="card" style={{ marginBottom: 10, padding: 0, opacity: cancelled ? 0.6 : isPast(e.starts_at) ? 0.65 : 1, position: "relative", overflow: "hidden" }}>
       <div style={{ padding: "16px 16px 14px", position: "relative" }}>
         {!cancelled && <div className="tower-deco-list" dangerouslySetInnerHTML={{ __html: towerSvg }} />}
         <div style={{ cursor: "pointer", display: "flex", gap: 12, position: "relative", zIndex: 1 }}>
           <DateBadge
             date={e.starts_at}
-            color={cancelled ? "var(--neutral-400)" : t.color}
+            color={cancelled || isPast(e.starts_at) ? "var(--neutral-400)" : t.color}
             ink={!cancelled && e.type === "match" ? "#fff" : "var(--hero-ink)"}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -924,6 +924,7 @@ function ParticipantsTab({ event: e, manage }) {
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   const { token, activeClubId } = useAuth();
   const [list, setList] = useState(null);
+  const [convocations, setConvocations] = useState(null);
   const [search, setSearch] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState("");
@@ -934,6 +935,12 @@ function ParticipantsTab({ event: e, manage }) {
   }, [activeClubId, e.id, token]);
 
   useEffect(load, [load]);
+
+  useEffect(() => {
+    if (e.type !== "match") return;
+    api("events.php", "convocation_list", { club_id: activeClubId, event_id: e.id }, token)
+      .then((d) => setConvocations(d.convocations)).catch(() => setConvocations([]));
+  }, [activeClubId, e.id, token, e.type]);
 
   const setFor = async (memberId, status) => {
     setError("");
@@ -972,6 +979,24 @@ function ParticipantsTab({ event: e, manage }) {
         </div>
         <div className="progress-track"><div className="progress-fill" style={{ width: `${rate}%` }} /></div>
       </div>
+
+      {e.type === "match" && convocations !== null && convocations.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div className="label-title">Convoqués ({convocations.length})</div>
+          {convocations.map((c) => (
+            <div key={c.club_member_id} className="participant-row">
+              <Avatar name={`${c.first_name} ${c.last_name}`} userId={c.user_id} avatarUrl={c.avatar_url} size={34} />
+              <div className="participant-row-body">
+                <strong style={{ fontSize: "0.88rem" }}>{c.first_name} {c.last_name}</strong>
+                {c.role === "goalkeeper" && <span className="badge badge-info" style={{ marginLeft: 6 }}>Gardien</span>}
+              </div>
+              <span className={`badge ${c.status === "confirmed" ? "badge-info" : c.status === "declined" ? "badge-neutral" : "badge-neutral"}`}>
+                {CONV_LABELS[c.status]}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {SECTIONS.map((sec) => {
         const items = filtered.filter((p) => p.status === sec.key);
