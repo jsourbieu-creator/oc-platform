@@ -388,14 +388,14 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, gotoCo
             const Icon = AVAIL_ICONS[v];
             return (
               <button
-                key={v} title={l}
+                key={v} className="btn btn-sm" title={l}
                 onClick={() => onSetAvailability(e.id, v)}
                 style={{
-                  width: 36, height: 36, borderRadius: "50%", border: "none", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
+                  display: "flex", alignItems: "center", gap: 6, border: "none",
                   background: active ? "#fff" : "rgba(255,255,255,0.18)",
+                  color: active ? "#0A2340" : "#fff",
                 }}
-              ><Icon size={16} color={active ? AVAIL_ICON_COLORS[v] : "#fff"} /></button>
+              ><Icon size={14} color={active ? AVAIL_ICON_COLORS[v] : "#fff"} />{l}</button>
             );
           })}
         </div>
@@ -408,7 +408,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, gotoCo
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 8, marginTop: 4, position: "relative", zIndex: 1 }}>
+      <div style={{ display: "flex", gap: 14, marginTop: 4, position: "relative", zIndex: 1 }}>
         <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.16)", color: "#fff", border: "none" }} onClick={openConversation} disabled={convBusy}>
           <ChatDots size={15} /> Discussion
         </button>
@@ -575,21 +575,21 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         </div>
 
         {!cancelled && !isPast(e.starts_at) && (
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {Object.entries(AVAIL_LABELS).map(([v, l]) => {
               const active = e.my_availability === v;
               const Icon = AVAIL_ICONS[v];
               return (
                 <button
-                  key={v} title={l}
+                  key={v} className="btn btn-sm" title={l}
                   onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
                   style={{
-                    width: 36, height: 36, borderRadius: "50%", border: "none", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
+                    display: "flex", alignItems: "center", gap: 6, border: "none",
                     background: active ? "var(--surface)" : "var(--surface-soft)",
+                    color: active ? "var(--text)" : "var(--text-dim)",
                     boxShadow: active ? "var(--shadow-sm)" : "none",
                   }}
-                ><Icon size={16} color={active ? AVAIL_ICON_COLORS[v] : "var(--text-dim)"} /></button>
+                ><Icon size={14} color={active ? AVAIL_ICON_COLORS[v] : "var(--text-dim)"} />{l}</button>
               );
             })}
           </div>
@@ -619,11 +619,11 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-        <button className="btn btn-secondary btn-sm" onClick={openConversation} disabled={convBusy}>
+      <div style={{ display: "flex", gap: 14, marginTop: 12 }}>
+        <button className="btn btn-sm" style={{ background: "var(--surface-soft)", color: "var(--text)", border: "none" }} onClick={openConversation} disabled={convBusy}>
           <ChatDots size={15} /> Discussion
         </button>
-        <button className="btn btn-secondary btn-sm" onClick={toggle}>
+        <button className="btn btn-sm" style={{ background: "var(--surface-soft)", color: "var(--text)", border: "none" }} onClick={toggle}>
           <Search size={15} /> Détails
         </button>
       </div>
