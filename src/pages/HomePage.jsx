@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { Calendar3, CaretLeft, CaretRight, GeoAlt, Star, Shield, ArrowCounterclockwise, X, ClipboardCheck, Clock, Flag, People, ThreeDots, ChatDots, Search, Check, Trophy, Activity, PlusLg, Bandaid } from "react-bootstrap-icons";
+import { Calendar3, CaretLeft, CaretRight, Star, Shield, ArrowCounterclockwise, X, ClipboardCheck, Clock, Flag, People, ThreeDots, ChatDots, Search, Check, Trophy, Activity, PlusLg, Bandaid } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -337,99 +337,56 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
   }
 
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
-  const d = new Date(e.starts_at.replace(" ", "T"));
-  const dayNum = d.getDate();
-  const monthShort = MONTH_NAMES[d.getMonth()].slice(0, 4);
   const isMatch = e.type === "match";
+  const presentCount = e.avail_counts?.present ?? 0;
+  const absentCount = e.avail_counts?.absent ?? 0;
+  const injuredCount = e.avail_counts?.injured ?? 0;
+  const totalMembers = members?.length ?? 0;
+  const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
+  const days = Math.ceil((new Date(e.starts_at.replace(" ", "T")) - Date.now()) / 86400000);
+  const daysLabel = days <= 0 ? "Aujourd'hui" : days === 1 ? "Demain" : `Dans ${days} jours`;
 
   return (
-    <div className={`event-card-ds${isMatch ? " royal" : ""}`} style={{ marginBottom: 16 }}>
+    <div className="card" style={{ marginBottom: 16, padding: 16, background: t.color, color: "#fff", position: "relative", overflow: "hidden" }}>
       <div className="tower-deco" dangerouslySetInnerHTML={{ __html: towerSvg }} />
-      <div onClick={onOpen} style={{ cursor: "pointer" }}>
-        <div style={{ marginBottom: 6 }}>
-          <span className="kicker">
-          Prochaine séance
-          {(() => {
-            const days = Math.ceil((new Date(e.starts_at.replace(" ", "T")) - Date.now()) / 86400000);
-            if (days <= 0) return " · Aujourd'hui";
-            if (days === 1) return " · Demain";
-            return ` · Dans ${days} jours`;
-          })()}
-        </span>
+      <div style={{ cursor: "pointer", display: "flex", gap: 12, position: "relative", zIndex: 1 }} onClick={onOpen}>
+        <DateBadge date={e.starts_at} color="rgba(255,255,255,0.35)" ink="#fff" />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><t.icon size={15} />{e.title}</strong>
+            <span className="badge" style={{ background: "rgba(255,255,255,0.22)", color: "#fff" }}>{daysLabel}</span>
+          </div>
+          <div style={{ opacity: 0.85 }}>
+            {fmtTime(e.starts_at)}{e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
+          </div>
         </div>
-
-        <h3>{e.title}</h3>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", opacity: 0.82, fontSize: "0.9rem", fontWeight: 600 }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <Calendar3 size={15} /> {dayNum} {monthShort} · {fmtTime(e.starts_at)}
-          </span>
-          {e.location && <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><GeoAlt size={15} /> {e.location}</span>}
-        </div>
-
-        {e.opponent && <div style={{ marginTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>vs {e.opponent}</div>}
-        {e.my_convocation && (
-          <span style={{ display: "inline-block", marginTop: 10, padding: "4px 10px", borderRadius: 999, background: "#fff", color: "var(--hero-ink)", fontSize: "0.68rem", fontWeight: 800 }}>
-            ✓ Tu es convoqué
-          </span>
-        )}
-        {e.team_name && (
-          <span style={{ display: "inline-block", marginTop: 12, padding: "5px 11px", borderRadius: 999, background: "rgba(11,58,82,0.12)", fontSize: "0.72rem", fontWeight: 800 }}>
-            {e.team_name}
-          </span>
-        )}
       </div>
 
-      <div style={{ marginTop: 20, position: "relative", zIndex: 1 }}>
-        <div
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", marginBottom: 10 }}
-          onClick={onOpen} role="button"
-        >
-          {(e.present_names?.length ?? 0) > 0 ? (
-            <AvatarStack people={e.present_names} />
-          ) : (
-            <span style={{ fontSize: "0.82rem", opacity: 0.65 }}>Sois le premier à répondre</span>
-          )}
-        </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 12, position: "relative", zIndex: 1 }}>
+        <CountChip value={presentCount} tint="green" icon={Check} />
+        <CountChip value={absentCount} tint="orange" icon={X} />
+        <CountChip value={injuredCount} tint="coral" icon={Bandaid} />
+        <CountChip value={noResponseCount} tint="gray" icon={Clock} />
+      </div>
+      {(e.present_names?.length ?? 0) > 0 && <div style={{ marginTop: 8, position: "relative", zIndex: 1 }}><AvatarStack people={e.present_names} /></div>}
 
-        {(() => {
-          const presentCount = e.avail_counts?.present ?? 0;
-          const absentCount = e.avail_counts?.absent ?? 0;
-          const injuredCount = e.avail_counts?.injured ?? 0;
-          const totalMembers = members?.length ?? 0;
-          const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
+      <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
+        {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+          const active = e.my_availability === v;
+          const Icon = AVAIL_ICONS[v];
           return (
-            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-              <CountChip value={presentCount} tint="green" icon={Check} ringColor={t.color} size="sm" />
-              <CountChip value={absentCount} tint="orange" icon={X} ringColor={t.color} size="sm" />
-              <CountChip value={injuredCount} tint="coral" icon={Bandaid} ringColor={t.color} size="sm" />
-              <CountChip value={noResponseCount} tint="gray" icon={Clock} ringColor={t.color} size="sm" />
-            </div>
+            <button
+              key={v} className="btn btn-sm" style={{
+                flex: "1 1 80px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                background: active ? "#fff" : "rgba(255,255,255,0.16)",
+                color: active ? "#0A2340" : "#fff",
+                opacity: active ? 1 : 0.85,
+                border: "none",
+              }}
+              onClick={() => onSetAvailability(e.id, v)}
+            ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} />{l}</button>
           );
-        })()}
-
-        <div style={{ display: "flex", gap: 8 }}>
-          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
-            const active = e.my_availability === v;
-            const Icon = AVAIL_ICONS[v];
-            return (
-              <button
-                key={v}
-                onClick={() => onSetAvailability(e.id, v)}
-                style={{
-                  flex: 1, border: "none", cursor: "pointer", padding: "11px 6px", borderRadius: 14,
-                  fontSize: "0.8rem", fontWeight: 850, fontFamily: "inherit",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  background: active ? "#fff" : "rgba(255,255,255,0.16)",
-                  color: active ? "var(--hero-ink)" : "currentColor",
-                  opacity: active ? 1 : 0.75,
-                  transform: active ? "scale(1.02)" : "none",
-                  transition: ".18s var(--ease-spring)",
-                }}
-              ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} style={active ? {} : { opacity: 0.7 }} />{l}</button>
-            );
-          })}
-        </div>
+        })}
       </div>
     </div>
   );
