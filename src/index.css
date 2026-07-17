@@ -302,24 +302,7 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
   border-radius:999px;
   box-shadow:var(--shadow-md);
 }
-[data-theme="dark"] .bottom-nav{
-  display:flex; position:fixed; z-index:20; gap:4px; align-items:stretch;
-  bottom:calc(14px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
-  width:min(calc(100% - 20px), 430px); height:64px; padding:8px;
-  background:color-mix(in srgb, var(--nav) 92%, transparent);
-  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-  border-radius:999px;
-  box-shadow:var(--shadow-md);
-}
-@media (min-width:1024px){ .bottom-nav{
-  display:flex; position:fixed; z-index:20; gap:4px; align-items:stretch;
-  bottom:calc(14px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
-  width:min(calc(100% - 20px), 430px); height:64px; padding:8px;
-  background:color-mix(in srgb, var(--nav) 92%, transparent);
-  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-  border-radius:999px;
-  box-shadow:var(--shadow-md);
-} }
+@media (min-width:1024px){ .bottom-nav{ display:none; } }
 .bottom-nav-item{
   flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
   cursor:pointer; color:var(--muted);
@@ -460,15 +443,6 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 
 
 /* Nav inversée en mode sombre (signature OC Design System) */
-[data-theme="dark"] .bottom-nav{
-  display:flex; position:fixed; z-index:20; gap:4px; align-items:stretch;
-  bottom:calc(14px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
-  width:min(calc(100% - 20px), 430px); height:64px; padding:8px;
-  background:color-mix(in srgb, var(--nav) 92%, transparent);
-  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-  border-radius:999px;
-  box-shadow:var(--shadow-md);
-}
 [data-theme="dark"] .bottom-nav-item.active .bottom-nav-icon svg{ color:var(--hero-sky); }
 
 /* ═══ Composants OC Design System ═══ */
