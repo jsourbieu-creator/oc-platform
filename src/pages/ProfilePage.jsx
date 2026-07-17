@@ -3,12 +3,20 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, StatTile } from "@/components/ui";
 import { fmtScore } from "@/lib/ballondor";
-import { Star, Activity, CheckCircle, ClipboardCheck } from "react-bootstrap-icons";
+import { Star, Activity, CheckCircle, ClipboardCheck, HeartPulse, Receipt } from "react-bootstrap-icons";
 
 export function ProfilePage() {
   const { user, token, activeClubId, refresh } = useAuth();
 
   const [myStats, setMyStats] = useState(undefined); // undefined=chargement, null=pas classé
+  const [myMember, setMyMember] = useState(undefined); // undefined=chargement
+
+  useEffect(() => {
+    if (!activeClubId) return;
+    api("members.php", "list", { club_id: activeClubId }, token).then((d) => {
+      setMyMember(d.members.find((x) => x.user_id === user?.id) ?? null);
+    }).catch(() => setMyMember(null));
+  }, [activeClubId, token, user?.id]);
 
   useEffect(() => {
     if (!activeClubId) return;
@@ -102,11 +110,32 @@ export function ProfilePage() {
         </div>
       </div>
 
-      {myStats !== null && (
+      {myMember && (
+        <div className="card" style={{ marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <span className="badge" style={{
+            display: "flex", alignItems: "center", gap: 6, padding: "7px 12px",
+            background: myMember.has_medical_certificate ? "var(--lime-100)" : "var(--surface-soft)",
+            color: myMember.has_medical_certificate ? "var(--lime-600)" : "var(--text-dim)",
+          }}>
+            <HeartPulse size={14} /> {myMember.has_medical_certificate ? "Certificat médical à jour" : "Certificat médical manquant"}
+          </span>
+          <span className="badge" style={{
+            display: "flex", alignItems: "center", gap: 6, padding: "7px 12px",
+            background: myMember.has_paid ? "var(--lime-100)" : "var(--surface-soft)",
+            color: myMember.has_paid ? "var(--lime-600)" : "var(--text-dim)",
+          }}>
+            <Receipt size={14} /> {myMember.has_paid ? "Cotisation payée" : "Cotisation non payée"}
+          </span>
+        </div>
+      )}
+
+      {myStats === undefined && <div className="card" style={{ marginBottom: 16 }}><div className="spinner" /></div>}
+
+      {myStats !== undefined && myStats !== null && (
         <div className="stat-tiles" style={{ marginBottom: 16 }}>
-          <StatTile icon={<Star size={20} />} value={myStats === undefined ? "…" : fmtScore(myStats.ballon_dor_score)} label="Score Ballon d'Or" tint="gold" solid />
-          <StatTile icon={<Activity size={20} />} value={myStats === undefined ? "…" : myStats.sessions_played} label="Séances jouées" tint="blue" />
-          <StatTile icon={<CheckCircle size={20} />} value={myStats === undefined ? "…" : `${myStats.attendance_rate}%`} label="Taux de présence" tint="green" />
+          <StatTile icon={<Star size={20} />} value={fmtScore(myStats.ballon_dor_score)} label="Score Ballon d'Or" tint="gold" solid />
+          <StatTile icon={<Activity size={20} />} value={myStats.sessions_played} label="Séances jouées" tint="blue" />
+          <StatTile icon={<CheckCircle size={20} />} value={`${myStats.attendance_rate}%`} label="Taux de présence" tint="green" />
         </div>
       )}
 

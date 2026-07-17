@@ -1,4 +1,4 @@
-import { Check, HeartPulse, CashCoin } from "react-bootstrap-icons";
+import { Check, HeartPulse, Receipt } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -120,24 +120,24 @@ export function MembersPage() {
                   title={m.has_medical_certificate ? "Certificat médical à jour — cliquer pour retirer" : "Pas de certificat médical — cliquer pour valider"}
                   onClick={() => manage && toggleFlag(m, "has_medical_certificate")}
                   disabled={!manage}
+                  className="btn btn-sm"
                   style={{
-                    width: 30, height: 30, borderRadius: "50%", border: "none", display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: manage ? "pointer" : "default",
                     background: m.has_medical_certificate ? "var(--lime-100)" : "var(--surface-soft)",
                     color: m.has_medical_certificate ? "var(--lime-600)" : "var(--text-dim)",
                   }}
-                ><HeartPulse size={15} /></button>
+                ><HeartPulse size={14} /> Certificat</button>
                 <button
                   title={m.has_paid ? "Cotisation payée — cliquer pour retirer" : "Cotisation non payée — cliquer pour valider"}
                   onClick={() => manage && toggleFlag(m, "has_paid")}
                   disabled={!manage}
+                  className="btn btn-sm"
                   style={{
-                    width: 30, height: 30, borderRadius: "50%", border: "none", display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: manage ? "pointer" : "default",
                     background: m.has_paid ? "var(--lime-100)" : "var(--surface-soft)",
                     color: m.has_paid ? "var(--lime-600)" : "var(--text-dim)",
                   }}
-                ><CashCoin size={15} /></button>
+                ><Receipt size={14} /> Payé</button>
                 {manage && r && (
                   <button
                     className="btn btn-sm"
