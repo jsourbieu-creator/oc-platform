@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { Calendar3, CaretLeft, CaretRight, Star, Shield, ArrowCounterclockwise, X, ClipboardCheck, Clock, Flag, People, ThreeDots, ChatDots, Search, Check, Trophy, Activity, PlusLg, Bandaid } from "react-bootstrap-icons";
+import { Calendar3, CaretLeft, CaretRight, Star, Shield, ArrowCounterclockwise, X, ClipboardCheck, Clock, Flag, People, ThreeDots, ChatDots, Search, Check, PlusLg, Bandaid } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,8 +7,7 @@ import {
   EVENT_TYPES, AVAIL_LABELS, AVAIL_COLORS, AVAIL_FILL, AVAIL_INK, AVAIL_ICONS, AVAIL_ICON_COLORS,
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
-import { fmtScore } from "@/lib/ballondor";
-import { DateBadge, StatTile, CountChip, Avatar, ScoreSlider, ScoreBar } from "@/components/ui";
+import { DateBadge, CountChip, Avatar, ScoreSlider, ScoreBar } from "@/components/ui";
 import towerSvg from "@/assets/tour-blason.svg?raw";
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
@@ -56,7 +55,6 @@ export function HomePage({ gotoConversation }) {
   const [form, setForm] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [myScore, setMyScore] = useState(undefined); // undefined=chargement, null=pas classé, objet sinon
 
   const load = useCallback(() => {
     if (!activeClubId) return;
@@ -66,23 +64,6 @@ export function HomePage({ gotoConversation }) {
   useEffect(load, [load]);
 
   // Mon score Ballon d'Or : dérivé du classement de la saison active
-  useEffect(() => {
-    if (!activeClubId || !token || !user || seasons === null) return;
-    let alive = true;
-    const active = seasons.find((s) => s.status === "active");
-    if (!active) { setMyScore(null); return; }
-    api("evaluations.php", "season_rankings", { club_id: activeClubId, season_id: active.id }, token)
-      .then((r) => {
-        if (!alive) return;
-        const full = `${user.first_name} ${user.last_name}`.trim().toLowerCase();
-        const all = [...(r.official ?? []), ...(r.provisional ?? [])];
-        const mine = all.find((p) => (p.name ?? "").trim().toLowerCase() === full);
-        setMyScore(mine ?? null);
-      })
-      .catch(() => { if (alive) setMyScore(null); });
-    return () => { alive = false; };
-  }, [activeClubId, token, user, seasons]);
-
   useEffect(() => {
     if (!activeClubId) return;
     api("seasons.php", "list", { club_id: activeClubId }, token).then((d) => setSeasons(d.seasons)).catch(() => setSeasons([]));
@@ -184,20 +165,7 @@ export function HomePage({ gotoConversation }) {
         }}
       />
 
-      <div className="kpi-grid" style={{ marginBottom: 16 }}>
-        <div className="kpi">
-          <Trophy size={18} style={{ opacity: 0.7, marginBottom: 8, color: "var(--hero-sky)" }} />
-          <b>{myScore === undefined ? "…" : myScore ? fmtScore(myScore.ballon_dor_score) : "—"}</b>
-          <span>{myScore ? "Ballon d'Or" : "Pas classé"}</span>
-        </div>
-        <div className="kpi">
-          <Activity size={18} style={{ opacity: 0.7, marginBottom: 8, color: "var(--hero-sky)" }} />
-          <b>{myScore === undefined ? "…" : myScore ? `${myScore.attendance_rate}%` : "—"}</b>
-          <span>Ma présence</span>
-        </div>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 18, marginBottom: 14 }}>
         <div className="segmented">
           {[["upcoming", "À venir"], ["month", "Mois"]].map(([v, l]) => (
             <button key={v} className={scope === v ? "active" : ""} onClick={() => { setScope(v); setSelectedDay(null); }}>{l}</button>
