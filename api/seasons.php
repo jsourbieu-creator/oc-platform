@@ -83,6 +83,40 @@ switch ($action) {
         json_out(['ok' => true]);
         break;
 
+    // Suppression définitive : la saison ET tous les événements qui tombent
+    // dans sa plage de dates (entraînements, matchs, présences, votes,
+    // convocations — tout cascade proprement via les clés étrangères).
+    // Irréversible, réservé à une saison de démonstration/test.
+    case 'delete':
+        $me = current_user();
+        $clubId = (int) ($in['club_id'] ?? 0);
+        require_permission($me['id'], $clubId, 'manage_seasons');
+
+        $id = (int) ($in['season_id'] ?? 0);
+        $stmt = db()->prepare('SELECT * FROM seasons WHERE id = ? AND club_id = ?');
+        $stmt->execute([$id, $clubId]);
+        $season = $stmt->fetch();
+        if (!$season) json_error('Saison introuvable dans ce club.', 404);
+
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('DELETE FROM events WHERE club_id = ? AND DATE(starts_at) BETWEEN ? AND ?');
+            $stmt->execute([$clubId, $season['start_date'], $season['end_date']]);
+            $deletedEvents = $stmt->rowCount();
+
+            $stmt = $pdo->prepare('DELETE FROM seasons WHERE id = ? AND club_id = ?');
+            $stmt->execute([$id, $clubId]);
+
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+        log_action((int) $me['id'], 'season_delete', "#$id {$season['name']} ($deletedEvents événement(s) supprimé(s))");
+        json_out(['ok' => true, 'deleted_events' => $deletedEvents]);
+        break;
+
     default:
         json_error('Action inconnue.', 404);
 }

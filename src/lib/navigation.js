@@ -1,13 +1,14 @@
 import {
   Calendar3, Megaphone, People, ChatDots, Star,
   Folder2Open, Images, Bell, PersonCircle,
-  Gear, Wrench,
+  Gear, Wrench, CalendarRange,
 } from "react-bootstrap-icons";
 
 export const NAV_ITEMS = [
   { label: "Calendrier", view: "home", icon: Calendar3, phase: 0 },
   { label: "Annonces", view: "vestiaire", icon: Megaphone, phase: 4 },
   { label: "Membres", view: "membres", icon: People, phase: 1 },
+  { label: "Saisons", view: "saisons", icon: CalendarRange, phase: 1 },
   { label: "Messages", view: "messages", icon: ChatDots, phase: 5 },
   { label: "Votes", view: "votes", icon: Star, phase: 2 },
   { label: "Documents", view: "documents", icon: Folder2Open, phase: 6 },

@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { NAV_ITEMS, isAvailable } from "@/lib/navigation";
 
 const canManage = (role) => role === "super_admin" || role === "admin";
-const HUB_LABELS = ["Membres", "Messages", "Statistiques", "Classements", "Trophées", "Documents", "Médias", "Notifications", "Charte graphique", "Administration"];
+const HUB_LABELS = ["Membres", "Saisons", "Messages", "Statistiques", "Classements", "Trophées", "Documents", "Médias", "Notifications", "Charte graphique", "Administration"];
 
 export function SettingsPage({ goto }) {
   const { token, activeClubId, activeRole, memberships, refresh, signOut, user } = useAuth();

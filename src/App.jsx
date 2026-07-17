@@ -6,6 +6,7 @@ import { SignupPage } from "@/pages/SignupPage";
 import { NoClubScreen } from "@/pages/NoClubScreen";
 import { HomePage } from "@/pages/HomePage";
 import { MembersPage } from "@/pages/MembersPage";
+import { SeasonsPage } from "@/pages/SeasonsPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { AdminPage } from "@/pages/AdminPage";
@@ -58,6 +59,7 @@ function Root() {
     <DashboardShell view={dashView} goto={setDashView}>
       {dashView === "home" && <HomePage gotoConversation={(conv) => { setPendingConversation(conv); setDashView("messages"); }} />}
       {dashView === "membres" && <MembersPage />}
+      {dashView === "saisons" && <SeasonsPage />}
       {dashView === "profil" && <ProfilePage />}
       {dashView === "parametres" && <SettingsPage goto={setDashView} />}
       {dashView === "administration" && <AdminPage />}
