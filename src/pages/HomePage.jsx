@@ -144,7 +144,12 @@ export function HomePage({ gotoConversation }) {
     const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6); sunday.setHours(23, 59, 59, 999);
     return d >= monday && d <= sunday;
   };
-  const visible = (events ?? []).filter((e) => (showPast || viewingOtherMonth || !isPast(e.starts_at)) && inScope(e.starts_at) && (!selectedDay || e.starts_at.slice(0, 10) === selectedDay));
+  const visible = (events ?? []).filter((e) =>
+    (showPast || viewingOtherMonth || !isPast(e.starts_at))
+    && inScope(e.starts_at)
+    && (!selectedDay || e.starts_at.slice(0, 10) === selectedDay)
+    && !(scope === "upcoming" && !showPast && !selectedDay && e.id === nextEvent?.id)
+  );
 
   const grouped = [];
   let currentMonth = null;
@@ -393,7 +398,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, gotoCo
                 key={v} className="btn btn-sm" title={l}
                 onClick={() => onSetAvailability(e.id, v)}
                 style={{
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", width: "auto",
+                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none",
                   background: active ? "#fff" : "rgba(255,255,255,0.14)",
                   color: active ? "#0A2340" : "#fff",
                 }}
@@ -588,7 +593,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
                   key={v} className="btn btn-sm" title={l}
                   onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
                   style={{
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", width: "auto",
+                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none",
                     background: active ? "var(--surface)" : "rgba(255,255,255,0.05)",
                     color: active ? "var(--text)" : "var(--text-dim)",
                     boxShadow: active ? "var(--shadow-sm)" : "none",
