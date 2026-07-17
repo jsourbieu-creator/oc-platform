@@ -8,7 +8,7 @@ import {
   fmtTime, fmtMonthKey, isPast, toLocalInput, fromLocalInput, canManageEvents, timeAgo,
 } from "@/lib/events";
 import { fmtScore } from "@/lib/ballondor";
-import { DateBadge, AvatarStack, StatTile, CountChip, Avatar, ScoreSlider, ScoreBar } from "@/components/ui";
+import { DateBadge, StatTile, CountChip, Avatar, ScoreSlider, ScoreBar } from "@/components/ui";
 import towerSvg from "@/assets/tour-blason.svg?raw";
 
 const EMPTY_FORM = { type: "match", title: "", opponent: "", location: "", starts_at: "", ends_at: "", meet_at: "", notes: "", team_id: "", repeat_weekly: false, repeat_until: "" };
@@ -374,31 +374,31 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, gotoCo
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginTop: 12, position: "relative", zIndex: 1 }}>
-        <CountChip value={presentCount} tint="green" icon={Check} />
-        <CountChip value={absentCount} tint="orange" icon={X} />
-        <CountChip value={injuredCount} tint="coral" icon={Bandaid} />
-        <CountChip value={noResponseCount} tint="gray" icon={Clock} />
-      </div>
-      {(e.present_names?.length ?? 0) > 0 && <div style={{ marginTop: 8, position: "relative", zIndex: 1 }}><AvatarStack people={e.present_names} /></div>}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", gap: 5 }}>
+          <CountChip value={presentCount} tint="green" icon={Check} size="sm" />
+          <CountChip value={absentCount} tint="orange" icon={X} size="sm" />
+          <CountChip value={injuredCount} tint="coral" icon={Bandaid} size="sm" />
+          <CountChip value={noResponseCount} tint="gray" icon={Clock} size="sm" />
+        </div>
 
-      <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
-        {Object.entries(AVAIL_LABELS).map(([v, l]) => {
-          const active = e.my_availability === v;
-          const Icon = AVAIL_ICONS[v];
-          return (
-            <button
-              key={v} className="btn btn-sm" style={{
-                flex: "1 1 80px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                background: active ? "#fff" : "rgba(255,255,255,0.16)",
-                color: active ? "#0A2340" : "#fff",
-                opacity: active ? 1 : 0.85,
-                border: "none",
-              }}
-              onClick={() => onSetAvailability(e.id, v)}
-            ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} />{l}</button>
-          );
-        })}
+        <div style={{ display: "flex", gap: 6 }}>
+          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+            const active = e.my_availability === v;
+            const Icon = AVAIL_ICONS[v];
+            return (
+              <button
+                key={v} title={l}
+                onClick={() => onSetAvailability(e.id, v)}
+                style={{
+                  width: 36, height: 36, borderRadius: "50%", border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: active ? "#fff" : "rgba(255,255,255,0.18)",
+                }}
+              ><Icon size={16} color={active ? AVAIL_ICON_COLORS[v] : "#fff"} /></button>
+            );
+          })}
+        </div>
       </div>
 
       {isMatch && Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0) > 0 && (
@@ -408,14 +408,13 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, gotoCo
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12, position: "relative", zIndex: 1 }}>
-        <button className="btn btn-ghost btn-sm" style={{ width: "auto", color: "#fff" }} onClick={openConversation} disabled={convBusy}>
-          <ChatDots size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
+      <div style={{ display: "flex", gap: 8, marginTop: 4, position: "relative", zIndex: 1 }}>
+        <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.16)", color: "#fff", border: "none" }} onClick={openConversation} disabled={convBusy}>
+          <ChatDots size={15} /> Discussion
         </button>
-      </div>
-
-      <div style={{ textAlign: "center", marginTop: 6, position: "relative", zIndex: 1 }}>
-        <span style={{ cursor: "pointer", opacity: 0.85, fontSize: "0.85rem" }} onClick={onOpen}>Voir tous les détails</span>
+        <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.16)", color: "#fff", border: "none" }} onClick={onOpen}>
+          <Search size={15} /> Détails
+        </button>
       </div>
     </div>
   );
@@ -507,8 +506,8 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   const totalMembers = members?.length ?? 0;
   const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
-  const confirmedPeople = e.present_names ?? [];
   const [convBusy, setConvBusy] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const quickRespond = async (status) => {
     try { await api("events.php", "availability_set", { club_id: activeClubId, event_id: e.id, status }, token); reload(); }
@@ -545,37 +544,57 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
             {e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
           </div>
         </div>
-        <ThreeDots size={17} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
+        {manage ? (
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <button
+              onClick={(ev) => { ev.stopPropagation(); setMenuOpen((v) => !v); }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "var(--text-dim)", display: "flex" }}
+            ><ThreeDots size={17} /></button>
+            {menuOpen && (
+              <div style={{
+                position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "none",
+                borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-md)", zIndex: 10, minWidth: 140, overflow: "hidden",
+              }}>
+                <MenuItem onClick={() => { setMenuOpen(false); onEdit(e); }}>Modifier</MenuItem>
+                {cancelled
+                  ? <MenuItem onClick={() => { setMenuOpen(false); onStatus(e.id, "scheduled"); }}>Rétablir</MenuItem>
+                  : <MenuItem color="var(--warning-600)" onClick={() => { setMenuOpen(false); onStatus(e.id, "cancelled"); }}>Annuler</MenuItem>}
+                <MenuItem color="var(--danger-600)" onClick={() => { setMenuOpen(false); onDelete(e.id); }}>Supprimer</MenuItem>
+              </div>
+            )}
+          </div>
+        ) : <ThreeDots size={17} style={{ color: "var(--text-dim)", flexShrink: 0, opacity: 0.3 }} />}
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-        <CountChip value={presentCount} tint="green" icon={Check} />
-        <CountChip value={absentCount} tint="orange" icon={X} />
-        <CountChip value={injuredCount} tint="coral" icon={Bandaid} />
-        <CountChip value={noResponseCount} tint="gray" icon={Clock} />
-      </div>
-      {confirmedPeople.length > 0 && <div style={{ marginTop: 8 }}><AvatarStack people={confirmedPeople} /></div>}
-
-      {!cancelled && !isPast(e.starts_at) && (
-        <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
-          {Object.entries(AVAIL_LABELS).map(([v, l]) => {
-            const active = e.my_availability === v;
-            const Icon = AVAIL_ICONS[v];
-            return (
-              <button
-                key={v} className="btn btn-sm" style={{
-                  flex: "1 1 80px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  background: active ? "#fff" : "transparent",
-                  color: active ? "#0A2340" : "var(--text-dim)",
-                  opacity: active ? 1 : 0.8,
-                  border: active ? "none" : "1.5px solid var(--line)",
-                }}
-                onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
-              ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} />{l}</button>
-            );
-          })}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 5 }}>
+          <CountChip value={presentCount} tint="green" icon={Check} size="sm" />
+          <CountChip value={absentCount} tint="orange" icon={X} size="sm" />
+          <CountChip value={injuredCount} tint="coral" icon={Bandaid} size="sm" />
+          <CountChip value={noResponseCount} tint="gray" icon={Clock} size="sm" />
         </div>
-      )}
+
+        {!cancelled && !isPast(e.starts_at) && (
+          <div style={{ display: "flex", gap: 6 }}>
+            {Object.entries(AVAIL_LABELS).map(([v, l]) => {
+              const active = e.my_availability === v;
+              const Icon = AVAIL_ICONS[v];
+              return (
+                <button
+                  key={v} title={l}
+                  onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
+                  style={{
+                    width: 36, height: 36, borderRadius: "50%", border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: active ? "var(--surface)" : "var(--surface-soft)",
+                    boxShadow: active ? "var(--shadow-sm)" : "none",
+                  }}
+                ><Icon size={16} color={active ? AVAIL_ICON_COLORS[v] : "var(--text-dim)"} /></button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {!cancelled && e.my_availability === "present" && hasEndedClient(e) && !e.my_vote_submitted && (
         <div
@@ -593,21 +612,20 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-        <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={openConversation} disabled={convBusy}>
-          <ChatDots size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
-        </button>
-      </div>
-
       {e.type === "match" && convokedTotal > 0 && (
-        <div className="subtle" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <div className="subtle" style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           <ClipboardCheck size={13} />{convokedTotal} joueur{convokedTotal > 1 ? "s" : ""} convoqué{convokedTotal > 1 ? "s" : ""}
           {e.my_convocation && <span className="badge badge-info">Tu es convoqué ✓</span>}
         </div>
       )}
 
-      <div style={{ textAlign: "center", marginTop: 6 }}>
-        <span className="subtle" style={{ cursor: "pointer" }} onClick={toggle}>Voir tous les détails</span>
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <button className="btn btn-secondary btn-sm" onClick={openConversation} disabled={convBusy}>
+          <ChatDots size={15} /> Discussion
+        </button>
+        <button className="btn btn-secondary btn-sm" onClick={toggle}>
+          <Search size={15} /> Détails
+        </button>
       </div>
 
       {open && (
