@@ -393,7 +393,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, gotoCo
                 key={v} className="btn btn-sm" title={l}
                 onClick={() => onSetAvailability(e.id, v)}
                 style={{
-                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", width: "auto",
                   background: active ? "#fff" : "rgba(255,255,255,0.14)",
                   color: active ? "#0A2340" : "#fff",
                 }}
@@ -588,8 +588,8 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
                   key={v} className="btn btn-sm" title={l}
                   onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
                   style={{
-                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none",
-                    background: active ? "var(--surface)" : "transparent",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", width: "auto",
+                    background: active ? "var(--surface)" : "rgba(255,255,255,0.05)",
                     color: active ? "var(--text)" : "var(--text-dim)",
                     boxShadow: active ? "var(--shadow-sm)" : "none",
                   }}
