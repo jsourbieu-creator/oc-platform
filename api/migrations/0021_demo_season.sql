@@ -1,11 +1,20 @@
 -- ═══════════════════════════════════════════════════════════════════════
 -- Saison d'EXEMPLE 2025-2026 : données de démonstration pour montrer aux
 -- joueurs à quoi ressemble l'appli une fois les votes et les trophées bien
--- remplis (18 entraînements, ~15 joueurs, classement + 9 trophées calculés
+-- remplis (18 entraînements, 15 joueurs, classement + 9 trophées calculés
 -- naturellement par l'algorithme réel, pas de valeurs figées à la main).
 --
--- Entièrement supprimable depuis Saisons → 'Supprimer' (cascade propre sur
--- tous les entraînements de cette plage de dates et tout ce qui s'y rattache).
+-- 14 des 15 joueurs n'ont pas encore de compte sur la plateforme (seul
+-- Julien Sourbieu existe déjà) : cette migration crée aussi ces 14 comptes
+-- de démonstration (email @exemple-oc.local, mot de passe inconnu/inutilisable,
+-- rôle joueur) avant de leur attribuer les données de la saison.
+--
+-- Pour tout nettoyer plus tard (comptes de démo + saison + entraînements) :
+--   DELETE FROM users WHERE email LIKE '%@exemple-oc.local';
+--   (à faire APRÈS avoir supprimé la saison depuis Saisons → Supprimer,
+--   ou directement : la suppression des users cascadera sur club_members,
+--   mais pas sur les events, à nettoyer via la page Saisons.)
+--
 -- À importer via phpMyAdmin (comme les précédentes).
 -- ═══════════════════════════════════════════════════════════════════════
 
@@ -14,7 +23,51 @@ SET @club_id := (SELECT id FROM clubs ORDER BY id LIMIT 1);
 INSERT INTO seasons (club_id, name, start_date, end_date, status, humorous_trophies_enabled)
 VALUES (@club_id, '2025-2026 (exemple)', '2025-08-01', '2026-06-30', 'closed', 1);
 
--- Repère chaque joueur par son nom (doit exister dans club_members/users)
+-- ── Création des comptes de démonstration manquants ──────────────────────
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('corentin.walliez@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Corentin', 'Walliez');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('clement.malingre@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Clement', 'Malingre');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('saber.atitir@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Saber', 'Atitir');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('johann.remer@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Johann', 'Remer');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('valentin.debons@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Valentin', 'Debons');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('pierangelo.belardi@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Pierangelo', 'Belardi');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('enzo.vermeulen@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Enzo', 'Vermeulen');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('thomas.rodrigues@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Thomas', 'Rodrigues');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('bastien.petit@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Bastien', 'Petit');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('ben.quillet@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Ben', 'Quillet');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('hugo.caudeville@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Hugo', 'Caudeville');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('victor.cantele@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Victor', 'Cantele');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('ethan.legrix@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Ethan', 'Legrix');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES ('corentin.renier@exemple-oc.local', '$2y$10$5HaNCIek0/brGYrApNTTMOmAxs75gm1YPDlAMzBvWuvahX7qisfqq', 'Corentin', 'Renier');
+SET @new_uid := LAST_INSERT_ID();
+INSERT INTO club_members (club_id, user_id, role, status) VALUES (@club_id, @new_uid, 'player', 'active');
+
+-- ── Repère chaque joueur (nouveaux + existants) par son nom ──────────────
 SET @p_corentin_walliez := (SELECT cm.id FROM club_members cm JOIN users u ON u.id = cm.user_id WHERE u.first_name = 'Corentin' AND u.last_name = 'Walliez' AND cm.club_id = @club_id);
 SET @p_clement_malingre := (SELECT cm.id FROM club_members cm JOIN users u ON u.id = cm.user_id WHERE u.first_name = 'Clement' AND u.last_name = 'Malingre' AND cm.club_id = @club_id);
 SET @p_saber_atitir := (SELECT cm.id FROM club_members cm JOIN users u ON u.id = cm.user_id WHERE u.first_name = 'Saber' AND u.last_name = 'Atitir' AND cm.club_id = @club_id);
