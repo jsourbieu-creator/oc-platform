@@ -331,6 +331,17 @@ switch ($action) {
             $stmt->execute([$eventId, $targetMemberId]);
         }
 
+        // Si le joueur n'est plus présent, sa convocation éventuelle à ce match
+        // n'a plus lieu d'être : elle est retirée, le badge "Tu es convoqué"
+        // disparaît, et les admins sont prévenus qu'il faut choisir quelqu'un
+        // d'autre à sa place.
+        $wasConvoked = false;
+        if ($status !== 'present' && $event['type'] === 'match') {
+            $stmt = db()->prepare('DELETE FROM convocations WHERE event_id = ? AND club_member_id = ?');
+            $stmt->execute([$eventId, $targetMemberId]);
+            $wasConvoked = $stmt->rowCount() > 0;
+        }
+
         // Notifie les admins/coachs de la réponse — alerte spécifique si c'est un
         // changement de dernière minute (moins de 2h avant le début de la séance).
         if ($previousStatus !== $status) {
@@ -353,11 +364,15 @@ switch ($action) {
                 $secondsUntilStart = strtotime($event['starts_at']) - time();
                 $isLastMinuteChange = $previousStatus !== false && $secondsUntilStart > 0 && $secondsUntilStart <= 2 * 3600;
 
-                $text = $isLastMinuteChange
-                    ? "⚠️ $name change sa présence en $label pour « {$event['title']} » à moins de 2h du début !"
-                    : "$name a répondu $label pour « {$event['title']} ».";
+                if ($wasConvoked) {
+                    $text = "⚠️ $name était convoqué pour « {$event['title']} » et passe $label — pense à le remplacer !";
+                } else {
+                    $text = $isLastMinuteChange
+                        ? "⚠️ $name change sa présence en $label pour « {$event['title']} » à moins de 2h du début !"
+                        : "$name a répondu $label pour « {$event['title']} ».";
+                }
 
-                notify_members($adminIds, 'availability_change', $text, 'home');
+                notify_members($adminIds, $wasConvoked ? 'convocation_freed' : 'availability_change', $text, 'home');
             }
         }
 

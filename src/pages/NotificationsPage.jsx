@@ -1,4 +1,4 @@
-import { Megaphone, ChatDots, ClipboardCheck, ExclamationTriangle, PersonPlus, PersonCheck, Star, Bell, CalendarEvent, Trophy } from "react-bootstrap-icons";
+import { Megaphone, ChatDots, ClipboardCheck, ExclamationTriangle, PersonPlus, PersonCheck, PersonDash, Star, Bell, CalendarEvent, Trophy } from "react-bootstrap-icons";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,7 @@ const TYPE_ICONS = {
   new_comment: ChatDots,
   new_message: ChatDots,
   convocation: ClipboardCheck,
+  convocation_freed: PersonDash,
   event_cancelled: ExclamationTriangle,
   event_updated: CalendarEvent,
   join_request: PersonPlus,
