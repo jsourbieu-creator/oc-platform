@@ -31,8 +31,9 @@ switch ($action) {
         $myMemberId = my_member_id((int) $me['id'], $clubId);
 
         $stmt = db()->prepare('
-            SELECT e.*, t.name AS team_name
-            FROM events e LEFT JOIN teams t ON t.id = e.team_id
+            SELECT e.*, s.name AS season_name, s.status AS season_status
+            FROM events e
+            LEFT JOIN seasons s ON s.club_id = e.club_id AND DATE(e.starts_at) BETWEEN s.start_date AND s.end_date
             WHERE e.club_id = ?
             ORDER BY e.starts_at ASC
         ');
@@ -77,7 +78,7 @@ switch ($action) {
             }
 
             $stmt = db()->prepare("
-                SELECT ea.event_id, cm.id AS club_member_id, u.id AS user_id, u.first_name, u.last_name, u.avatar_url
+                SELECT ea.event_id, cm.id AS club_member_id, cm.has_medical_certificate, u.id AS user_id, u.first_name, u.last_name, u.avatar_url
                 FROM event_availabilities ea
                 JOIN club_members cm ON cm.id = ea.club_member_id
                 JOIN users u ON u.id = cm.user_id
@@ -86,7 +87,7 @@ switch ($action) {
             $stmt->execute($ids);
             $presentNames = [];
             foreach ($stmt->fetchAll() as $r) {
-                $presentNames[$r['event_id']][] = ['name' => trim("{$r['first_name']} {$r['last_name']}"), 'club_member_id' => (int) $r['club_member_id'], 'user_id' => $r['user_id'], 'avatar_url' => $r['avatar_url']];
+                $presentNames[$r['event_id']][] = ['name' => trim("{$r['first_name']} {$r['last_name']}"), 'club_member_id' => (int) $r['club_member_id'], 'user_id' => $r['user_id'], 'avatar_url' => $r['avatar_url'], 'has_medical_certificate' => (bool) $r['has_medical_certificate']];
             }
 
             $stmt = db()->prepare("SELECT event_id FROM vote_submissions WHERE event_id IN ($ph) AND club_member_id = ?");
@@ -406,18 +407,19 @@ switch ($action) {
 
         $memberIds = $goalkeeperId ? array_merge([$goalkeeperId], $fieldIds) : $fieldIds;
 
-        // Tous les IDs doivent être des membres actifs du club ET avoir déclaré
-        // "présent" à cette séance (la convocation se fait parmi les présents).
+        // Tous les IDs doivent être des membres actifs du club, avoir un
+        // certificat médical à jour, ET avoir déclaré "présent" à cette
+        // séance (la convocation se fait parmi les présents).
         if ($memberIds) {
             $ph = implode(',', array_fill(0, count($memberIds), '?'));
             $stmt = db()->prepare("
                 SELECT COUNT(*) FROM club_members cm
                 JOIN event_availabilities ea ON ea.club_member_id = cm.id AND ea.event_id = ? AND ea.status = 'present'
-                WHERE cm.id IN ($ph) AND cm.club_id = ? AND cm.status = 'active'
+                WHERE cm.id IN ($ph) AND cm.club_id = ? AND cm.status = 'active' AND cm.has_medical_certificate = 1
             ");
             $stmt->execute([$eventId, ...$memberIds, $clubId]);
             if ((int) $stmt->fetchColumn() !== count($memberIds)) {
-                json_error('Seuls les membres ayant répondu "présent" à cette séance peuvent être convoqués.');
+                json_error('Seuls les membres présents à cette séance ET ayant un certificat médical à jour peuvent être convoqués.');
             }
         }
 

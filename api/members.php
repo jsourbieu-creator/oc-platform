@@ -29,6 +29,7 @@ switch ($action) {
 
         $stmt = db()->prepare('
             SELECT cm.id, cm.user_id, cm.role, cm.status, cm.joined_at,
+                   cm.has_medical_certificate, cm.has_paid,
                    u.first_name, u.last_name, u.email, u.phone, u.avatar_url
             FROM club_members cm JOIN users u ON u.id = cm.user_id
             WHERE cm.club_id = ?
@@ -38,6 +39,28 @@ switch ($action) {
         ');
         $stmt->execute([$clubId]);
         json_out(['members' => $stmt->fetchAll()]);
+        break;
+
+    // Bascule le certificat médical et/ou le statut de paiement d'un membre
+    // (suivi manuel, lié à Yapla en dehors de la plateforme).
+    case 'set_flags':
+        $me = current_user();
+        $clubId = (int) ($in['club_id'] ?? 0);
+        require_permission((int) $me['id'], $clubId, 'manage_members');
+
+        $memberId = (int) ($in['member_id'] ?? 0);
+        $stmt = db()->prepare('SELECT id FROM club_members WHERE id = ? AND club_id = ?');
+        $stmt->execute([$memberId, $clubId]);
+        if (!$stmt->fetchColumn()) json_error('Membre introuvable.', 404);
+
+        $sets = []; $params = [];
+        if (array_key_exists('has_medical_certificate', $in)) { $sets[] = 'has_medical_certificate = ?'; $params[] = (int) !!$in['has_medical_certificate']; }
+        if (array_key_exists('has_paid', $in)) { $sets[] = 'has_paid = ?'; $params[] = (int) !!$in['has_paid']; }
+        if (!$sets) json_error('Rien à mettre à jour.');
+
+        $params[] = $memberId;
+        db()->prepare('UPDATE club_members SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($params);
+        json_out(['ok' => true]);
         break;
 
     // Génère un code d'invitation (8 caractères, 14 jours de validité)

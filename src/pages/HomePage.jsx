@@ -545,7 +545,8 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <strong>{e.title}</strong>
               {cancelled && <span className="badge badge-neutral">Annulé</span>}
-              {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
+              {e.season_status === "closed" && <span className="badge badge-neutral">Clôturée</span>}
+              {e.season_name && e.season_status !== "closed" && <span className="badge" style={{ background: "var(--surface)", color: "var(--text-dim)" }}>{e.season_name}</span>}
             </div>
             <div className="subtle">
               {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}
@@ -1179,24 +1180,26 @@ function ConvocationManager({ event: e, reload }) {
 
               <div className="label-title" style={{ fontSize: "0.78rem", marginBottom: 4 }}>Gardien</div>
               {candidates.map((m) => (
-                <label key={m.club_member_id} className="list-row" style={{ padding: "6px 0", cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex" }}>
+                <label key={m.club_member_id} className="list-row" style={{ padding: "6px 0", cursor: m.has_medical_certificate ? "pointer" : "not-allowed", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex", opacity: m.has_medical_certificate ? 1 : 0.45 }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <input type="radio" name={`gk-${e.id}`} checked={goalkeeperId === m.club_member_id} onChange={() => pickGoalkeeper(m.club_member_id)} style={{ width: "auto" }} />
+                    <input type="radio" name={`gk-${e.id}`} checked={goalkeeperId === m.club_member_id} disabled={!m.has_medical_certificate} onChange={() => pickGoalkeeper(m.club_member_id)} style={{ width: "auto" }} />
                     <Avatar name={m.name} userId={m.user_id} avatarUrl={m.avatar_url} size={24} />{m.name}
+                    {!m.has_medical_certificate && <span className="badge badge-neutral" style={{ fontSize: "0.62rem" }}>Pas de certificat</span>}
                   </span>
                 </label>
               ))}
 
               <div className="label-title" style={{ fontSize: "0.78rem", marginTop: 12, marginBottom: 4 }}>Joueurs de champ ({fieldIds.size}/8)</div>
               {candidates.filter((m) => m.club_member_id !== goalkeeperId).map((m) => (
-                <label key={m.club_member_id} className="list-row" style={{ padding: "6px 0", cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex", opacity: !fieldIds.has(m.club_member_id) && fieldIds.size >= 8 ? 0.4 : 1 }}>
+                <label key={m.club_member_id} className="list-row" style={{ padding: "6px 0", cursor: m.has_medical_certificate ? "pointer" : "not-allowed", textTransform: "none", letterSpacing: 0, fontSize: "0.9rem", fontWeight: 400, color: "var(--text)", display: "flex", opacity: !m.has_medical_certificate ? 0.45 : (!fieldIds.has(m.club_member_id) && fieldIds.size >= 8 ? 0.4 : 1) }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <input
                       type="checkbox" checked={fieldIds.has(m.club_member_id)}
-                      disabled={!fieldIds.has(m.club_member_id) && fieldIds.size >= 8}
+                      disabled={!m.has_medical_certificate || (!fieldIds.has(m.club_member_id) && fieldIds.size >= 8)}
                       onChange={() => toggleField(m.club_member_id)} style={{ width: "auto" }}
                     />
                     <Avatar name={m.name} userId={m.user_id} avatarUrl={m.avatar_url} size={24} />{m.name}
+                    {!m.has_medical_certificate && <span className="badge badge-neutral" style={{ fontSize: "0.62rem" }}>Pas de certificat</span>}
                   </span>
                 </label>
               ))}
