@@ -169,6 +169,7 @@ export function HomePage({ gotoConversation }) {
         hasSeason={seasons !== null && seasons.length > 0}
         manage={manage}
         members={members}
+        gotoConversation={gotoConversation}
         onCreate={() => setForm({ ...EMPTY_FORM })}
         onOpen={() => { if (nextEvent) { setScope("upcoming"); setSelectedDay(null); setOpenId(nextEvent.id); } }}
         onSetAvailability={async (eventId, status) => {
@@ -307,7 +308,10 @@ export function HomePage({ gotoConversation }) {
 
 const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
-function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCreate, onOpen, onSetAvailability }) {
+function NextSessionCard({ event: e, loading, hasSeason, manage, members, gotoConversation, onCreate, onOpen, onSetAvailability }) {
+  const { token, activeClubId } = useAuth();
+  const [convBusy, setConvBusy] = useState(false);
+
   if (loading) return <div className="card" style={{ marginBottom: 16, height: 150 }}><div className="spinner" /></div>;
 
   if (!e) {
@@ -338,6 +342,14 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
 
   const t = EVENT_TYPES[e.type] ?? EVENT_TYPES.match;
   const isMatch = e.type === "match";
+  const openConversation = async (ev) => {
+    ev.stopPropagation();
+    setConvBusy(true);
+    try {
+      const d = await api("events.php", "conversation_get_or_create", { club_id: activeClubId, event_id: e.id }, token);
+      gotoConversation?.(d);
+    } catch (_) { /* silencieux, pas critique */ } finally { setConvBusy(false); }
+  };
   const presentCount = e.avail_counts?.present ?? 0;
   const absentCount = e.avail_counts?.absent ?? 0;
   const injuredCount = e.avail_counts?.injured ?? 0;
@@ -387,6 +399,23 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
             ><Icon size={13} color={active ? AVAIL_ICON_COLORS[v] : undefined} />{l}</button>
           );
         })}
+      </div>
+
+      {isMatch && Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0) > 0 && (
+        <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", opacity: 0.9, position: "relative", zIndex: 1 }}>
+          <ClipboardCheck size={13} />{Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0)} joueur{Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0) > 1 ? "s" : ""} convoqué{Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0) > 1 ? "s" : ""}
+          {e.my_convocation && <span className="badge" style={{ background: "rgba(255,255,255,0.22)", color: "#fff" }}>Tu es convoqué ✓</span>}
+        </div>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12, position: "relative", zIndex: 1 }}>
+        <button className="btn btn-ghost btn-sm" style={{ width: "auto", color: "#fff" }} onClick={openConversation} disabled={convBusy}>
+          <ChatDots size={15} /> {e.conversation_id ? "Discussion de la séance" : "Créer la discussion"}
+        </button>
+      </div>
+
+      <div style={{ textAlign: "center", marginTop: 6, position: "relative", zIndex: 1 }}>
+        <span style={{ cursor: "pointer", opacity: 0.85, fontSize: "0.85rem" }} onClick={onOpen}>Voir tous les détails</span>
       </div>
     </div>
   );
@@ -478,7 +507,7 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   const totalMembers = members?.length ?? 0;
   const noResponseCount = Math.max(0, totalMembers - presentCount - absentCount - injuredCount);
   const convokedTotal = Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0);
-  const confirmedPeople = e.confirmed_names ?? [];
+  const confirmedPeople = e.present_names ?? [];
   const [convBusy, setConvBusy] = useState(false);
 
   const quickRespond = async (status) => {
