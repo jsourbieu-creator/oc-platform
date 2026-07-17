@@ -359,30 +359,32 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, gotoCo
   const daysLabel = days <= 0 ? "Aujourd'hui" : days === 1 ? "Demain" : `Dans ${days} jours`;
 
   return (
-    <div className="card" style={{ marginBottom: 16, padding: 16, background: t.color, color: "#fff", position: "relative", overflow: "hidden" }}>
-      <div className="tower-deco-list" style={{ opacity: 0.18 }} dangerouslySetInnerHTML={{ __html: towerSvg }} />
-      <div style={{ cursor: "pointer", display: "flex", gap: 12, position: "relative", zIndex: 1 }} onClick={onOpen}>
-        <DateBadge date={e.starts_at} color="rgba(255,255,255,0.35)" ink="#fff" />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><t.icon size={15} />{e.title}</strong>
-            <span className="badge" style={{ background: "rgba(255,255,255,0.22)", color: "#fff" }}>{daysLabel}</span>
-          </div>
-          <div style={{ opacity: 0.85 }}>
-            {fmtTime(e.starts_at)}{e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
+    <div className="card" style={{ marginBottom: 16, padding: 0, background: t.color, color: "#fff", position: "relative", overflow: "hidden" }}>
+      <div style={{ padding: "18px 18px 16px", position: "relative" }}>
+        <div className="tower-deco-list" style={{ opacity: 0.18 }} dangerouslySetInnerHTML={{ __html: towerSvg }} />
+        <div style={{ cursor: "pointer", display: "flex", gap: 12, position: "relative", zIndex: 1 }} onClick={onOpen}>
+          <DateBadge date={e.starts_at} color="rgba(255,255,255,0.35)" ink="#fff" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <strong style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><t.icon size={15} />{e.title}</strong>
+              <span className="badge" style={{ background: "rgba(255,255,255,0.22)", color: "#fff" }}>{daysLabel}</span>
+            </div>
+            <div style={{ opacity: 0.85 }}>
+              {fmtTime(e.starts_at)}{e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
-        <div style={{ display: "flex", gap: 5 }}>
+        <div style={{ display: "flex", gap: 5, marginTop: 14, position: "relative", zIndex: 1 }}>
           <CountChip value={presentCount} tint="green" icon={Check} size="sm" />
           <CountChip value={absentCount} tint="orange" icon={X} size="sm" />
           <CountChip value={injuredCount} tint="coral" icon={Bandaid} size="sm" />
           <CountChip value={noResponseCount} tint="gray" icon={Clock} size="sm" />
         </div>
+      </div>
 
-        <div style={{ display: "flex", gap: 6 }}>
+      <div style={{ background: "rgba(0,0,0,0.18)", padding: "14px 18px 16px", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
           {Object.entries(AVAIL_LABELS).map(([v, l]) => {
             const active = e.my_availability === v;
             const Icon = AVAIL_ICONS[v];
@@ -391,30 +393,30 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, gotoCo
                 key={v} className="btn btn-sm" title={l}
                 onClick={() => onSetAvailability(e.id, v)}
                 style={{
-                  display: "flex", alignItems: "center", gap: 6, border: "none",
-                  background: active ? "#fff" : "rgba(255,255,255,0.18)",
+                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none",
+                  background: active ? "#fff" : "rgba(255,255,255,0.14)",
                   color: active ? "#0A2340" : "#fff",
                 }}
               ><Icon size={14} color={active ? AVAIL_ICON_COLORS[v] : "#fff"} />{l}</button>
             );
           })}
         </div>
-      </div>
 
-      {isMatch && Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0) > 0 && (
-        <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", opacity: 0.9, position: "relative", zIndex: 1 }}>
-          <ClipboardCheck size={13} />{Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0)} joueur{Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0) > 1 ? "s" : ""} convoqué{Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0) > 1 ? "s" : ""}
-          {e.my_convocation && <span className="badge" style={{ background: "rgba(255,255,255,0.22)", color: "#fff" }}>Tu es convoqué ✓</span>}
+        {isMatch && Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0) > 0 && (
+          <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", opacity: 0.9, fontSize: "0.82rem" }}>
+            <ClipboardCheck size={13} />{Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0)} joueur{Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0) > 1 ? "s" : ""} convoqué{Object.values(e.conv_counts ?? {}).reduce((a, b) => a + b, 0) > 1 ? "s" : ""}
+            {e.my_convocation && <span className="badge" style={{ background: "rgba(255,255,255,0.22)", color: "#fff" }}>Tu es convoqué ✓</span>}
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 16 }}>
+          <span style={{ cursor: "pointer", opacity: 0.85, fontSize: "0.82rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }} onClick={openConversation}>
+            <ChatDots size={14} /> Discussion
+          </span>
+          <span style={{ cursor: "pointer", opacity: 0.85, fontSize: "0.82rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }} onClick={onOpen}>
+            <Search size={14} /> Détails
+          </span>
         </div>
-      )}
-
-      <div style={{ display: "flex", gap: 14, marginTop: 4, position: "relative", zIndex: 1 }}>
-        <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.16)", color: "#fff", border: "none" }} onClick={openConversation} disabled={convBusy}>
-          <ChatDots size={15} /> Discussion
-        </button>
-        <button className="btn btn-sm" style={{ background: "rgba(255,255,255,0.16)", color: "#fff", border: "none" }} onClick={onOpen}>
-          <Search size={15} /> Détails
-        </button>
       </div>
     </div>
   );
@@ -525,57 +527,59 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
   };
 
   return (
-    <div className="card" style={{ marginBottom: 10, padding: 16, opacity: cancelled ? 0.6 : 1, position: "relative", overflow: "hidden" }}>
-      {!cancelled && <div className="tower-deco-list" dangerouslySetInnerHTML={{ __html: towerSvg }} />}
-      <div style={{ cursor: "pointer", display: "flex", gap: 12, position: "relative", zIndex: 1 }}>
-        <DateBadge
-          date={e.starts_at}
-          color={cancelled ? "var(--neutral-400)" : t.color}
-          ink={!cancelled && e.type === "match" ? "#fff" : "var(--hero-ink)"}
-        />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <strong>{e.title}</strong>
-            {cancelled && <span className="badge badge-neutral">Annulé</span>}
-            {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
+    <div className="card" style={{ marginBottom: 10, padding: 0, opacity: cancelled ? 0.6 : 1, position: "relative", overflow: "hidden" }}>
+      <div style={{ padding: "16px 16px 14px", position: "relative" }}>
+        {!cancelled && <div className="tower-deco-list" dangerouslySetInnerHTML={{ __html: towerSvg }} />}
+        <div style={{ cursor: "pointer", display: "flex", gap: 12, position: "relative", zIndex: 1 }}>
+          <DateBadge
+            date={e.starts_at}
+            color={cancelled ? "var(--neutral-400)" : t.color}
+            ink={!cancelled && e.type === "match" ? "#fff" : "var(--hero-ink)"}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <strong>{e.title}</strong>
+              {cancelled && <span className="badge badge-neutral">Annulé</span>}
+              {e.team_name && <span className="badge badge-info">{e.team_name}</span>}
+            </div>
+            <div className="subtle">
+              {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}
+              {e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
+            </div>
           </div>
-          <div className="subtle">
-            {fmtTime(e.starts_at)}{e.ends_at ? ` → ${fmtTime(e.ends_at)}` : ""}
-            {e.location ? ` — ${e.location}` : ""}{e.opponent ? ` — vs ${e.opponent}` : ""}
-          </div>
+          {manage ? (
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              <button
+                onClick={(ev) => { ev.stopPropagation(); setMenuOpen((v) => !v); }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "var(--text-dim)", display: "flex" }}
+              ><ThreeDots size={17} /></button>
+              {menuOpen && (
+                <div style={{
+                  position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "none",
+                  borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-md)", zIndex: 10, minWidth: 140, overflow: "hidden",
+                }}>
+                  <MenuItem onClick={() => { setMenuOpen(false); onEdit(e); }}>Modifier</MenuItem>
+                  {cancelled
+                    ? <MenuItem onClick={() => { setMenuOpen(false); onStatus(e.id, "scheduled"); }}>Rétablir</MenuItem>
+                    : <MenuItem color="var(--warning-600)" onClick={() => { setMenuOpen(false); onStatus(e.id, "cancelled"); }}>Annuler</MenuItem>}
+                  <MenuItem color="var(--danger-600)" onClick={() => { setMenuOpen(false); onDelete(e.id); }}>Supprimer</MenuItem>
+                </div>
+              )}
+            </div>
+          ) : <ThreeDots size={17} style={{ color: "var(--text-dim)", flexShrink: 0, opacity: 0.3 }} />}
         </div>
-        {manage ? (
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <button
-              onClick={(ev) => { ev.stopPropagation(); setMenuOpen((v) => !v); }}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "var(--text-dim)", display: "flex" }}
-            ><ThreeDots size={17} /></button>
-            {menuOpen && (
-              <div style={{
-                position: "absolute", right: 0, top: "100%", background: "var(--surface)", border: "none",
-                borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-md)", zIndex: 10, minWidth: 140, overflow: "hidden",
-              }}>
-                <MenuItem onClick={() => { setMenuOpen(false); onEdit(e); }}>Modifier</MenuItem>
-                {cancelled
-                  ? <MenuItem onClick={() => { setMenuOpen(false); onStatus(e.id, "scheduled"); }}>Rétablir</MenuItem>
-                  : <MenuItem color="var(--warning-600)" onClick={() => { setMenuOpen(false); onStatus(e.id, "cancelled"); }}>Annuler</MenuItem>}
-                <MenuItem color="var(--danger-600)" onClick={() => { setMenuOpen(false); onDelete(e.id); }}>Supprimer</MenuItem>
-              </div>
-            )}
-          </div>
-        ) : <ThreeDots size={17} style={{ color: "var(--text-dim)", flexShrink: 0, opacity: 0.3 }} />}
-      </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 5 }}>
+        <div style={{ display: "flex", gap: 5, marginTop: 14, position: "relative", zIndex: 1 }}>
           <CountChip value={presentCount} tint="green" icon={Check} size="sm" />
           <CountChip value={absentCount} tint="orange" icon={X} size="sm" />
           <CountChip value={injuredCount} tint="coral" icon={Bandaid} size="sm" />
           <CountChip value={noResponseCount} tint="gray" icon={Clock} size="sm" />
         </div>
+      </div>
 
+      <div style={{ background: "var(--surface-soft)", padding: "14px 16px 16px" }}>
         {!cancelled && !isPast(e.starts_at) && (
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
             {Object.entries(AVAIL_LABELS).map(([v, l]) => {
               const active = e.my_availability === v;
               const Icon = AVAIL_ICONS[v];
@@ -584,8 +588,8 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
                   key={v} className="btn btn-sm" title={l}
                   onClick={(ev) => { ev.stopPropagation(); quickRespond(v); }}
                   style={{
-                    display: "flex", alignItems: "center", gap: 6, border: "none",
-                    background: active ? "var(--surface)" : "var(--surface-soft)",
+                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none",
+                    background: active ? "var(--surface)" : "transparent",
                     color: active ? "var(--text)" : "var(--text-dim)",
                     boxShadow: active ? "var(--shadow-sm)" : "none",
                   }}
@@ -594,38 +598,38 @@ function EventAccordionCard({ event: e, open, toggle, reload, manage, members, o
             })}
           </div>
         )}
-      </div>
 
-      {!cancelled && e.my_availability === "present" && hasEndedClient(e) && !e.my_vote_submitted && (
-        <div
-          onClick={toggle}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer",
-            marginTop: 12, padding: "10px 14px", borderRadius: "var(--radius-md)",
-            background: "color-mix(in srgb, var(--hero-sky) 16%, transparent)",
-          }}
-        >
-          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--hero-sky)" }}>
-            🗳️ Tu n'as pas encore voté pour cette séance
+        {!cancelled && e.my_availability === "present" && hasEndedClient(e) && !e.my_vote_submitted && (
+          <div
+            onClick={toggle}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer",
+              marginBottom: 12, padding: "10px 14px", borderRadius: "var(--radius-md)",
+              background: "color-mix(in srgb, var(--hero-sky) 16%, transparent)",
+            }}
+          >
+            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--hero-sky)" }}>
+              🗳️ Tu n'as pas encore voté pour cette séance
+            </span>
+            <span className="btn btn-primary btn-sm" style={{ width: "auto", padding: "6px 14px" }}>Voter</span>
+          </div>
+        )}
+
+        {e.type === "match" && convokedTotal > 0 && (
+          <div className="subtle" style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <ClipboardCheck size={13} />{convokedTotal} joueur{convokedTotal > 1 ? "s" : ""} convoqué{convokedTotal > 1 ? "s" : ""}
+            {e.my_convocation && <span className="badge badge-info">Tu es convoqué ✓</span>}
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 16 }}>
+          <span style={{ cursor: "pointer", opacity: 0.85, fontSize: "0.82rem", fontWeight: 600, color: "var(--text-dim)", display: "flex", alignItems: "center", gap: 5 }} onClick={openConversation}>
+            <ChatDots size={14} /> Discussion
           </span>
-          <span className="btn btn-primary btn-sm" style={{ width: "auto", padding: "6px 14px" }}>Voter</span>
+          <span style={{ cursor: "pointer", opacity: 0.85, fontSize: "0.82rem", fontWeight: 600, color: "var(--text-dim)", display: "flex", alignItems: "center", gap: 5 }} onClick={toggle}>
+            <Search size={14} /> Détails
+          </span>
         </div>
-      )}
-
-      {e.type === "match" && convokedTotal > 0 && (
-        <div className="subtle" style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          <ClipboardCheck size={13} />{convokedTotal} joueur{convokedTotal > 1 ? "s" : ""} convoqué{convokedTotal > 1 ? "s" : ""}
-          {e.my_convocation && <span className="badge badge-info">Tu es convoqué ✓</span>}
-        </div>
-      )}
-
-      <div style={{ display: "flex", gap: 14, marginTop: 12 }}>
-        <button className="btn btn-sm" style={{ background: "var(--surface-soft)", color: "var(--text)", border: "none" }} onClick={openConversation} disabled={convBusy}>
-          <ChatDots size={15} /> Discussion
-        </button>
-        <button className="btn btn-sm" style={{ background: "var(--surface-soft)", color: "var(--text)", border: "none" }} onClick={toggle}>
-          <Search size={15} /> Détails
-        </button>
       </div>
 
       {open && (
