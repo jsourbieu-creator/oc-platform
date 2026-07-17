@@ -261,7 +261,6 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
 .dashboard-shell{ display:flex; min-height:100vh; background:var(--bg); }
 .dashboard-main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .dashboard-content{ flex:1; padding:20px; padding-bottom:calc(140px + env(safe-area-inset-bottom)); max-width:900px; width:100%; margin:0 auto; }
-@media (min-width:1024px){ .dashboard-content{ padding-bottom:20px; } }
 
 .thread-composer{
   position:sticky; bottom:calc(88px + env(safe-area-inset-bottom)); z-index:15;
@@ -302,7 +301,7 @@ label{ font-size:12px; font-weight:800; color:var(--text); display:block; margin
   border-radius:999px;
   box-shadow:var(--shadow-md);
 }
-@media (min-width:1024px){ .bottom-nav{ display:none; } }
+@media (min-width:1024px){ .bottom-nav{ display:flex; } }
 .bottom-nav-item{
   flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
   cursor:pointer; color:var(--muted);
