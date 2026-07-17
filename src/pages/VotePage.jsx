@@ -151,7 +151,7 @@ export function VotePage() {
 
   return (
     <div>
-      <h1 className="page-title" style={{ marginBottom: 18 }}>Ballon d'Or</h1>
+      <h1 className="page-title" style={{ marginBottom: 18 }}>Votes</h1>
 
       <div className="segmented" style={{ marginBottom: 16 }}>
         {[["seances", "Séances"], ["profil", "Mon profil"], ["groupe", "Le groupe"]].map(([v, l]) => (

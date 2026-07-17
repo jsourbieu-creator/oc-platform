@@ -9,7 +9,7 @@ export const NAV_ITEMS = [
   { label: "Annonces", view: "vestiaire", icon: Megaphone, phase: 4 },
   { label: "Membres", view: "membres", icon: People, phase: 1 },
   { label: "Messages", view: "messages", icon: ChatDots, phase: 5 },
-  { label: "Ballon d'Or", view: "votes", icon: Star, phase: 2 },
+  { label: "Votes", view: "votes", icon: Star, phase: 2 },
   { label: "Documents", view: "documents", icon: Folder2Open, phase: 6 },
   { label: "Médias", view: "medias", icon: Images, phase: 6 },
   { label: "Notifications", view: "notifications", icon: Bell, phase: 4 },
@@ -21,7 +21,7 @@ export const NAV_ITEMS = [
 export const MOBILE_NAV_ITEMS = [
   NAV_ITEMS.find((i) => i.label === "Calendrier"),
   NAV_ITEMS.find((i) => i.label === "Annonces"),
-  NAV_ITEMS.find((i) => i.label === "Ballon d'Or"),
+  NAV_ITEMS.find((i) => i.label === "Votes"),
   NAV_ITEMS.find((i) => i.label === "Profil"),
   NAV_ITEMS.find((i) => i.label === "Paramètres"),
 ];
