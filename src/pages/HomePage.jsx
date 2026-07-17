@@ -348,7 +348,7 @@ function NextSessionCard({ event: e, loading, hasSeason, manage, members, onCrea
 
   return (
     <div className="card" style={{ marginBottom: 16, padding: 16, background: t.color, color: "#fff", position: "relative", overflow: "hidden" }}>
-      <div className="tower-deco" dangerouslySetInnerHTML={{ __html: towerSvg }} />
+      <div className="tower-deco-list" style={{ opacity: 0.18 }} dangerouslySetInnerHTML={{ __html: towerSvg }} />
       <div style={{ cursor: "pointer", display: "flex", gap: 12, position: "relative", zIndex: 1 }} onClick={onOpen}>
         <DateBadge date={e.starts_at} color="rgba(255,255,255,0.35)" ink="#fff" />
         <div style={{ flex: 1, minWidth: 0 }}>
